@@ -41,19 +41,6 @@ public class MerlinToDssTest
 		ts.forEach(tsc -> tsc.fileName = file);
 		LOGGER.log(Level.SEVERE, file);
 
-//		DSS dss = DSS.open(file);
-//		HecDss dss = HecDss.open(file);
-//		for (TimeSeriesContainer tsc : ts)
-//		{
-//			try
-//			{
-//				dss.write(tsc);
-//			}
-//			catch (Exception ex)
-//			{
-//				LOGGER.log(Level.SEVERE, "Exception while writing " + tsc.fullName, ex);
-//			}
-//		}
 		HecTimeSeries dssStor = new HecTimeSeries();
 		try
 		{

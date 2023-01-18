@@ -52,14 +52,6 @@ final class MerlinDataConverter
 		Optional<Interval> opt = IntervalFactory.findAny(interval -> interval.isRegular() && interval.getMinutes() == parsedInterval);
 		String path = "/" + data.getProject() + "/" + data.getStation() + "-" + data.getSensor() + "/" +
 				data.getParameter() + "//" +opt.map(Interval::getInterval).orElse("") + "/" + fPart;
-//		pathname.setAPart(data.getProject());
-//		pathname.setBPart(data.getStation() + "-" + data.getSensor());
-//		pathname.setCPart(data.getParameter());
-//		pathname.setDPart("");
-//		pathname.setEPart("");
-
-//		pathname.setEPart();
-//		String path = "/" + pathname.pathname().replace(".", "/");
 		output.fullName = path;
 		output.timeZoneID = data.getTimeZone().getId();
 		output.units = data.getUnits();
