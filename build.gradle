@@ -1,0 +1,95 @@
+plugins {
+    id "com.palantir.git-version" version "0.13.0"
+}
+
+def versionLabel(gitInfo) {
+    def branch = gitInfo.branchName // all branches are snapshots, only tags get released
+    if (branch == null && !"$System.env.CI_COMMIT_BRANCH".isEmpty()) {
+        branch = "$System.env.CI_COMMIT_BRANCH" // Gitlab CI checks out a commit, not a branch. Grab the branch name from the env vars it sets
+    }
+    def tag = gitInfo.lastTag
+    // tag is returned as is. Branch may need cleanup
+    return (branch == null || branch == "null" || branch.isEmpty()) ? tag : branch.replace("/","-") + "-SNAPSHOT"
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'project-report'
+    apply plugin: 'maven-publish'
+
+    group 'gov.usbr.wq'
+    version versionLabel(versionDetails())
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url = uri('https://www.hec.usace.army.mil/nexus/repository/maven-public')
+        }
+    }
+
+    compileJava {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+
+    test {
+        //useJUnitPlatform()
+    }
+
+    publishing {
+        repositories {
+            maven {
+                credentials {
+                    username = project.hasProperty('rmaNexusUser') ? "$rmaNexusUser" : "defaultUser"
+                    password = project.hasProperty('rmaNexusPassword') ? "$rmaNexusPassword" : "defaultPassword"
+                }
+                afterEvaluate {
+                    url = version.toString().endsWith("SNAPSHOT") ?
+                            "https://artifact.rmanet.app/repository/usbr-component-snapshots/" :
+                            "https://artifact.rmanet.app/repository/usbr-component-releases/"
+                }
+            }
+        }
+    }
+
+    dependencies {
+        implementation 'com.squareup.okhttp3:okhttp:4.9.2'
+        implementation 'com.auth0:java-jwt:3.18.2'
+
+        implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+        implementation 'org.springframework.boot:spring-boot-starter-websocket:2.3.12.RELEASE'
+        implementation 'io.swagger:swagger-annotations:1.6.3'
+        implementation 'org.springframework.boot:spring-boot-starter-validation:2.5.6'
+
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+
+    }
+
+    task generateMyDependenciesReport(type: DependencyReportTask) { depReport ->
+        depReport.setConfiguration("runtimeClasspath")
+    }
+
+    /**
+     * To help people understand how the versioning
+     * interacts with the git repo
+     */
+    task showGit () {
+        doFirst {
+            def gitInfo = versionDetails()
+            println( "Used:    " + getVersion() ) // The select version (the project.version field)
+            println( "Tag:     " + gitInfo.lastTag) // actual tag or commit hash(short) if no tag
+            println( "Hash:    " + gitInfo.gitHash) // short commit hash
+            println( "Branch:  " + gitInfo.branchName) // branch name (null if tag checkout)
+            println( "TagBuild:" + gitInfo.isCleanTag) // true if repoi is in dettached head mode(e.g. git checkout <tag>)
+            println( "CI_COMMIT_BRANCH: $System.env.CI_COMMIT_BRANCH") // Used by the Gitlab CI runner, since it checks out a commit, not a branch
+        }
+    }
+
+    configure(showGit) {
+        group = 'help'
+        description = 'Shows Git Tag Versioning information'
+    }
+
+}

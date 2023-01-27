@@ -1,10 +1,6 @@
 plugins {
-    id 'java'
-    id 'maven-publish'
+    id 'java-library'
 }
-
-group 'gov.usbr.wq'
-version '1.0-SNAPSHOT'
 
 publishing {
     publications {
@@ -13,29 +9,6 @@ publishing {
             from components.java
         }
     }
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        url = uri('https://repo1.maven.org/maven2/')
-    }
-    maven {
-        url = uri('https://repo.maven.apache.org/maven2')
-    }
-    maven {
-        url = uri('https://www.hec.usace.army.mil/nexus/repository/maven-public')
-    }
-}
-
-compileJava {
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
-}
-
-test {
-    useJUnitPlatform()
 }
 
 dependencies {
@@ -47,7 +20,8 @@ dependencies {
     implementation 'mil.army.usace.hec:hec-lib:7.0-20220112.004307-156'
     implementation 'mil.army.usace.hec:hec-nucleus-metadata:1.0.28'
     implementation 'mil.army.usace.hec:hec-rma:7.0-20220112.004315-152'
-    implementation 'gov.usbr.wq:merlin-web-client:1.0-SNAPSHOT'
+    implementation 'gov.usbr.wq:merlin-web-client:feature-api_updates-SNAPSHOT'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
