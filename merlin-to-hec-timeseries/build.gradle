@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+apply plugin: 'java'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId = 'merlin-to-hec-timeseries'
+            from components.java
+        }
+    }
+}
+
+dependencies {
+    implementation 'mil.army.usace.hec:hec-core:7.0-20220112.004251-159'
+    implementation 'mil.army.usace.hec:hec-data:7.0-20220112.004300-157'
+    implementation 'mil.army.usace.hec:heclib:6.0.00.100'
+    implementation 'mil.army.usace.hec:hec-nucleus-metadata:1.0.28'
+    implementation 'gov.usbr.wq:merlin-web-client:1.0-SNAPSHOT'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+}
+
