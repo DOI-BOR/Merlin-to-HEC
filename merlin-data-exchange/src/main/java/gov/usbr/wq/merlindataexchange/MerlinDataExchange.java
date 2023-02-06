@@ -40,32 +40,32 @@ public class MerlinDataExchange
 		MerlinTimeSeriesDao dao = new MerlinTimeSeriesDao();
 
 		//Need to set the username and password for the dao somehow.  I probably need to read it in somehow?
-		List<TimeSeriesContainer> catalog = dao.catalogTimeSeries();
-
-		for (MerlinConfigDssData dssData : configData)
-		{
-			String dssFilePath = dssData.getDssFilePath();
-			boolean mustExist = dssData.isMustExist();
-
-			try
-			{
-				HecDss dss = HecDss.open(dssFilePath, mustExist);
-
-				for (MerlinConfigData data : dssData.getConfigData())
-				{
-					String merlinId = data.getMerlinId();
-					catalog.stream()
-						   .filter(tsc -> tsc.fullName.equalsIgnoreCase(merlinId))
-						   .findFirst()
-						   .map(tsc -> updateTsc(tsc, data))
-						   .ifPresent(tsc -> storeTsc(tsc, dss));
-				}
-			}
-			catch (Exception ex)
-			{
-				throw new IOException("Unable to access DSS file: " + dssFilePath, ex);
-			}
-		}
+//		List<TimeSeriesContainer> catalog = dao.catalogTimeSeries();
+//
+//		for (MerlinConfigDssData dssData : configData)
+//		{
+//			String dssFilePath = dssData.getDssFilePath();
+//			boolean mustExist = dssData.isMustExist();
+//
+//			try
+//			{
+//				HecDss dss = HecDss.open(dssFilePath, mustExist);
+//
+//				for (MerlinConfigData data : dssData.getConfigData())
+//				{
+//					String merlinId = data.getMerlinId();
+//					catalog.stream()
+//						   .filter(tsc -> tsc.fullName.equalsIgnoreCase(merlinId))
+//						   .findFirst()
+//						   .map(tsc -> updateTsc(tsc, data))
+//						   .ifPresent(tsc -> storeTsc(tsc, dss));
+//				}
+//			}
+//			catch (Exception ex)
+//			{
+//				throw new IOException("Unable to access DSS file: " + dssFilePath, ex);
+//			}
+//		}
 	}
 
 	private void storeTsc(TimeSeriesContainer tsc, HecDss dss)

@@ -17,9 +17,9 @@ publishing {
 dependencies {
     implementation 'mil.army.usace.hec:hec-core:7.0-20220112.004251-159'
     implementation 'mil.army.usace.hec:hec-data:7.0-20220112.004300-157'
-    implementation 'mil.army.usace.hec:heclib:6.0.00.100'
+    implementation 'mil.army.usace.hec:hec-lib:6.0-20220607.200812-129!!'
     implementation 'mil.army.usace.hec:hec-nucleus-metadata:1.0.28'
-    implementation 'gov.usbr.wq:merlin-web-client:1.0-SNAPSHOT'
+    implementation 'gov.usbr.wq:merlin-web-client:1.0.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
 }
 

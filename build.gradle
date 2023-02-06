@@ -12,6 +12,15 @@ def versionLabel(gitInfo) {
     return (branch == null || branch == "null" || branch.isEmpty()) ? tag : branch.replace("/","-") + "-SNAPSHOT"
 }
 
+def checkForRMANexusCredentials() {
+    if(!project.hasProperty('rmaNexusUser')) {
+        println ('Please set the rmaNexusUser property in the GRADLE_USER_HOME ($userHome/.gradle/gradle.properties) file or via -PrmaNexusUser= .')
+    }
+    if(!project.hasProperty('rmaNexusPassword')) {
+        println ('Please set the rmaNexusPassword property in the GRADLE_USER_HOME ($userHome/.gradle/gradle.properties) file or via -PrmaNexusPassword= .')
+    }
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'jacoco'
@@ -25,6 +34,14 @@ subprojects {
         mavenLocal()
         mavenCentral()
         maven {
+            url 'https://artifact.rmanet.app/repository/rma-internal'
+            credentials {
+                checkForRMANexusCredentials()
+                username "$rmaNexusUser"
+                password "$rmaNexusPassword"
+            }
+        }
+        maven {
             url = uri('https://www.hec.usace.army.mil/nexus/repository/maven-public')
         }
     }
@@ -35,7 +52,7 @@ subprojects {
     }
 
     test {
-        //useJUnitPlatform()
+        useJUnitPlatform()
     }
 
     publishing {
