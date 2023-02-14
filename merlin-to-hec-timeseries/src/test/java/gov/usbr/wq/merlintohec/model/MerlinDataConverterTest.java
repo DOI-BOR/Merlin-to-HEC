@@ -4,12 +4,15 @@ import gov.usbr.wq.dataaccess.json.Data;
 import gov.usbr.wq.dataaccess.json.Event;
 import gov.usbr.wq.dataaccess.model.DataWrapper;
 import gov.usbr.wq.merlintohec.exceptions.MerlinDataException;
+import gov.usbr.wq.merlintohec.exceptions.MerlinInvalidTimestepException;
+import hec.data.DataSetIllegalArgumentException;
+import hec.data.Units;
+import hec.data.UnitsConversionException;
 import hec.heclib.util.HecTime;
 import hec.io.TimeSeriesContainer;
 import hec.lang.Const;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +23,8 @@ class MerlinDataConverterTest
 {
 	private static final String TEST_TIMESERIES_ID = "Shasta Lake-Shasta Dam-Outflow/Flow/INST-VAL/60/0/35-230.11.125.1.1";
 
-//	@Test
-	void dataWrapperToTimeSeries() throws MerlinDataException
+	@Test
+	void dataWrapperToTimeSeries() throws MerlinDataException, DataSetIllegalArgumentException, MerlinInvalidTimestepException
 	{
 		ZonedDateTime startTime = ZonedDateTime.now()
 											   .withYear(2019)
@@ -64,7 +67,14 @@ class MerlinDataConverterTest
 										  double out = Const.UNDEFINED_DOUBLE;
 										  if (val != null)
 										  {
-											  out = val;
+											  try
+											  {
+												  out = Units.convertUnits(val, "cfs", "cms");
+											  }
+											  catch (UnitsConversionException e)
+											  {
+												  throw new RuntimeException(e);
+											  }
 										  }
 										  return out;
 									  })
@@ -73,8 +83,10 @@ class MerlinDataConverterTest
 								   .mapToInt(Integer::intValue)
 								   .toArray();
 
+		data.setUnits("cfs");
+		data.setParameter("FLOW");
 		DataWrapper wrapper = new DataWrapper(data);
-		TimeSeriesContainer tsc = MerlinDataConverter.dataToTimeSeries(wrapper);
+		TimeSeriesContainer tsc = MerlinDataConverter.dataToTimeSeries(wrapper, "SI", null, null);
 		int[] receivedTimes = tsc.times;
 		double[] receivedValues = tsc.values;
 

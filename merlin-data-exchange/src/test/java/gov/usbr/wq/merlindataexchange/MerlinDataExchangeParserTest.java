@@ -37,6 +37,8 @@ final class MerlinDataExchangeParserTest
         assertEquals("https://www.grabdata.com/merlinwebservice", dataStoreMerlin1.getPath());
         assertEquals("wat", dataStoreLocalDss1.getId());
         assertEquals("$WATERSHED/shared/filename.dss", dataStoreLocalDss1.getPath());
+        assertEquals("Auburn Dam - Daily", tsDataExchangeSet1.getId());
+        assertEquals("www.grabdata.com", tsDataExchangeSet1.getSourceId());
         assertEquals(80, tsDataExchangeSet1.getTemplateId());
         assertEquals("Auburn Dam - Daily", tsDataExchangeSet1.getTemplateName());
         assertEquals(0, tsDataExchangeSet1.getQualityVersionId());
@@ -52,6 +54,8 @@ final class MerlinDataExchangeParserTest
         assertEquals("https://www.grabdata2.com/merlinwebservice", dataStoreMerlin2.getPath());
         assertEquals("wat2", dataStoreLocalDss2.getId());
         assertEquals("$WATERSHED/shared/filename2.dss", dataStoreLocalDss2.getPath());
+        assertEquals("Folsom Lake - MR Boundary Flow", tsDataExchangeSet2.getId());
+        assertEquals("www.grabdata2.com", tsDataExchangeSet2.getSourceId());
         assertEquals(83, tsDataExchangeSet2.getTemplateId());
         assertEquals("Folsom Lake - MR Boundary Flow", tsDataExchangeSet2.getTemplateName());
         assertEquals(0, tsDataExchangeSet2.getQualityVersionId());

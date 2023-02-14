@@ -7,6 +7,8 @@ final class DataExchangeSet
 {
     @JacksonXmlProperty(isAttribute = true, localName = "id")
     private String _id;
+    @JacksonXmlProperty(isAttribute = true, localName = "source-id")
+    private String _sourceId;
     @JacksonXmlProperty(isAttribute = true, localName = "template-id")
     private int _templateId;
     @JacksonXmlProperty(isAttribute = true, localName = "template-name")
@@ -33,6 +35,16 @@ final class DataExchangeSet
     void setId(String id)
     {
         _id = id;
+    }
+
+    String getSourceId()
+    {
+        return _sourceId;
+    }
+
+    void setSourceId(String sourceId)
+    {
+        _sourceId = sourceId;
     }
 
     int getTemplateId()

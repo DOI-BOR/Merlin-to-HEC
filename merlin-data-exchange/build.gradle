@@ -13,8 +13,12 @@ publishing {
 
 dependencies {
     implementation project(":merlin-to-hec-timeseries")
+    implementation 'mil.army.usace.hec:service-annotations:1.2.1'
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3"
+    implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.6"
+
+    annotationProcessor("mil.army.usace.hec:service-annotations:1.2.1")
 }

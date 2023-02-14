@@ -4,6 +4,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
+import java.util.Optional;
 
 @JacksonXmlRootElement(namespace = "https://www.w3.org/2001/XMLSchema-instance", localName = "data-exchange-configuration")
 final class DataExchangeConfiguration
@@ -33,4 +34,10 @@ final class DataExchangeConfiguration
         _dataExchangeSet = dataExchangeSet;
     }
 
+    Optional<DataStore> getDataStoreByRef(DataStoreRef ref)
+    {
+        return getDataStores().stream()
+                .filter(ds -> ds.getId().equalsIgnoreCase(ref.getId()))
+                .findFirst();
+    }
 }
