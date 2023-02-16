@@ -38,9 +38,7 @@ final class MerlinDataExchangeEngineTest
         Instant end = Instant.parse("2022-08-30T08:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
         MerlinDataExchangeParameters params = new MerlinDataExchangeParameters(username, password, workingDir, workingDir, start, end, storeOption, "fPart");
-        String lookupPath = DataExchangeEngine.LOOKUP_PATH + "/" + MerlinDataExchangeEngine.MERLIN;
-        Lookup lookup = Lookups.forPath(lookupPath);
-        DataExchangeEngine dataExchangeEngine = lookup.lookup(DataExchangeEngine.class);
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngine();
         assertNotNull(dataExchangeEngine);
         ProgressListener progressListener = buildMockProgressListener();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract(mocks, params, progressListener).join();
@@ -57,9 +55,7 @@ final class MerlinDataExchangeEngineTest
         Instant end = Instant.parse("2022-08-30T08:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
         MerlinDataExchangeParameters params = new MerlinDataExchangeParameters(username, password, workingDir, workingDir, start, end, storeOption, "fPart");
-        String lookupPath = DataExchangeEngine.LOOKUP_PATH + "/" + MerlinDataExchangeEngine.MERLIN;
-        Lookup lookup = Lookups.forPath(lookupPath);
-        DataExchangeEngine dataExchangeEngine = lookup.lookup(DataExchangeEngine.class);
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngine();
         assertNotNull(dataExchangeEngine);
         ProgressListener progressListener = buildMockProgressListener();
         dataExchangeEngine.runExtract(Collections.singletonList(mockXml), params, progressListener);

@@ -43,12 +43,8 @@ import java.util.logging.SimpleFormatter;
 
 import static java.util.stream.Collectors.toList;
 
-
-@ServiceProvider(service = DataExchangeEngine.class, position = 100, path = DataExchangeEngine.LOOKUP_PATH
-        + "/" + MerlinDataExchangeEngine.MERLIN)
 public final class MerlinDataExchangeEngine implements DataExchangeEngine
 {
-    public static final String MERLIN = "merlin";
     private static final Logger LOG_FILE_LOGGER = Logger.getLogger("MerlinDataExchange");
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeEngine.class.getName());
     private static final int PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP = 5;
