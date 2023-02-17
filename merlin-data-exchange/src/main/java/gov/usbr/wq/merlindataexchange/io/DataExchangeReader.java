@@ -12,13 +12,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
-public interface DataExchangeReader
+public interface DataExchangeReader extends DataExchanger
 {
+    String LOOKUP_PATH = "dataexchange/reader";
     CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet configuration, MerlinDataExchangeParameters runtimeParameters, DataExchangeCache cache, String seriesPath,
                                                     MerlinExchangeDaoCompletionTracker completionTracker,
                                                     ProgressListener progressListener, AtomicBoolean isCancelled, Logger logger, ExecutorService executorService);
-
-    void close();
 
     String getSourcePath();
 }

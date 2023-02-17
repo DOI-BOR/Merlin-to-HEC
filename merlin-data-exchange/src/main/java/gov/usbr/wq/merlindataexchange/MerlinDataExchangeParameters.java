@@ -8,36 +8,24 @@ import java.util.Arrays;
 
 public final class MerlinDataExchangeParameters
 {
-    private final String _username;
-    private final char[] _password;
     private final Instant _start;
     private final Instant _end;
     private final StoreOption _storeOption;
     private final String _fPartOverride;
     private final Path _watershedDirectory;
     private final Path _logFileDirectory;
+    private final AuthenticationParameters[] _authenticationParameters;
 
-    public MerlinDataExchangeParameters(String username, char[] password, Path watershedDirectory, Path logFileDirectory, Instant start, Instant end,
-                                        StoreOption storeOption, String fPartOverride)
+    public MerlinDataExchangeParameters(Path watershedDirectory, Path logFileDirectory, Instant start, Instant end,
+                                        StoreOption storeOption, String fPartOverride, AuthenticationParameters... authenticationParameters)
     {
-        _username = username;
-        _password = password;
+        _authenticationParameters = authenticationParameters;
         _watershedDirectory = watershedDirectory;
         _logFileDirectory = logFileDirectory;
         _start = start;
         _end = end;
         _storeOption = storeOption;
         _fPartOverride = fPartOverride;
-    }
-
-    public String getUsername()
-    {
-        return _username;
-    }
-
-    public char[] getPassword()
-    {
-        return _password;
     }
 
     public Instant getStart()
@@ -70,8 +58,12 @@ public final class MerlinDataExchangeParameters
         return _logFileDirectory;
     }
 
-    public void clearPassword()
+    public UsernamePasswordHolder getUsernamePasswordForUrl(String url) throws UsernamePasswordNotFoundException
     {
-        Arrays.fill(_password, '\0');
+        return Arrays.stream(_authenticationParameters)
+                .filter(authParam -> authParam.getUrl().equalsIgnoreCase(url))
+                .findFirst()
+                .orElseThrow(() -> new UsernamePasswordNotFoundException(url))
+                .getUsernamePassword();
     }
 }

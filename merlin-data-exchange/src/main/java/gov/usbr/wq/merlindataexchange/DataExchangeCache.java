@@ -1,5 +1,6 @@
 package gov.usbr.wq.merlindataexchange;
 
+import gov.usbr.wq.dataaccess.model.MeasureWrapper;
 import gov.usbr.wq.dataaccess.model.QualityVersionWrapper;
 import gov.usbr.wq.dataaccess.model.TemplateWrapper;
 
@@ -14,7 +15,7 @@ public final class DataExchangeCache
 {
     private final Set<TemplateWrapper> _cachedTemplates = new HashSet<>();
     private final Set<QualityVersionWrapper> _cachedQualityVersions = new HashSet<>();
-    private final Map<TemplateWrapper, List<String>> _cachedTemplateToSeriesIds = new HashMap<>();
+    private final Map<TemplateWrapper, List<MeasureWrapper>> _cachedTemplateToMeasures = new HashMap<>();
 
     public List<TemplateWrapper> getCachedTemplates()
     {
@@ -26,9 +27,9 @@ public final class DataExchangeCache
         return new ArrayList<>(_cachedQualityVersions);
     }
 
-    public Map<TemplateWrapper, List<String>> getCachedTemplateToSeriesIds()
+    public Map<TemplateWrapper, List<MeasureWrapper>> getCachedTemplateToMeasures()
     {
-        return new HashMap<>(_cachedTemplateToSeriesIds);
+        return new HashMap<>(_cachedTemplateToMeasures);
     }
 
     public void cacheTemplates(List<TemplateWrapper> templates)
@@ -40,16 +41,16 @@ public final class DataExchangeCache
     {
         _cachedQualityVersions.addAll(qualityVersions);
     }
-    public void cacheSeriesIds(TemplateWrapper template, List<String> seriesIds)
+    public void cacheSeriesIds(TemplateWrapper template, List<MeasureWrapper> measures)
     {
-        _cachedTemplateToSeriesIds.put(template, seriesIds);
+        _cachedTemplateToMeasures.put(template, measures);
     }
 
     public void clearCache()
     {
         _cachedTemplates.clear();
         _cachedQualityVersions.clear();
-        _cachedTemplateToSeriesIds.clear();
+        _cachedTemplateToMeasures.clear();
     }
 
 }

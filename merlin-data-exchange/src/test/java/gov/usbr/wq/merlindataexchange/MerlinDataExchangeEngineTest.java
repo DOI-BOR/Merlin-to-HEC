@@ -4,8 +4,6 @@ import gov.usbr.wq.dataaccess.http.HttpAccessException;
 import hec.io.impl.StoreOptionImpl;
 import hec.ui.ProgressListener;
 import org.junit.jupiter.api.Test;
-import rma.util.lookup.Lookup;
-import rma.util.lookup.Lookups;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,15 +35,23 @@ final class MerlinDataExchangeEngineTest
         Instant start = Instant.parse("2019-01-01T08:00:00Z");
         Instant end = Instant.parse("2022-08-30T08:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
-        MerlinDataExchangeParameters params = new MerlinDataExchangeParameters(username, password, workingDir, workingDir, start, end, storeOption, "fPart");
-        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngine();
-        assertNotNull(dataExchangeEngine);
-        ProgressListener progressListener = buildMockProgressListener();
-        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract(mocks, params, progressListener).join();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        AuthenticationParameters authParams = new AuthenticationParametersBuilder()
+                .forUrl("https://www.grabdata2.com")
+                .setUsername(username)
+                .andPassword(password)
+                .build();
+        MerlinDataExchangeParameters params = new MerlinDataExchangeParameters(workingDir, workingDir, start, end, storeOption, "fPart", authParams);
+        DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
     }
 
-    @Test
     void testRunExtractCancelled() throws IOException, HttpAccessException, InterruptedException {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
@@ -54,17 +60,26 @@ final class MerlinDataExchangeEngineTest
         Instant start = Instant.parse("2019-01-01T08:00:00Z");
         Instant end = Instant.parse("2022-08-30T08:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
-        MerlinDataExchangeParameters params = new MerlinDataExchangeParameters(username, password, workingDir, workingDir, start, end, storeOption, "fPart");
-        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngine();
-        assertNotNull(dataExchangeEngine);
-        ProgressListener progressListener = buildMockProgressListener();
-        dataExchangeEngine.runExtract(Collections.singletonList(mockXml), params, progressListener);
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        AuthenticationParameters authParams = new AuthenticationParametersBuilder()
+                .forUrl("https://www.grabdata2.com")
+                .setUsername(username)
+                .andPassword(password)
+                .build();
+        MerlinDataExchangeParameters params = new MerlinDataExchangeParameters(workingDir, workingDir, start, end, storeOption, "fPart", authParams);
+        DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
+                .withConfigurationFiles(Collections.singletonList(mockXml))
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        dataExchangeEngine.runExtract();
         Thread.sleep(500);
         dataExchangeEngine.cancelExtract();
         Thread.sleep(20000);
     }
 
-    private ProgressListener buildMockProgressListener()
+    private ProgressListener buildLoggingProgressListener()
     {
         return new ProgressListener()
         {

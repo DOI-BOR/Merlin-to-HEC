@@ -12,12 +12,16 @@ import gov.usbr.wq.dataaccess.model.QualityVersionWrapper;
 import gov.usbr.wq.merlindataexchange.DataExchangeCache;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeDaoCompletionTracker;
+import gov.usbr.wq.merlindataexchange.UsernamePasswordHolder;
+import gov.usbr.wq.merlindataexchange.UsernamePasswordNotFoundException;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
+import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import gov.usbr.wq.merlintohec.exceptions.MerlinInvalidTimestepException;
 import gov.usbr.wq.merlintohec.model.MerlinDaoConversionUtil;
 import hec.io.TimeSeriesContainer;
 import hec.ui.ProgressListener;
 import hec.ui.ProgressListener.MessageType;
+import rma.services.annotations.ServiceProvider;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -29,17 +33,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@ServiceProvider(service = DataExchangeReader.class, position = 100, path = DataExchangeReader.LOOKUP_PATH
+        + "/" + MerlinDataExchangeReader.MERLIN)
 public final class MerlinDataExchangeReader implements DataExchangeReader
 {
 
+    public static final String MERLIN = "merlin";
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeReader.class.getName());
-    private final String _sourcePath;
+    private String _merlinApiRoot;
     private TokenContainer _token;
-
-    public MerlinDataExchangeReader(String sourcePath)
-    {
-        _sourcePath = sourcePath;
-    }
 
     @Override
     public CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet dataExchangeSet, MerlinDataExchangeParameters runtimeParameters, DataExchangeCache cache, String seriesPath,
@@ -70,17 +72,13 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
             TimeSeriesContainer retVal = null;
             try
             {
-                _token = generateNewTokenIfNecessary(new ApiConnectionInfo(_sourcePath), runtimeParameters.getUsername(), runtimeParameters.getPassword());
-                DataWrapper data = retrieveDataWithUpdatedTimeWindow(start, end, seriesPath, qualityVersionId,
-                        completionTracker, progressListener, logFileLogger, isCancelled);
-                if(!isCancelled.get())
-                {
-                    retVal = convertToTsc(data, unitSystemToConvertTo, fPartOverride, progressListener, logFileLogger);
-                }
+                UsernamePasswordHolder usernamePassword = runtimeParameters.getUsernamePasswordForUrl(_merlinApiRoot);
+                retVal = retrieveDataAsTimeSeries(usernamePassword, start, end, seriesPath, qualityVersionId, completionTracker, progressListener, logFileLogger,
+                        isCancelled, fPartOverride, unitSystemToConvertTo);
             }
-            catch (HttpAccessException e)
+            catch (UsernamePasswordNotFoundException e)
             {
-                String errorMsg = "Failed to authenticate user: " + runtimeParameters.getUsername();
+                String errorMsg = "Failed to find username/password in parameters for URL: " + _merlinApiRoot;
                 progressListener.progress(errorMsg, MessageType.ERROR);
                 LOGGER.log(Level.CONFIG, e, () -> errorMsg);
                 logFileLogger.log(Level.SEVERE, e, () -> errorMsg);
@@ -88,6 +86,31 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
             return retVal;
 
         }, executorService);
+    }
+
+    private TimeSeriesContainer retrieveDataAsTimeSeries(UsernamePasswordHolder usernamePassword, Instant start, Instant end, String seriesPath, Integer qualityVersionId,
+                                                         MerlinExchangeDaoCompletionTracker completionTracker, ProgressListener progressListener, Logger logFileLogger,
+                                                         AtomicBoolean isCancelled, String fPartOverride, String unitSystemToConvertTo)
+    {
+        TimeSeriesContainer retVal = null;
+        try
+        {
+            _token = generateNewTokenIfNecessary(new ApiConnectionInfo(_merlinApiRoot), usernamePassword.getUsername(), usernamePassword.getPassword());
+            DataWrapper data = retrieveData(start, end, seriesPath, qualityVersionId,
+                    completionTracker, progressListener, logFileLogger, isCancelled);
+            if(!isCancelled.get())
+            {
+                retVal = convertToTsc(data, unitSystemToConvertTo, fPartOverride, progressListener, logFileLogger);
+            }
+        }
+        catch (HttpAccessException e)
+        {
+            String errorMsg = "Failed to authenticate user: " + usernamePassword.getUsername();
+            progressListener.progress(errorMsg, MessageType.ERROR);
+            LOGGER.log(Level.CONFIG, e, () -> errorMsg);
+            logFileLogger.log(Level.SEVERE, e, () -> errorMsg);
+        }
+        return retVal;
     }
 
     private TimeSeriesContainer convertToTsc(DataWrapper data, String unitSystemToConvertTo, String fPartOverride, ProgressListener progressListener, Logger logFileLogger)
@@ -116,6 +139,12 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
     }
 
     @Override
+    public void initialize(DataStore dataStore, MerlinDataExchangeParameters parameters)
+    {
+        _merlinApiRoot = dataStore.getPath();
+    }
+
+    @Override
     public void close()
     {
         //Nothing to close from our end, reading from merlin web service
@@ -124,12 +153,12 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
     @Override
     public String getSourcePath()
     {
-        return _sourcePath;
+        return _merlinApiRoot;
     }
 
-    private DataWrapper retrieveDataWithUpdatedTimeWindow(Instant start, Instant end, String seriesPath, Integer qualityVersionId,
-                                                          MerlinExchangeDaoCompletionTracker completionTracker,
-                                                          ProgressListener progressListener, Logger logFileLogger, AtomicBoolean isCancelled)
+    private DataWrapper retrieveData(Instant start, Instant end, String seriesPath, Integer qualityVersionId,
+                                     MerlinExchangeDaoCompletionTracker completionTracker,
+                                     ProgressListener progressListener, Logger logFileLogger, AtomicBoolean isCancelled)
     {
         MerlinTimeSeriesDataAccess access = new MerlinTimeSeriesDataAccess();
         DataWrapper retVal = null;
@@ -138,7 +167,7 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
             try
             {
                 MeasureWrapper measure = new MeasureWrapperBuilder().withSeriesString(seriesPath).build();
-                retVal = access.getEventsBySeries(new ApiConnectionInfo(_sourcePath), _token, measure, qualityVersionId, start, end);
+                retVal = access.getEventsBySeries(new ApiConnectionInfo(_merlinApiRoot), _token, measure, qualityVersionId, start, end);
                 String progressMsg = "Successfully retrieved data for " + measure.getSeriesString() + " with " + retVal.getEvents().size() + " events!";
                 int percentComplete = completionTracker.readTaskCompleted();
                 logFileLogger.info(() -> progressMsg);
