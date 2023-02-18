@@ -1,7 +1,7 @@
 package gov.usbr.wq.merlindataexchange.io;
 
 import gov.usbr.wq.merlindataexchange.DataExchangeCache;
-import gov.usbr.wq.merlindataexchange.MerlinDataExchangeParameters;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeDaoCompletionTracker;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import hec.ui.ProgressListener;
@@ -18,7 +18,7 @@ public final class DataExchangeIO
         throw new AssertionError("Utility class for reading and writing data. Don't instantiate");
     }
 
-    public static CompletableFuture<Void> exchangeData(DataExchangeReader reader, DataExchangeWriter writer, DataExchangeSet dataExchangeSet, MerlinDataExchangeParameters runtimeParameters,
+    public static CompletableFuture<Void> exchangeData(DataExchangeReader reader, DataExchangeWriter writer, DataExchangeSet dataExchangeSet, MerlinParameters runtimeParameters,
                                                 DataExchangeCache cache, String seriesPath, MerlinExchangeDaoCompletionTracker completionTracker, ProgressListener progressListener,
                                                 AtomicBoolean isCancelled, Logger logger, ExecutorService executorService)
     {

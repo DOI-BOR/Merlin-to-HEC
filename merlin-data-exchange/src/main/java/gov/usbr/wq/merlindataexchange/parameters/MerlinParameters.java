@@ -1,12 +1,12 @@
-package gov.usbr.wq.merlindataexchange;
+package gov.usbr.wq.merlindataexchange.parameters;
 
 import hec.io.StoreOption;
 
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.List;
 
-public final class MerlinDataExchangeParameters
+public final class MerlinParameters
 {
     private final Instant _start;
     private final Instant _end;
@@ -14,10 +14,10 @@ public final class MerlinDataExchangeParameters
     private final String _fPartOverride;
     private final Path _watershedDirectory;
     private final Path _logFileDirectory;
-    private final AuthenticationParameters[] _authenticationParameters;
+    private final List<AuthenticationParameters> _authenticationParameters;
 
-    public MerlinDataExchangeParameters(Path watershedDirectory, Path logFileDirectory, Instant start, Instant end,
-                                        StoreOption storeOption, String fPartOverride, AuthenticationParameters... authenticationParameters)
+    MerlinParameters(Path watershedDirectory, Path logFileDirectory, Instant start, Instant end,
+                            StoreOption storeOption, String fPartOverride, List<AuthenticationParameters> authenticationParameters)
     {
         _authenticationParameters = authenticationParameters;
         _watershedDirectory = watershedDirectory;
@@ -60,7 +60,7 @@ public final class MerlinDataExchangeParameters
 
     public UsernamePasswordHolder getUsernamePasswordForUrl(String url) throws UsernamePasswordNotFoundException
     {
-        return Arrays.stream(_authenticationParameters)
+        return _authenticationParameters.stream()
                 .filter(authParam -> authParam.getUrl().equalsIgnoreCase(url))
                 .findFirst()
                 .orElseThrow(() -> new UsernamePasswordNotFoundException(url))

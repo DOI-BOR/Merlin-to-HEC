@@ -1,8 +1,8 @@
-package gov.usbr.wq.merlindataexchange;
+package gov.usbr.wq.merlindataexchange.parameters;
 
 public final class UsernamePasswordNotFoundException extends Exception
 {
-    UsernamePasswordNotFoundException(String url)
+    public UsernamePasswordNotFoundException(String url)
     {
         super("Failed to find username/password associated with url: " + url + ". Please verify parameters are correct");
     }

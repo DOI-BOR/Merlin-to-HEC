@@ -1,6 +1,9 @@
 package gov.usbr.wq.merlindataexchange;
 
 import gov.usbr.wq.dataaccess.http.HttpAccessException;
+import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParametersBuilder;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParametersBuilder;
 import hec.io.impl.StoreOptionImpl;
 import hec.ui.ProgressListener;
 import org.junit.jupiter.api.Test;
@@ -17,7 +20,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 final class MerlinDataExchangeEngineTest
 {
@@ -37,12 +39,19 @@ final class MerlinDataExchangeEngineTest
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
-        AuthenticationParameters authParams = new AuthenticationParametersBuilder()
-                .forUrl("https://www.grabdata2.com")
-                .setUsername(username)
-                .andPassword(password)
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(workingDir)
+                .withLogFileDirectory(workingDir)
+                .withStart(start)
+                .withEnd(end)
+                .withStoreOption(storeOption)
+                .withFPartOverride("fPart")
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
                 .build();
-        MerlinDataExchangeParameters params = new MerlinDataExchangeParameters(workingDir, workingDir, start, end, storeOption, "fPart", authParams);
         DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
                 .withConfigurationFiles(mocks)
                 .withParameters(params)
@@ -62,12 +71,19 @@ final class MerlinDataExchangeEngineTest
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
-        AuthenticationParameters authParams = new AuthenticationParametersBuilder()
-                .forUrl("https://www.grabdata2.com")
-                .setUsername(username)
-                .andPassword(password)
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(workingDir)
+                .withLogFileDirectory(workingDir)
+                .withStart(start)
+                .withEnd(end)
+                .withStoreOption(storeOption)
+                .withFPartOverride("fPart")
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
                 .build();
-        MerlinDataExchangeParameters params = new MerlinDataExchangeParameters(workingDir, workingDir, start, end, storeOption, "fPart", authParams);
         DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
                 .withConfigurationFiles(Collections.singletonList(mockXml))
                 .withParameters(params)

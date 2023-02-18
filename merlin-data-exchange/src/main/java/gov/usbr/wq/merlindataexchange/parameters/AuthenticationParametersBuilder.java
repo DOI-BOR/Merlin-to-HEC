@@ -1,4 +1,4 @@
-package gov.usbr.wq.merlindataexchange;
+package gov.usbr.wq.merlindataexchange.parameters;
 
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentAuthenticationBuild;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentAuthenticationPassword;

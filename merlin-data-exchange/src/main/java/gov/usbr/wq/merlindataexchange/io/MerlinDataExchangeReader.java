@@ -10,10 +10,10 @@ import gov.usbr.wq.dataaccess.model.MeasureWrapper;
 import gov.usbr.wq.dataaccess.model.MeasureWrapperBuilder;
 import gov.usbr.wq.dataaccess.model.QualityVersionWrapper;
 import gov.usbr.wq.merlindataexchange.DataExchangeCache;
-import gov.usbr.wq.merlindataexchange.MerlinDataExchangeParameters;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeDaoCompletionTracker;
-import gov.usbr.wq.merlindataexchange.UsernamePasswordHolder;
-import gov.usbr.wq.merlindataexchange.UsernamePasswordNotFoundException;
+import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordHolder;
+import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordNotFoundException;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import gov.usbr.wq.merlintohec.exceptions.MerlinInvalidTimestepException;
@@ -44,7 +44,7 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
     private TokenContainer _token;
 
     @Override
-    public CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet dataExchangeSet, MerlinDataExchangeParameters runtimeParameters, DataExchangeCache cache, String seriesPath,
+    public CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet dataExchangeSet, MerlinParameters runtimeParameters, DataExchangeCache cache, String seriesPath,
                                                            MerlinExchangeDaoCompletionTracker completionTracker, ProgressListener progressListener, AtomicBoolean isCancelled,
                                                            Logger logFileLogger, ExecutorService executorService)
     {
@@ -139,7 +139,7 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
     }
 
     @Override
-    public void initialize(DataStore dataStore, MerlinDataExchangeParameters parameters)
+    public void initialize(DataStore dataStore, MerlinParameters parameters)
     {
         _merlinApiRoot = dataStore.getPath();
     }

@@ -19,6 +19,9 @@ import gov.usbr.wq.merlindataexchange.io.DataExchangeReaderFactory;
 import gov.usbr.wq.merlindataexchange.io.DataExchangeWriter;
 import gov.usbr.wq.merlindataexchange.io.DataExchangeWriterFactory;
 import gov.usbr.wq.merlindataexchange.io.MerlinDataExchangeReader;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
+import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordHolder;
+import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordNotFoundException;
 import hec.ui.ProgressListener;
 import hec.ui.ProgressListener.MessageType;
 
@@ -61,12 +64,12 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     private final MerlinTimeSeriesDataAccess _merlinDataAccess = new MerlinTimeSeriesDataAccess();
     private final AtomicBoolean _isCancelled = new AtomicBoolean(false);
     private final List<Path> _configurationFiles;
-    private final MerlinDataExchangeParameters _runtimeParameters;
+    private final MerlinParameters _runtimeParameters;
     private final ProgressListener _progressListener;
     private MerlinExchangeDaoCompletionTracker _completionTracker;
     private final Map<String, Handler> _fileHandlers = new HashMap<>();
 
-    MerlinDataExchangeEngine(List<Path> configurationFiles, MerlinDataExchangeParameters runtimeParameters, ProgressListener progressListener)
+    MerlinDataExchangeEngine(List<Path> configurationFiles, MerlinParameters runtimeParameters, ProgressListener progressListener)
     {
         _configurationFiles = configurationFiles;
         _runtimeParameters = runtimeParameters;

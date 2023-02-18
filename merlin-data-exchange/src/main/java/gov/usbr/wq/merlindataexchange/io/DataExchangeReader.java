@@ -1,7 +1,7 @@
 package gov.usbr.wq.merlindataexchange.io;
 
 import gov.usbr.wq.merlindataexchange.DataExchangeCache;
-import gov.usbr.wq.merlindataexchange.MerlinDataExchangeParameters;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeDaoCompletionTracker;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import hec.io.TimeSeriesContainer;
@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 public interface DataExchangeReader extends DataExchanger
 {
     String LOOKUP_PATH = "dataexchange/reader";
-    CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet configuration, MerlinDataExchangeParameters runtimeParameters, DataExchangeCache cache, String seriesPath,
+    CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet configuration, MerlinParameters runtimeParameters, DataExchangeCache cache, String seriesPath,
                                                     MerlinExchangeDaoCompletionTracker completionTracker,
                                                     ProgressListener progressListener, AtomicBoolean isCancelled, Logger logger, ExecutorService executorService);
 

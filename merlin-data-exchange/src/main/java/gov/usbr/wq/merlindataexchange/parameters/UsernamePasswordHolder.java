@@ -1,4 +1,4 @@
-package gov.usbr.wq.merlindataexchange;
+package gov.usbr.wq.merlindataexchange.parameters;
 
 public final class UsernamePasswordHolder
 {

@@ -4,6 +4,7 @@ import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentBuilder;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentBuilderDataExchangeConfigurationFiles;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentBuilderDataExchangeParameters;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentBuilderProgressListener;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import hec.ui.ProgressListener;
 
 import java.nio.file.Path;
@@ -13,7 +14,7 @@ import java.util.List;
 public final class MerlinExchangeEngineBuilder implements FluentBuilderDataExchangeConfigurationFiles
 {
     private List<Path> _configurationFiles = new ArrayList<>();
-    private MerlinDataExchangeParameters _runtimeParameters;
+    private MerlinParameters _runtimeParameters;
     private ProgressListener _progressListener;
 
     @Override
@@ -27,7 +28,7 @@ public final class MerlinExchangeEngineBuilder implements FluentBuilderDataExcha
     {
 
         @Override
-        public FluentBuilderProgressListener withParameters(MerlinDataExchangeParameters runtimeParameters)
+        public FluentBuilderProgressListener withParameters(MerlinParameters runtimeParameters)
         {
             _runtimeParameters = runtimeParameters;
             return new FluentMerlinDataExchangeProgressListener();

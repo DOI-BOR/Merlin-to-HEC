@@ -2,7 +2,7 @@ package gov.usbr.wq.merlindataexchange.io;
 
 import com.rma.io.DssFileManager;
 import com.rma.io.DssFileManagerImpl;
-import gov.usbr.wq.merlindataexchange.MerlinDataExchangeParameters;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeDaoCompletionTracker;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import hec.io.StoreOption;
@@ -25,7 +25,7 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
     private Path _dssWritePath;
 
     @Override
-    public synchronized void writeData(TimeSeriesContainer timeSeriesContainer, String seriesPath, MerlinDataExchangeParameters runtimeParameters,
+    public synchronized void writeData(TimeSeriesContainer timeSeriesContainer, String seriesPath, MerlinParameters runtimeParameters,
                                        MerlinExchangeDaoCompletionTracker completionTracker, ProgressListener progressListener, Logger logFileLogger, AtomicBoolean isCancelled)
     {
         StoreOption storeOption = runtimeParameters.getStoreOption();
@@ -55,7 +55,7 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
     }
 
     @Override
-    public void initialize(DataStore dataStore, MerlinDataExchangeParameters parameters)
+    public void initialize(DataStore dataStore, MerlinParameters parameters)
     {
         _dssFileManager = DssFileManagerImpl.getDssFileManager();
         _dssWritePath = buildAbsoluteDssWritePath(dataStore.getPath(), parameters.getWatershedDirectory());

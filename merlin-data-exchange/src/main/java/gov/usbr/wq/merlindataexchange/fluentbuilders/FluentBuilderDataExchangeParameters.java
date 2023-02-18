@@ -1,8 +1,8 @@
 package gov.usbr.wq.merlindataexchange.fluentbuilders;
 
-import gov.usbr.wq.merlindataexchange.MerlinDataExchangeParameters;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 
 public interface FluentBuilderDataExchangeParameters
 {
-    FluentBuilderProgressListener withParameters(MerlinDataExchangeParameters parameters);
+    FluentBuilderProgressListener withParameters(MerlinParameters parameters);
 }
