@@ -19,11 +19,11 @@ public final class ResourceAccess
 
     private static void validateSetup()
     {
-        URL userConfigUrl = ResourceAccess.class.getClassLoader().getResource("gov/usbr/wq/merlintohec/user.config");
+        URL userConfigUrl = ResourceAccess.class.getClassLoader().getResource("gov/usbr/wq/merlindataexchange/user.config");
         List<String> errors = new ArrayList<>();
         if (userConfigUrl == null)
         {
-            errors.add("user.config file is missing from local file system.  Expected this at src/test/resources/gov/usbr/wq/merlintohec/user.config- see readme in the same folder for details.");
+            errors.add("user.config file is missing from local file system.  Expected this at src/test/resources/gov/usbr/wq/merlindataexchange/user.config- see readme in the same folder for details.");
         }
         else
         {

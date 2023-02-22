@@ -1,12 +1,14 @@
-package gov.usbr.wq.merlindataexchange;
+package gov.usbr.wq.merlindataexchange.configuration;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import hec.heclib.util.Unit;
 
-final class DataExchangeSet
+public final class DataExchangeSet
 {
     @JacksonXmlProperty(isAttribute = true, localName = "id")
     private String _id;
+    @JacksonXmlProperty(isAttribute = true, localName = "source-id")
+    private String _sourceId;
     @JacksonXmlProperty(isAttribute = true, localName = "template-id")
     private int _templateId;
     @JacksonXmlProperty(isAttribute = true, localName = "template-name")
@@ -25,92 +27,102 @@ final class DataExchangeSet
     private DataStoreRef _dataStoreRefB;
 
 
-    String getId()
+    public  String getId()
     {
         return _id;
     }
 
-    void setId(String id)
+    public void setId(String id)
     {
         _id = id;
     }
 
-    int getTemplateId()
+    public String getSourceId()
+    {
+        return _sourceId;
+    }
+
+    public void setSourceId(String sourceId)
+    {
+        _sourceId = sourceId;
+    }
+
+    public int getTemplateId()
     {
         return _templateId;
     }
 
-    void setTemplateId(int templateId)
+    public void setTemplateId(int templateId)
     {
         _templateId = templateId;
     }
 
-    Integer getQualityVersionId()
+    public Integer getQualityVersionId()
     {
         return _qualityVersionId;
     }
 
-    void setQualityVersionId(Integer qualityVersionId)
+    public void setQualityVersionId(Integer qualityVersionId)
     {
         _qualityVersionId = qualityVersionId;
     }
 
-    String getUnitSystem()
+    public String getUnitSystem()
     {
         return _unitSystem;
     }
 
-    void setUnitSystem(String unitSystem)
+    public void setUnitSystem(String unitSystem)
     {
         _unitSystem = unitSystem;
     }
 
-    DataStoreRef getDataStoreRefA()
+    public DataStoreRef getDataStoreRefA()
     {
         return _dataStoreRefA;
     }
 
-    void setDataStoreRefA(DataStoreRef dataStoreRefA)
+    public void setDataStoreRefA(DataStoreRef dataStoreRefA)
     {
         _dataStoreRefA = dataStoreRefA;
     }
 
-    DataStoreRef getDataStoreRefB()
+    public DataStoreRef getDataStoreRefB()
     {
         return _dataStoreRefB;
     }
 
-    void setDataStoreRefB(DataStoreRef dataStoreRefB)
+    public void setDataStoreRefB(DataStoreRef dataStoreRefB)
     {
         _dataStoreRefB = dataStoreRefB;
     }
 
-    String getTemplateName()
+    public String getTemplateName()
     {
         return _templateName;
     }
 
-    void setTemplateName(String templateName)
+    public void setTemplateName(String templateName)
     {
         _templateName = templateName;
     }
 
-    String getQualityVersionName()
+    public String getQualityVersionName()
     {
         return _qualityVersionName;
     }
 
-    void setQualityVersionName(String qualityVersionName)
+    public void setQualityVersionName(String qualityVersionName)
     {
         _qualityVersionName = qualityVersionName;
     }
 
-    String getDataType()
+    public String getDataType()
     {
         return _dataType;
     }
 
-    void setDataType(String dataType)
+    public void setDataType(String dataType)
     {
         _dataType = dataType;
     }

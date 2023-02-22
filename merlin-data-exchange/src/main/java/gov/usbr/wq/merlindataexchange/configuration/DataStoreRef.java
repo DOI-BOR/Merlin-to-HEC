@@ -1,18 +1,18 @@
-package gov.usbr.wq.merlindataexchange;
+package gov.usbr.wq.merlindataexchange.configuration;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
-class DataStoreRef
+public class DataStoreRef
 {
     @JacksonXmlProperty(isAttribute = true, localName = "id")
     private String _id;
 
-    String getId()
+    public String getId()
     {
         return _id;
     }
 
-    void setId(String id)
+    public void setId(String id)
     {
         this._id = id;
     }

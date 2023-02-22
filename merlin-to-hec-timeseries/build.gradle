@@ -15,10 +15,16 @@ publishing {
 }
 
 dependencies {
+    api 'mil.army.usace.hec:hec-rma:6.0-20220607.200819-127'
+    implementation "com.google.flogger:flogger:0.5.1"
+    implementation "com.google.code.findbugs:jsr305:3.0.1"
+    implementation "com.google.errorprone:error_prone_annotations:2.3.2"
+    runtimeOnly "com.google.flogger:flogger-system-backend:0.5.1"
+    api 'mil.army.usace.hec:lookup:1.1'
     api 'mil.army.usace.hec:hec-core:6.0-20220607.200756-129!!'
     api 'mil.army.usace.hec:hec-data:6.0-20220607.200804-129!!'
     api 'mil.army.usace.hec:hec-lib:6.0-20220607.200812-129!!'
-    api 'gov.usbr.wq:merlin-web-client:1.0.0'
+    api 'gov.usbr.wq:merlin-web-client:4.0.2'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
 }
 

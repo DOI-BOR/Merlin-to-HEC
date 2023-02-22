@@ -1,8 +1,8 @@
-package gov.usbr.wq.merlindataexchange;
+package gov.usbr.wq.merlindataexchange.configuration;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
-class DataStore
+public class DataStore
 {
     @JacksonXmlProperty(isAttribute = true, localName = "id")
     private String _id;
@@ -12,27 +12,27 @@ class DataStore
     @JacksonXmlProperty(localName = "path")
     private String _path;
 
-    String getId()
+    public String getId()
     {
         return _id;
     }
 
-    void setId(String id)
+    public void setId(String id)
     {
         this._id = id;
     }
 
-    String getDataStoreType()
+    public String getDataStoreType()
     {
         return _dataStoreType;
     }
 
-    void setDataStoreType(String dataStoreType)
+    public void setDataStoreType(String dataStoreType)
     {
         _dataStoreType = dataStoreType;
     }
 
-    String getPath()
+    public String getPath()
     {
         return _path;
     }

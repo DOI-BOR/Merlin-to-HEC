@@ -2,6 +2,7 @@ package gov.usbr.wq.merlindataexchange;
 
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeConfiguration;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
