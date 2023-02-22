@@ -2,6 +2,12 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    testRuntimeClasspath.extendsFrom(runtimeClasspath)
+    windows_x64
+    linux_x64
+}
+
 publishing {
     publications {
         maven(MavenPublication) {
@@ -17,8 +23,22 @@ dependencies {
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3"
     implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
 
+    windows_x64 'mil.army.usace.hec:javaHeclib:7-IQ-0-win-x86_64@zip'
+    linux_x64 'mil.army.usace.hec:javaHeclib:7-IQ-0-linux-x86_64@zip'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 
     annotationProcessor("mil.army.usace.hec:service-annotations:1.2.1")
 }
+
+task extractNatives(type: Copy) { copyTask ->
+    into "$buildDir/libs"
+    from configurations.windows_x64
+    configurations.windows_x64.asFileTree.each {
+        copyTask.from(zipTree(it))
+        copyTask.into "$buildDir/libs"
+    }
+}
+
+build.dependsOn(extractNatives)

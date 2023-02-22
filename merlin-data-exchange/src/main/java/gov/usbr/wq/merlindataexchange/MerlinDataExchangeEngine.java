@@ -28,6 +28,7 @@ import hec.ui.ProgressListener.MessageType;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,6 +62,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     private final MerlinExchangeCompletionTracker _completionTracker = new MerlinExchangeCompletionTracker(PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP);
     private final Map<Path, MerlinDataExchangeLogger> _fileLoggers = new HashMap<>();
     private CompletableFuture<MerlinDataExchangeStatus> _extractFuture;
+    private Instant _extractStart;
 
     MerlinDataExchangeEngine(List<Path> configurationFiles, MerlinParameters runtimeParameters, ProgressListener progressListener)
     {
@@ -105,8 +107,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             {
                 _progressListener.start();
             }
-            Map<Path, DataExchangeConfiguration> parsedConfigurations = parseConfigurations();
-            _extractFuture = beginExtract(parsedConfigurations);
+            _extractFuture = beginExtract();
         }
         return _extractFuture;
     }
@@ -115,51 +116,59 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     public void cancelExtract()
     {
         _isCancelled.set(true);
-        logProgress("Merlin Data Exchanged Cancelled. Finishing gracefully...");
+        String cancelMsg = "Merlin Data Exchanged Cancelled. Finishing gracefully...";
+        MerlinDataExchangeLogBody body = new MerlinDataExchangeLogBody();
+        body.log(cancelMsg);
+        _fileLoggers.values().forEach(fl -> fl.logBody(body));
+        if(_progressListener != null)
+        {
+            _progressListener.progress(cancelMsg);
+        }
     }
 
-    private CompletableFuture<MerlinDataExchangeStatus> beginExtract(Map<Path, DataExchangeConfiguration> parsedConfiguartions)
+    private CompletableFuture<MerlinDataExchangeStatus> beginExtract()
     {
         return CompletableFuture.supplyAsync(() ->
         {
+            _extractStart = Instant.now();
+            String startStr = "NULL";
+            Instant start = _runtimeParameters.getStart();
+            if(start != null)
+            {
+                startStr = start.toString();
+            }
+            String endStr = "NULL";
+            Instant end = _runtimeParameters.getStart();
+            if(end != null)
+            {
+                endStr = end.toString();
+            }
+            String timeWindowMsg = "Time Window: " + startStr + " | " + endStr;
+            String performedOnMsg = "Extract Performed on: " + _extractStart;
+            logProgress(performedOnMsg);
+            logProgress(timeWindowMsg);
+            Map<Path, DataExchangeConfiguration> parsedConfigurations = parseConfigurations();
             MerlinDataExchangeStatus retVal = MerlinDataExchangeStatus.FAILURE;
             try
             {
-                setUpLoggingForConfigs(parsedConfiguartions, _runtimeParameters.getLogFileDirectory());
-                String performedOnMsg = "Extract Performed on: " + Instant.now().toString();
-                String startStr = "NULL";
-                Instant start = _runtimeParameters.getStart();
-                if(start != null)
-                {
-                    startStr = start.toString();
-                }
-                String endStr = "NULL";
-                Instant end = _runtimeParameters.getStart();
-                if(end != null)
-                {
-                    endStr = end.toString();
-                }
-                String timeWindowMsg = "Time Window: " + startStr + " | " + endStr;
+                setUpLoggingForConfigs(parsedConfigurations, _runtimeParameters.getLogFileDirectory());
                 _fileLoggers.values().forEach(logger ->
                 {
                     logger.logToHeader(performedOnMsg);
                     logger.logToHeader(timeWindowMsg);
                 });
-                logProgress(performedOnMsg);
-                logProgress(timeWindowMsg);
                 logProgress("Setting up extract for all configs...");
-                List<ApiConnectionInfo> merlinRoots = getMerlinUrlPaths(parsedConfiguartions.values());
+                List<ApiConnectionInfo> merlinRoots = getMerlinUrlPaths(parsedConfigurations.values());
                 for(ApiConnectionInfo connectionInfo : merlinRoots)
                 {
-                    initializeCacheForMerlinUrl(connectionInfo, parsedConfiguartions);
+                    initializeCacheForMerlinUrl(connectionInfo, parsedConfigurations);
                 }
                 if(!_isCancelled.get())
                 {
                     logProgress("Setup complete!");
                     logProgress("Running Full Extract...");
-                    extractUsingInitializedCache(parsedConfiguartions);
+                    extractUsingInitializedCache(parsedConfigurations);
                 }
-                finish();
                 retVal = _completionTracker.getCompletionStatus();
             }
             catch (UnsupportedTemplateException e)
@@ -179,24 +188,72 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             }
             logCompletion(retVal);
             _fileLoggers.values().forEach(MerlinDataExchangeLogger::writeLog);
+            finish();
             return retVal;
         }, _executorService);
     }
 
     private void logCompletion(MerlinDataExchangeStatus retVal)
     {
-        if(retVal == MerlinDataExchangeStatus.PARTIAL_SUCCESS)
+        Collection<MerlinDataExchangeLogger> fileLoggers = _fileLoggers.values();
+        if(_isCancelled.get())
         {
-            _fileLoggers.values().forEach(logger -> logger.logToFooter("Extract Completed Partially"));
+            fileLoggers.forEach(logger -> logger.logToFooter("Extract Cancelled"));
+            logCompletionProgress("Extract Cancelled");
+        }
+        else if(retVal == MerlinDataExchangeStatus.PARTIAL_SUCCESS)
+        {
+            fileLoggers.forEach(logger -> logger.logToFooter("Extract Completed Partially"));
+            logCompletionProgress("Extract Cancelled");
         }
         else if(retVal == MerlinDataExchangeStatus.COMPLETE_SUCCESS)
         {
-            _fileLoggers.values().forEach(logger -> logger.logToFooter("Extract Completed!"));
+            fileLoggers.forEach(logger -> logger.logToFooter("Extract Completed!"));
+            logCompletionProgress("Extract Cancelled");
         }
         else
         {
-            _fileLoggers.values().forEach(logger -> logger.logToFooter("Extract Failed!"));
+            fileLoggers.forEach(logger -> logger.logToFooter("Extract Failed!"));
+            logCompletionProgress("Extract Cancelled");
         }
+        String formattedDuration = "Total Duration: " + getFormattedDuration();
+        fileLoggers.forEach(logger -> logger.logToFooter(formattedDuration));
+        logCompletionProgress(formattedDuration);
+    }
+
+    private void logCompletionProgress(String completionMessage)
+    {
+        if (_progressListener != null)
+        {
+            _progressListener.progress(completionMessage);
+        }
+    }
+
+    private String getFormattedDuration()
+    {
+        String units = " ms";
+        double duration = Duration.between(_extractStart, Instant.now()).toMillis();
+        if (duration >= 1000)
+        {
+            duration = duration/1000.0;
+            units = " seconds";
+        }
+        if(duration >= 60)
+        {
+            duration = duration/60;
+            units = " minutes";
+        }
+        if(duration >= 60)
+        {
+            duration = duration/60;
+            units = " hours";
+        }
+        if(duration >= 24)
+        {
+            duration = duration/24;
+            units = " days";
+        }
+        return duration + units;
     }
 
     private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions) throws IOException, UnsupportedTemplateException
@@ -287,34 +344,13 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
 
     private void finish()
     {
-        try
+        if(_progressListener != null)
         {
-            if (_isCancelled.get())
-            {
-                logProgress("Merlin Data Exchanged Cancelled successfully");
-            }
-            else
-            {
-                String successMsg = "Extract Complete!";
-                if(_completionTracker.getCompletionStatus() == MerlinDataExchangeStatus.PARTIAL_SUCCESS)
-                {
-                    successMsg = "Extract Completed Partially";
-                }
-                else if (_completionTracker.getCompletionStatus() == MerlinDataExchangeStatus.FAILURE)
-                {
-                    successMsg = "Extract Failed";
-                }
-                logProgress(successMsg);
-            }
-            if(_progressListener != null)
-            {
-                _progressListener.finish();
-            }
+            _progressListener.finish();
         }
-        finally
-        {
-            _dataExchangeCache.clear();
-        }
+        _dataExchangeCache.clear();
+        _fileLoggers.clear();
+        _completionTracker.reset();
     }
 
     private Map<Path, DataExchangeConfiguration> parseConfigurations()
@@ -435,35 +471,45 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
 
     private void logProgress(String message)
     {
-        if(_progressListener != null)
+        if(!_isCancelled.get())
         {
-            _progressListener.progress(message, MessageType.IMPORTANT);
+            if(_progressListener != null)
+            {
+                _progressListener.progress(message, MessageType.IMPORTANT);
+            }
+            LOGGER.fine(() -> message);
         }
-        LOGGER.fine(() -> message);
+
     }
 
     private void logProgress(String message, int progressPercentage)
     {
-        if(_progressListener != null)
+        if(!_isCancelled.get())
         {
-            _progressListener.progress(message, MessageType.IMPORTANT, progressPercentage);
+            if(_progressListener != null)
+            {
+                _progressListener.progress(message, MessageType.IMPORTANT, progressPercentage);
+            }
+            LOGGER.fine(() -> message);
         }
-        LOGGER.fine(() -> message);
     }
 
     private void logError(String message, Throwable error)
     {
-        if(_progressListener != null)
+        if(!_isCancelled.get())
         {
-            _progressListener.progress(message, MessageType.ERROR);
-        }
-        if(error == null)
-        {
-            LOGGER.log(Level.CONFIG, () -> message);
-        }
-        else
-        {
-            LOGGER.log(Level.CONFIG, error, () -> message + ": " + error.getMessage());
+            if(_progressListener != null)
+            {
+                _progressListener.progress(message, MessageType.ERROR);
+            }
+            if(error == null)
+            {
+                LOGGER.log(Level.CONFIG, () -> message);
+            }
+            else
+            {
+                LOGGER.log(Level.CONFIG, error, () -> message + ": " + error.getMessage());
+            }
         }
     }
 

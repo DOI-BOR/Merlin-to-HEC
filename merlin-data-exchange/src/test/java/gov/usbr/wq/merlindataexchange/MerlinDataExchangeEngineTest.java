@@ -1,11 +1,9 @@
 package gov.usbr.wq.merlindataexchange;
 
-import gov.usbr.wq.dataaccess.http.HttpAccessException;
 import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParametersBuilder;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParametersBuilder;
 import hec.io.impl.StoreOptionImpl;
-import hec.ui.ProgressListener;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -20,6 +18,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class MerlinDataExchangeEngineTest
 {
@@ -131,7 +130,9 @@ final class MerlinDataExchangeEngineTest
         assertEquals(MerlinDataExchangeStatus.PARTIAL_SUCCESS, status);
     }
 
-    void testRunExtractCancelled() throws IOException, HttpAccessException, InterruptedException {
+    @Test
+    void testRunExtractCancelled() throws IOException, InterruptedException
+    {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
         Path mockXml = getMockXml("merlin_mock_config_dx.xml");
@@ -154,101 +155,22 @@ final class MerlinDataExchangeEngineTest
                         .andPassword(password)
                         .build())
                 .build();
+        TestLogProgressListener progressListener = buildLoggingProgressListener();
         DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
                 .withConfigurationFiles(Collections.singletonList(mockXml))
                 .withParameters(params)
-                .withProgressListener(buildLoggingProgressListener())
+                .withProgressListener(progressListener)
                 .build();
         dataExchangeEngine.runExtract();
-        Thread.sleep(500);
+        Thread.sleep(2000);
         dataExchangeEngine.cancelExtract();
-        Thread.sleep(20000);
+        Thread.sleep(5000);
+        assertTrue(progressListener.getProgress() < 100);
     }
 
-    private ProgressListener buildLoggingProgressListener()
+    private TestLogProgressListener buildLoggingProgressListener()
     {
-        return new ProgressListener()
-        {
-            @Override
-            public void start()
-            {
-                System.out.println("started");
-            }
-
-            @Override
-            public void start(int i)
-            {
-
-            }
-
-            @Override
-            public void switchToIndeterminate()
-            {
-
-            }
-
-            @Override
-            public void setStayOnTop(boolean b)
-            {
-
-            }
-
-            @Override
-            public void switchToDeterminate(int i)
-            {
-
-            }
-
-            @Override
-            public void finish()
-            {
-                System.out.println("Finished!");
-            }
-
-            @Override
-            public void progress(int i)
-            {
-                System.out.println("Progress: " + i + "%");
-            }
-
-            @Override
-            public void progress(String s)
-            {
-                System.out.println(s);
-            }
-
-            @Override
-            public void progress(String s, MessageType messageType)
-            {
-                if(messageType == MessageType.IMPORTANT)
-                {
-                    System.out.println(s);
-                }
-                if(messageType == MessageType.ERROR)
-                {
-                    System.out.println("ERROR: " + s);
-                }
-            }
-
-            @Override
-            public void progress(String s, int i)
-            {
-
-            }
-
-            @Override
-            public void progress(String s, MessageType messageType, int i)
-            {
-                progress(s, messageType);
-                progress(i);
-            }
-
-            @Override
-            public void incrementProgress(int i)
-            {
-
-            }
-        };
+        return new TestLogProgressListener();
     }
 
     private Path getMockXml(String fileName) throws IOException

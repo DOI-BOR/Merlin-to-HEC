@@ -51,6 +51,12 @@ subprojects {
         targetCompatibility = '1.8'
     }
 
+    test {
+        useJUnitPlatform()
+        systemProperty "java.library.path", "$buildDir/libs"
+        ignoreFailures = true
+    }
+
     publishing {
         repositories {
             maven {

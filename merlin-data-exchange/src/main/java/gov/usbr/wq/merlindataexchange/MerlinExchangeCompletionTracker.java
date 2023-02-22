@@ -55,4 +55,12 @@ public final class MerlinExchangeCompletionTracker
         return retVal;
     }
 
+    public void reset()
+    {
+        _readsCompleted = 0;
+        _numberOfMeasuresToComplete = 0;
+        _writesCompleted = 0;
+        _totalCompleted = 0;
+    }
+
 }
