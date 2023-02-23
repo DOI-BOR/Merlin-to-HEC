@@ -40,6 +40,7 @@ import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -229,29 +230,53 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
 
     private String getFormattedDuration(Instant endTime)
     {
-        String units = " ms";
-        double duration = Duration.between(_extractStart, endTime).toMillis();
-        if (duration >= 1000)
+        long millis = Duration.between(_extractStart, endTime).toMillis();
+        long days = TimeUnit.MILLISECONDS.toDays(millis);
+        millis -= TimeUnit.DAYS.toMillis(days);
+        long hours = TimeUnit.MILLISECONDS.toHours(millis);
+        millis -= TimeUnit.HOURS.toMillis(hours);
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
+        millis -= TimeUnit.MINUTES.toMillis(minutes);
+        double seconds = millis/1000.0;
+
+        StringBuilder sb = new StringBuilder(64);
+        if(days == 1)
         {
-            duration = duration/1000.0;
-            units = " seconds";
+            sb.append(1 + " Day");
         }
-        if(duration >= 60)
+        else if(days > 1)
         {
-            duration = duration/60;
-            units = " minutes";
+            sb.append(days);
+            sb.append(" Days ");
         }
-        if(duration >= 60)
+        if(hours == 1)
         {
-            duration = duration/60;
-            units = " hours";
+            sb.append(1 + " Hour");
         }
-        if(duration >= 24)
+        else if (hours > 1)
         {
-            duration = duration/24;
-            units = " days";
+            sb.append(hours);
+            sb.append(" Hours ");
         }
-        return String.format("%.2f",duration) + units;
+        if(minutes == 1)
+        {
+            sb.append(1 + "Minute");
+        }
+        else if (minutes > 1)
+        {
+            sb.append(minutes);
+            sb.append(" Minutes ");
+        }
+        if(seconds == 1)
+        {
+            sb.append(1 + " Second");
+        }
+        else if (seconds >= 0)
+        {
+            sb.append(String.format("%.2f", seconds));
+            sb.append(" Seconds");
+        }
+        return(sb.toString());
     }
 
     private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions) throws IOException, UnsupportedTemplateException

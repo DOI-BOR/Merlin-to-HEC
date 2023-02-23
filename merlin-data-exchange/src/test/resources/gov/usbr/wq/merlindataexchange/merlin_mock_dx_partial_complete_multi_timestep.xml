@@ -10,11 +10,11 @@
     </datastore>
     <datastore id="wat">
         <datastore-type>dss</datastore-type>
-        <path>$WATERSHED/filename.dss</path>
+        <path>$WATERSHED/merlin_mock_dx_partial_complete_multi_timestep.dss</path>
     </datastore>
     <datastore id="wat2">
         <datastore-type>dss</datastore-type>
-        <path>$WATERSHED/filename2.dss</path>
+        <path>$WATERSHED/wat2.dss</path>
     </datastore>
     <data-exchange-set id="Auburn Dam - Daily" source-id="www.grabdata2.com" template-id="80" template-name = "Auburn Dam - Daily" quality-version-id="0" quality-version-name = "All" unit-system="SI">
         <data-type>time-series</data-type>

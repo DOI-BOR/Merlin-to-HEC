@@ -6,7 +6,7 @@
     </datastore>
     <datastore id="wat">
         <datastore-type>dss</datastore-type>
-        <path>$WATERSHED/filename.dss</path>
+        <path>$WATERSHED/merlin_mock_config_dx2.dss</path>
     </datastore>
     <data-exchange-set id="Shasta Lake - MR Boundary Flow" source-id="www.grabdata2.com" template-id="98" template-name = "Shasta Lake - MR Boundary Flow" quality-version-id="0" quality-version-name = "All" unit-system="SI">
         <data-type>time-series</data-type>
