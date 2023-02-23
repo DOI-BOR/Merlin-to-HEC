@@ -382,10 +382,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     {
         Map<Path, DataExchangeConfiguration> retVal = new TreeMap<>();
         _configurationFiles.forEach(configFilepath -> retVal.put(configFilepath, parseDataExchangeConfiguration(configFilepath)));
-        if(_progressListener != null)
-        {
-            _progressListener.progress(1);
-        }
+        logGeneralProgress("Read configuration files", 1);
         return retVal;
     }
 
@@ -527,13 +524,13 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
 
     }
 
-    private synchronized void logImportantProgress(String message, int progressPercentage)
+    private synchronized void logGeneralProgress(String message, int progressPercentage)
     {
         if(!_isCancelled.get())
         {
             if(_progressListener != null)
             {
-                _progressListener.progress(message, MessageType.IMPORTANT, progressPercentage);
+                _progressListener.progress(message, MessageType.GENERAL, progressPercentage);
             }
             LOGGER.fine(() -> message);
         }
@@ -624,10 +621,10 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             _dataExchangeCache.put(connectionInfo, cache);
             List<TemplateWrapper> templates = _merlinDataAccess.getTemplates(connectionInfo, token);
             cache.cacheTemplates(templates);
-            logImportantProgress("Retrieved " + templates.size() + " templates", (int) (PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP * 0.4));
+            logGeneralProgress("Retrieved " + templates.size() + " templates", (int) (PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP * 0.4));
             List<QualityVersionWrapper> qualityVersions = _merlinDataAccess.getQualityVersions(connectionInfo, token);
             cache.cacheQualityVersions(qualityVersions);
-            logImportantProgress("Retrieved " + qualityVersions.size() + " quality versions", (int) (PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP * 0.6));
+            logGeneralProgress("Retrieved " + qualityVersions.size() + " quality versions", (int) (PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP * 0.6));
             if(!_isCancelled.get())
             {
                 initializeCachedMeasurementsForMerlin(cache, parsedConfigurations, connectionInfo, token);
@@ -667,7 +664,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             }
         }
 
-        logImportantProgress("Retrieved " + cache.getCachedTemplateToMeasures().values().size() + " measure(s) for template(s): "
+        logGeneralProgress("Retrieved " + cache.getCachedTemplateToMeasures().values().size() + " measure(s) for template(s): "
                 + cache.getCachedTemplateToMeasures().keySet().stream()
                 .map(TemplateWrapper::getName)
                 .collect(Collectors.joining(",")), PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP);

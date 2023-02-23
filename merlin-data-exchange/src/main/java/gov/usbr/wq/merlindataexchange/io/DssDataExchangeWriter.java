@@ -46,18 +46,18 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
             int success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
             if(success == 0)
             {
-                String successMsg = "Wrote " + seriesString + " to " + timeSeriesContainer.fullName;
-                percentComplete = completionTracker.writeTaskCompleted();
+                String successMsg = "Write to " + timeSeriesContainer.fullName + " from " + seriesString;
+                int percentCompleteAfterWrite = completionTracker.writeTaskCompleted();
                 if(progressListener != null)
                 {
-                    progressListener.progress(successMsg, ProgressListener.MessageType.GENERAL, percentComplete);
+                    progressListener.progress(successMsg, ProgressListener.MessageType.GENERAL, percentCompleteAfterWrite);
                 }
                 logFileLogger.log(successMsg);
                 LOGGER.config(() -> successMsg);
             }
             else
             {
-                String failMsg = "Failed to write Measure (" +  seriesString + ") to DSS! Error status code: " + success;
+                String failMsg = "Failed to write " +  seriesString + " to DSS! Error status code: " + success;
                 if(progressListener != null)
                 {
                     progressListener.progress(failMsg, ProgressListener.MessageType.ERROR);

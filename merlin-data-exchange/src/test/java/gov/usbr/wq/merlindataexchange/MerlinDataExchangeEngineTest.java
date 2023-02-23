@@ -168,7 +168,7 @@ final class MerlinDataExchangeEngineTest
         assertTrue(progressListener.getProgress() < 100);
     }
 
-    private TestLogProgressListener buildLoggingProgressListener()
+    private TestLogProgressListener buildLoggingProgressListener() throws IOException
     {
         return new TestLogProgressListener();
     }
