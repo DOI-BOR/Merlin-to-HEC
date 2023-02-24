@@ -1,6 +1,6 @@
 package gov.usbr.wq.merlindataexchange;
 
-import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentBuilder;
+import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentEngineBuilder;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentBuilderDataExchangeConfigurationFiles;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentBuilderDataExchangeParameters;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentBuilderProgressListener;
@@ -10,8 +10,9 @@ import hec.ui.ProgressListener;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public final class MerlinExchangeEngineBuilder implements FluentBuilderDataExchangeConfigurationFiles
+public final class MerlinDataExchangeEngineBuilder implements FluentBuilderDataExchangeConfigurationFiles
 {
     private List<Path> _configurationFiles = new ArrayList<>();
     private MerlinParameters _runtimeParameters;
@@ -20,6 +21,10 @@ public final class MerlinExchangeEngineBuilder implements FluentBuilderDataExcha
     @Override
     public FluentBuilderDataExchangeParameters withConfigurationFiles(List<Path> configurationFiles)
     {
+        if(configurationFiles == null || configurationFiles.isEmpty())
+        {
+            throw new IllegalArgumentException("At least 1 configuration file must be specified");
+        }
         _configurationFiles = configurationFiles;
         return new FluentMerlinDataExchangeParameters();
     }
@@ -30,7 +35,7 @@ public final class MerlinExchangeEngineBuilder implements FluentBuilderDataExcha
         @Override
         public FluentBuilderProgressListener withParameters(MerlinParameters runtimeParameters)
         {
-            _runtimeParameters = runtimeParameters;
+            _runtimeParameters = Objects.requireNonNull(runtimeParameters, "Parameters must be specified, not null");
             return new FluentMerlinDataExchangeProgressListener();
         }
     }
@@ -38,14 +43,14 @@ public final class MerlinExchangeEngineBuilder implements FluentBuilderDataExcha
     private class FluentMerlinDataExchangeProgressListener implements FluentBuilderProgressListener
     {
         @Override
-        public FluentBuilder withProgressListener(ProgressListener progressListener)
+        public FluentEngineBuilder withProgressListener(ProgressListener progressListener)
         {
-            _progressListener = progressListener;
+            _progressListener = Objects.requireNonNull(progressListener, "Progress listener must be specified, not null");
             return new FluentMerlinBuilderImpl();
         }
     }
 
-    private class FluentMerlinBuilderImpl implements FluentBuilder
+    private class FluentMerlinBuilderImpl implements FluentEngineBuilder
     {
         @Override
         public DataExchangeEngine build()

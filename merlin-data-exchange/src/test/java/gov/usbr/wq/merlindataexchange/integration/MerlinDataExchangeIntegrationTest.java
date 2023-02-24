@@ -2,7 +2,7 @@ package gov.usbr.wq.merlindataexchange.integration;
 
 import gov.usbr.wq.merlindataexchange.DataExchangeEngine;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeStatus;
-import gov.usbr.wq.merlindataexchange.MerlinExchangeEngineBuilder;
+import gov.usbr.wq.merlindataexchange.MerlinDataExchangeEngineBuilder;
 import gov.usbr.wq.merlindataexchange.ResourceAccess;
 import gov.usbr.wq.merlindataexchange.TestLogProgressListener;
 import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParametersBuilder;
@@ -17,7 +17,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,22 +37,22 @@ final class MerlinDataExchangeIntegrationTest
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
-        MerlinParameters params = new MerlinParametersBuilder()
+        MerlinParameters parameters = new MerlinParametersBuilder()
                 .withWatershedDirectory(testDirectory)
                 .withLogFileDirectory(testDirectory)
-                .withStart(start)
-                .withEnd(end)
-                .withStoreOption(storeOption)
-                .withFPartOverride("fPart")
                 .withAuthenticationParameters(new AuthenticationParametersBuilder()
                         .forUrl("https://www.grabdata2.com")
                         .setUsername(username)
                         .andPassword(password)
                         .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
                 .build();
-        DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
                 .withConfigurationFiles(mocks)
-                .withParameters(params)
+                .withParameters(parameters)
                 .withProgressListener(new TestLogProgressListener())
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();

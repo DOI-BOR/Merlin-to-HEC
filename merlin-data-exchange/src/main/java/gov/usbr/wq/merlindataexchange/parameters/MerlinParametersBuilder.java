@@ -1,73 +1,111 @@
 package gov.usbr.wq.merlindataexchange.parameters;
 
+import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentAuthenticationParameters;
+import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentLogDirectory;
+import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentParametersNonRequiredBuilder;
+import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentStoreOption;
+import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentWatershedDirectory;
 import hec.io.StoreOption;
 
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-public final class MerlinParametersBuilder
+public final class MerlinParametersBuilder implements FluentWatershedDirectory
 {
-    private Instant _start;
-    private Instant _end;
+    private Path _logDirectory;
+    private List<AuthenticationParameters> _authenticationParametersList;
+    private Path _watershedDirectory;
     private StoreOption _storeOption;
     private String _fPartOverride;
-    private Path _watershedDirectory;
-    private Path _logFileDirectory;
-    private List<AuthenticationParameters> _authenticationParameters;
+    private Instant _start;
+    private Instant _end;
 
-    public MerlinParametersBuilder withStart(Instant start)
+    @Override
+    public FluentLogDirectory withWatershedDirectory(Path watershedDirectory)
     {
-        _start = start;
-        return this;
+        _watershedDirectory = Objects.requireNonNull(watershedDirectory, "Watershed directory must be specified, not null");
+        return new MerlinLogDirectory();
     }
 
-    public MerlinParametersBuilder withEnd(Instant end)
+    private class MerlinLogDirectory implements FluentLogDirectory
     {
-        _end = end;
-        return this;
+
+        @Override
+        public FluentAuthenticationParameters withLogFileDirectory(Path logDirectory)
+        {
+            _logDirectory = Objects.requireNonNull(logDirectory, "Log file directory must be specified, not null");
+            return new MerlinAuthenticationParameters();
+        }
     }
 
-    public MerlinParametersBuilder withStoreOption(StoreOption storeOption)
+    private class MerlinAuthenticationParameters implements FluentAuthenticationParameters
     {
-        _storeOption = storeOption;
-        return this;
+
+        @Override
+        public FluentStoreOption withAuthenticationParameters(AuthenticationParameters authenticationParameters)
+        {
+            if(authenticationParameters == null)
+            {
+                throw new IllegalArgumentException("AuthenticationParameters must be specified, not null");
+            }
+            _authenticationParametersList = Collections.singletonList(authenticationParameters);
+            return new MerlinStoreOption();
+        }
+
+        @Override
+        public FluentStoreOption withAuthenticationParametersList(List<AuthenticationParameters> authenticationParametersList)
+        {
+            if(authenticationParametersList == null || authenticationParametersList.isEmpty())
+            {
+                throw new IllegalArgumentException("AuthenticationParameters must be specified, not null");
+            }
+            _authenticationParametersList = authenticationParametersList;
+            return new MerlinStoreOption();
+        }
     }
 
-    public MerlinParametersBuilder withFPartOverride(String fPartOverride)
+    private class MerlinStoreOption implements FluentStoreOption
     {
-        _fPartOverride = fPartOverride;
-        return this;
+
+        @Override
+        public FluentParametersNonRequiredBuilder withStoreOption(StoreOption storeOption)
+        {
+            _storeOption = Objects.requireNonNull(storeOption, "Store option must be specified, not null");
+            return new MerlinParametersNonRequiredBuilder();
+        }
     }
 
-    public MerlinParametersBuilder withWatershedDirectory(Path watershedDirectory)
+    private class MerlinParametersNonRequiredBuilder implements FluentParametersNonRequiredBuilder
     {
-        _watershedDirectory = watershedDirectory;
-        return this;
-    }
 
-    public MerlinParametersBuilder withLogFileDirectory(Path logFileDirectory)
-    {
-        _logFileDirectory = logFileDirectory;
-        return this;
-    }
+        @Override
+        public FluentParametersNonRequiredBuilder withFPartOverride(String fPartOverride)
+        {
+            _fPartOverride = fPartOverride;
+            return this;
+        }
 
-    public MerlinParametersBuilder withAuthenticationParametersList(List<AuthenticationParameters> authenticationParameters)
-    {
-        _authenticationParameters = authenticationParameters;
-        return this;
-    }
+        @Override
+        public FluentParametersNonRequiredBuilder withStart(Instant start)
+        {
+            _start = start;
+            return this;
+        }
 
-    public MerlinParametersBuilder withAuthenticationParameters(AuthenticationParameters authenticationParameters)
-    {
-        _authenticationParameters = Collections.singletonList(authenticationParameters);
-        return this;
-    }
+        @Override
+        public FluentParametersNonRequiredBuilder withEnd(Instant end)
+        {
+            _end = end;
+            return this;
+        }
 
-    public MerlinParameters build()
-    {
-        // create and return a new MerlinParameters object with the builder's current state
-        return new MerlinParameters(_watershedDirectory, _logFileDirectory, _start, _end, _storeOption, _fPartOverride, _authenticationParameters);
+        @Override
+        public MerlinParameters build()
+        {
+            return new MerlinParameters(_watershedDirectory, _logDirectory, _start, _end, _storeOption, _fPartOverride, _authenticationParametersList);
+        }
     }
 }

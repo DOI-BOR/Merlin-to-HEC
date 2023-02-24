@@ -12,18 +12,16 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 final class MerlinDataExchangeEngineTest
 {
-
-    private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeEngineTest.class.getName());
     @Test
     void testRunExtract() throws IOException
     {
@@ -41,17 +39,17 @@ final class MerlinDataExchangeEngineTest
         MerlinParameters params = new MerlinParametersBuilder()
                 .withWatershedDirectory(testDirectory)
                 .withLogFileDirectory(testDirectory)
-                .withStart(start)
-                .withEnd(end)
-                .withStoreOption(storeOption)
-                .withFPartOverride("fPart")
                 .withAuthenticationParameters(new AuthenticationParametersBuilder()
                         .forUrl("https://www.grabdata2.com")
                         .setUsername(username)
                         .andPassword(password)
                         .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
                 .build();
-        DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
                 .withConfigurationFiles(mocks)
                 .withParameters(params)
                 .withProgressListener(buildLoggingProgressListener())
@@ -76,17 +74,17 @@ final class MerlinDataExchangeEngineTest
         MerlinParameters params = new MerlinParametersBuilder()
                 .withWatershedDirectory(testDirectory)
                 .withLogFileDirectory(testDirectory)
-                .withStart(start)
-                .withEnd(end)
-                .withStoreOption(storeOption)
-                .withFPartOverride("fPart")
                 .withAuthenticationParameters(new AuthenticationParametersBuilder()
                         .forUrl("https://www.grabdata2.com")
                         .setUsername(username)
                         .andPassword(password)
                         .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
                 .build();
-        DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
                 .withConfigurationFiles(mocks)
                 .withParameters(params)
                 .withProgressListener(buildLoggingProgressListener())
@@ -111,17 +109,17 @@ final class MerlinDataExchangeEngineTest
         MerlinParameters params = new MerlinParametersBuilder()
                 .withWatershedDirectory(testDirectory)
                 .withLogFileDirectory(testDirectory)
-                .withStart(start)
-                .withEnd(end)
-                .withStoreOption(storeOption)
-                .withFPartOverride("fPart")
                 .withAuthenticationParameters(new AuthenticationParametersBuilder()
                         .forUrl("https://www.grabdata2.com")
                         .setUsername(username)
                         .andPassword(password)
                         .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
                 .build();
-        DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
                 .withConfigurationFiles(mocks)
                 .withParameters(params)
                 .withProgressListener(buildLoggingProgressListener())
@@ -145,18 +143,18 @@ final class MerlinDataExchangeEngineTest
         MerlinParameters params = new MerlinParametersBuilder()
                 .withWatershedDirectory(testDirectory)
                 .withLogFileDirectory(testDirectory)
-                .withStart(start)
-                .withEnd(end)
-                .withStoreOption(storeOption)
-                .withFPartOverride("fPart")
                 .withAuthenticationParameters(new AuthenticationParametersBuilder()
                         .forUrl("https://www.grabdata2.com")
                         .setUsername(username)
                         .andPassword(password)
                         .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
                 .build();
         TestLogProgressListener progressListener = buildLoggingProgressListener();
-        DataExchangeEngine dataExchangeEngine = new MerlinExchangeEngineBuilder()
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
                 .withConfigurationFiles(Collections.singletonList(mockXml))
                 .withParameters(params)
                 .withProgressListener(progressListener)
@@ -167,6 +165,54 @@ final class MerlinDataExchangeEngineTest
         Thread.sleep(5000);
         assertTrue(progressListener.getProgress() < 100);
     }
+
+    @Test
+    void testNulls() throws IOException {
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        Path mockXml = getMockXml("merlin_mock_config_dx.xml");
+        Path testDirectory = getTestDirectory();
+        Instant start = Instant.parse("2019-01-01T08:00:00Z");
+        Instant end = Instant.parse("2022-08-30T08:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        TestLogProgressListener progressListener = buildLoggingProgressListener();
+        assertThrows(IllegalArgumentException.class, () -> new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(null)
+                .withParameters(params)
+                .withProgressListener(progressListener)
+                .build());
+        assertThrows(IllegalArgumentException.class, () -> new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(new ArrayList<>())
+                .withParameters(params)
+                .withProgressListener(progressListener)
+                .build());
+        assertThrows(NullPointerException.class, () -> new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(Collections.singletonList(mockXml))
+                .withParameters(null)
+                .withProgressListener(progressListener)
+                .build());
+        assertThrows(NullPointerException.class, () -> new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(Collections.singletonList(mockXml))
+                .withParameters(params)
+                .withProgressListener(null)
+                .build());
+    }
+
 
     private TestLogProgressListener buildLoggingProgressListener() throws IOException
     {

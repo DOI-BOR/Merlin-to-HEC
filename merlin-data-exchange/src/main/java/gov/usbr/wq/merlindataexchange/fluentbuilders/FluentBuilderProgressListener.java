@@ -4,5 +4,5 @@ import hec.ui.ProgressListener;
 
 public interface FluentBuilderProgressListener
 {
-    FluentBuilder withProgressListener(ProgressListener progressListener);
+    FluentEngineBuilder withProgressListener(ProgressListener progressListener);
 }

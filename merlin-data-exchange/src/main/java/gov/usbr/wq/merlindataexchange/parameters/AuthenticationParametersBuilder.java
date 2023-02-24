@@ -1,9 +1,11 @@
 package gov.usbr.wq.merlindataexchange.parameters;
 
-import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentAuthenticationBuild;
+import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentAuthenticationBuilder;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentAuthenticationPassword;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentAuthenticationUrl;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.FluentAuthenticationUsername;
+
+import java.util.Objects;
 
 public final class AuthenticationParametersBuilder implements FluentAuthenticationUrl
 {
@@ -16,7 +18,7 @@ public final class AuthenticationParametersBuilder implements FluentAuthenticati
     @Override
     public FluentAuthenticationUsername forUrl(String url)
     {
-        _url = url;
+        _url = Objects.requireNonNull(url, "URL must be specified, not null");
         return new FluentAuthenticationUsernameImpl();
     }
 
@@ -26,7 +28,7 @@ public final class AuthenticationParametersBuilder implements FluentAuthenticati
         @Override
         public FluentAuthenticationPassword setUsername(String username)
         {
-            _username = username;
+            _username = Objects.requireNonNull(username, "Username must be specified, not null");
             return new FluentAuthenticationPasswordImpl();
         }
     }
@@ -35,14 +37,14 @@ public final class AuthenticationParametersBuilder implements FluentAuthenticati
     {
 
         @Override
-        public FluentAuthenticationBuild andPassword(char[] password)
+        public FluentAuthenticationBuilder andPassword(char[] password)
         {
-            _password = password;
+            _password = Objects.requireNonNull(password, "Password must be specified, not null");
             return new FluentAuthenticationBuildImpl();
         }
     }
 
-    private class FluentAuthenticationBuildImpl implements FluentAuthenticationBuild
+    private class FluentAuthenticationBuildImpl implements FluentAuthenticationBuilder
     {
 
         @Override
