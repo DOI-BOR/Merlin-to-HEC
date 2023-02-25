@@ -7,9 +7,9 @@ import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import hec.data.DataSetIllegalArgumentException;
-import hec.data.Interval;
 import hec.heclib.dss.DSSPathname;
 import hec.heclib.dss.HecTimeSeriesBase;
+import hec.heclib.util.HecTime;
 import hec.io.StoreOption;
 import hec.io.TimeSeriesContainer;
 import hec.ui.ProgressListener;
@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +44,7 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
             try
             {
                 String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Events read: " + timeSeriesContainer.getNumberValues()
-                            + ", expected " + getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart());
+                            + ", expected " + getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(), timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
                 logFileLogger.log(progressMsg);
                 int percentComplete = completionTracker.readTaskCompleted();
                 logProgress(progressListener, progressMsg, percentComplete);
@@ -81,14 +80,14 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         }
     }
 
-    private int getExpectedNumValues(Instant start, Instant end, String ePart) throws DataSetIllegalArgumentException
+    static int getExpectedNumValues(Instant start, Instant end, String ePart, HecTime firstRealTime, HecTime lastRealTime) throws DataSetIllegalArgumentException
     {
-        int interval = HecTimeSeriesBase.getIntervalFromEPart(ePart);
-        long topOfInterval = Interval.getTimeAtTopOfIntervalOnOrBefore(start.toEpochMilli(), ePart, TimeZone.getDefault());
-        boolean firstIncluded = topOfInterval == start.toEpochMilli();
-        long duration = Duration.between(start, end).toMinutes();
-        int retVal = (int) Math.ceil(duration / ((double) interval));
-        if(firstIncluded)
+        int intervalMinutes = HecTimeSeriesBase.getIntervalFromEPart(ePart);
+        long durationMinutes = Duration.between(start, end).toMinutes();
+        boolean startIsBeforeFirstRealTime = start.toEpochMilli() < firstRealTime.getTimeInMillis();
+        boolean endIsAfterLastRealTime = end.toEpochMilli() > lastRealTime.getTimeInMillis();
+        int retVal = (int) (durationMinutes / ((double) intervalMinutes));
+        if(!(startIsBeforeFirstRealTime && endIsAfterLastRealTime))
         {
             retVal ++;
         }
