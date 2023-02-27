@@ -1,20 +1,17 @@
 package gov.usbr.wq.merlindataexchange.io;
 
-import hec.data.DataSetIllegalArgumentException;
 import hec.heclib.util.HecTime;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class TestExpectedValuesCalculator
 {
-
     @Test
-    void testCalculateBothOnInterval() throws DataSetIllegalArgumentException
+    void testCalculateBothOnInterval()
     {
         Instant start = Instant.parse("2022-01-01T08:00:00Z");
         Instant end = Instant.parse("2022-01-04T08:00:00Z");
@@ -41,7 +38,7 @@ final class TestExpectedValuesCalculator
     }
 
     @Test
-    void testStartIsBeforeAndEndIsOn() throws DataSetIllegalArgumentException
+    void testStartIsBeforeAndEndIsOn() 
     {
         Instant start = Instant.parse("2022-01-01T08:20:00Z");
         Instant end = Instant.parse("2022-01-04T08:00:00Z");
@@ -60,7 +57,7 @@ final class TestExpectedValuesCalculator
     }
 
     @Test
-    void testStartIsOnAndEndIsAfter() throws DataSetIllegalArgumentException
+    void testStartIsOnAndEndIsAfter() 
     {
         Instant start = Instant.parse("2022-01-01T08:00:00Z");
         Instant end = Instant.parse("2022-01-04T08:30:00Z");
@@ -79,7 +76,7 @@ final class TestExpectedValuesCalculator
     }
 
     @Test
-    void testStartIsBeforeAndEndIsAfter() throws DataSetIllegalArgumentException
+    void testStartIsBeforeAndEndIsAfter() 
     {
         Instant start = Instant.parse("2022-01-01T08:20:00Z");
         Instant end = Instant.parse("2022-01-04T08:20:00Z");

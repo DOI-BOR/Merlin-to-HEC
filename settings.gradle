@@ -1,4 +1,3 @@
 rootProject.name = 'merlin-to-hec'
 
 include ":merlin-data-exchange"
-include ":merlin-to-hec-timeseries"
