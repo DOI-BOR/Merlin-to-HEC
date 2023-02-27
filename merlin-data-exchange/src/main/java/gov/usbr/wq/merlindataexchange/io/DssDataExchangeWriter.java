@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,51 +42,44 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         if(timeSeriesContainer != null && !isCancelled.get())
         {
             DSSPathname pathname = new DSSPathname(timeSeriesContainer.fullName);
-            try
+            String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Events read: " + timeSeriesContainer.getNumberValues()
+                    + ", expected " + getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(), ZoneId.of(timeSeriesContainer.getTimeZoneID()),
+                    timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
+            logFileLogger.log(progressMsg);
+            int percentComplete = completionTracker.readTaskCompleted();
+            logProgress(progressListener, progressMsg, percentComplete);
+            timeSeriesContainer.fileName = _dssWritePath.toString();
+            int success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
+            if(success == 0)
             {
-                String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Events read: " + timeSeriesContainer.getNumberValues()
-                            + ", expected " + getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(), timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
-                logFileLogger.log(progressMsg);
-                int percentComplete = completionTracker.readTaskCompleted();
-                logProgress(progressListener, progressMsg, percentComplete);
-                timeSeriesContainer.fileName = _dssWritePath.toString();
-                int success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
-                if(success == 0)
+                String successMsg = "Write to " + timeSeriesContainer.fullName + " from " + seriesString;
+                int percentCompleteAfterWrite = completionTracker.writeTaskCompleted();
+                if(progressListener != null)
                 {
-                    String successMsg = "Write to " + timeSeriesContainer.fullName + " from " + seriesString;
-                    int percentCompleteAfterWrite = completionTracker.writeTaskCompleted();
-                    if(progressListener != null)
-                    {
-                        progressListener.progress(successMsg, MessageType.GENERAL, percentCompleteAfterWrite);
-                    }
-                    logFileLogger.log(successMsg);
-                    LOGGER.config(() -> successMsg);
+                    progressListener.progress(successMsg, MessageType.GENERAL, percentCompleteAfterWrite);
                 }
-                else
-                {
-                    String failMsg = "Failed to write " +  seriesString + " to DSS! Error status code: " + success;
-                    if(progressListener != null)
-                    {
-                        progressListener.progress(failMsg, MessageType.ERROR);
-                    }
-                    logFileLogger.log(failMsg);
-                    LOGGER.config(() -> failMsg);
-                }
+                logFileLogger.log(successMsg);
+                LOGGER.config(() -> successMsg);
             }
-            catch (DataSetIllegalArgumentException e)
+            else
             {
-                String errorMsg = "Error calculating expected values for " + seriesString + ": " + e.getMessage();
-                logError(progressListener, logFileLogger, errorMsg, e);
+                String failMsg = "Failed to write " +  seriesString + " to DSS! Error status code: " + success;
+                if(progressListener != null)
+                {
+                    progressListener.progress(failMsg, MessageType.ERROR);
+                }
+                logFileLogger.log(failMsg);
+                LOGGER.config(() -> failMsg);
             }
         }
     }
 
-    static int getExpectedNumValues(Instant start, Instant end, String ePart, HecTime firstRealTime, HecTime lastRealTime) throws DataSetIllegalArgumentException
+    static int getExpectedNumValues(Instant start, Instant end, String ePart, ZoneId tscZoneId, HecTime firstRealTime, HecTime lastRealTime)
     {
         int intervalMinutes = HecTimeSeriesBase.getIntervalFromEPart(ePart);
         long durationMinutes = Duration.between(start, end).toMinutes();
-        boolean startIsBeforeFirstRealTime = start.toEpochMilli() < firstRealTime.getTimeInMillis();
-        boolean endIsAfterLastRealTime = end.toEpochMilli() > lastRealTime.getTimeInMillis();
+        boolean startIsBeforeFirstRealTime = start.isBefore(firstRealTime.getInstant(tscZoneId));
+        boolean endIsAfterLastRealTime = end.isAfter(lastRealTime.getInstant(tscZoneId));
         int retVal = (int) (durationMinutes / ((double) intervalMinutes));
         if(!(startIsBeforeFirstRealTime && endIsAfterLastRealTime))
         {
