@@ -105,11 +105,11 @@ class MerlinDataConverterTest
 	@Test
 	void testTimeZoneConversion()
 	{
-		ZonedDateTime nowPST = ZonedDateTime.now(ZoneId.of("UTC-08:00"));
-		HecTime hecTime7HourDiff = MerlinDataConverter.fromZonedDateTime(nowPST, ZoneId.of("UTC-01:00"));
-		assertNotEquals(nowPST.toLocalDateTime(), hecTime7HourDiff.getLocalDateTime());
-		LocalDateTime expected = nowPST.toLocalDateTime().plusHours(7).truncatedTo(ChronoUnit.MINUTES);
-		assertEquals(expected, hecTime7HourDiff.getLocalDateTime());
+		ZonedDateTime zuluNow = ZonedDateTime.now(ZoneId.of("Z"));
+		HecTime hecTimePST = MerlinDataConverter.fromZonedDateTime(zuluNow, ZoneId.of("UTC-08:00"));
+		assertNotEquals(zuluNow.toLocalDateTime(), hecTimePST.getLocalDateTime());
+		LocalDateTime expected = zuluNow.toLocalDateTime().minusHours(8).truncatedTo(ChronoUnit.MINUTES);
+		assertEquals(expected, hecTimePST.getLocalDateTime());
 	}
 
 }

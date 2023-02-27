@@ -84,7 +84,7 @@ final class MerlinDataConverter
 			int i = 0;
 			for (EventWrapper event : events)
 			{
-				HecTime hecTime = fromZonedDateTime(event.getDate(), data.getTimeZone());
+				HecTime hecTime = fromZonedDateTime(event.getDate(), dataZoneId);
 				int time = hecTime.value();
 				times[i] = time;
 				double value = Const.UNDEFINED_DOUBLE;
