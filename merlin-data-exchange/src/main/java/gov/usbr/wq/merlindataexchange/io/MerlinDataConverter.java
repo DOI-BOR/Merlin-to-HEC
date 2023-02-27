@@ -6,11 +6,10 @@
  * from HEC
  */
 
-package gov.usbr.wq.merlintohec.model;
+package gov.usbr.wq.merlindataexchange.io;
 
 import gov.usbr.wq.dataaccess.model.DataWrapper;
 import gov.usbr.wq.dataaccess.model.EventWrapper;
-import gov.usbr.wq.merlintohec.exceptions.MerlinInvalidTimestepException;
 import hec.data.Units;
 import hec.data.UnitsConversionException;
 import hec.heclib.dss.DSSPathname;
@@ -21,11 +20,9 @@ import hec.io.TimeSeriesContainer;
 import hec.lang.Const;
 import hec.ui.ProgressListener;
 
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.NavigableSet;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,7 +43,7 @@ final class MerlinDataConverter
 			throws MerlinInvalidTimestepException
 	{
 		TimeSeriesContainer output = new TimeSeriesContainer();
-		if (!data.getEvents().isEmpty())
+		if(data != null && data.getSeriesId() != null && !data.getSeriesId().isEmpty())
 		{
 			String timeStep = data.getTimestep();
 			if (timeStep == null || timeStep.contains(","))
@@ -71,7 +68,9 @@ final class MerlinDataConverter
 			pathname.setEPart("" + interval);
 			pathname.setDPart("");
 			output.fullName = pathname.getPathname();
-			output.timeZoneID = data.getTimeZone().getId();
+			ZoneId dataZoneId = data.getTimeZone();
+			output.setTimeZoneID(dataZoneId.getId());
+			output.locationTimezone = dataZoneId.getId();
 			output.units = data.getUnits();
 			output.interval = parsedInterval;
 			output.type = data.getDataType();
@@ -85,7 +84,7 @@ final class MerlinDataConverter
 			int i = 0;
 			for (EventWrapper event : events)
 			{
-				HecTime hecTime = fromZonedDateTime(event.getDate());
+				HecTime hecTime = fromZonedDateTime(event.getDate(), data.getTimeZone());
 				int time = hecTime.value();
 				times[i] = time;
 				double value = Const.UNDEFINED_DOUBLE;
@@ -102,8 +101,8 @@ final class MerlinDataConverter
 			output.times = times;
 			output.numberValues = values.length;
 
-			HecTime startTime = fromZonedDateTime(data.getStartTime());
-			HecTime endTime = fromZonedDateTime(data.getEndTime());
+			HecTime startTime = fromZonedDateTime(data.getStartTime(), dataZoneId);
+			HecTime endTime = fromZonedDateTime(data.getEndTime(), dataZoneId);
 			output.startTime = times[0];
 			output.startHecTime = startTime;
 			output.endTime = times[times.length - 1];
@@ -148,17 +147,13 @@ final class MerlinDataConverter
 		{
 			Units.convertUnits(output, convertToUnitSystemId);
 		}
+		output.setUnits(unitsTo);
 	}
 
-	static HecTime fromZonedDateTime(ZonedDateTime zonedDateTime)
+	static HecTime fromZonedDateTime(ZonedDateTime zonedDateTime, ZoneId zoneIdToConvertTo)
 	{
-		//This comes from HecJavaDev v6.1, we should use that utility instead of this one if we ever upgrade.
-		Instant instant = zonedDateTime.toInstant();
-		ZoneId zoneId = zonedDateTime.getZone();
-		HecTime hecTime = new HecTime();
-		int offsetMinutes = (int) TimeUnit.SECONDS.toMinutes(zoneId.getRules().getOffset(instant).getTotalSeconds());
-		hecTime.setTimeInMillis(instant.toEpochMilli(), offsetMinutes);
-		return hecTime;
+		zonedDateTime = ZonedDateTime.ofInstant(zonedDateTime.toInstant(), zoneIdToConvertTo);
+		return HecTime.fromZonedDateTime(zonedDateTime);
 	}
 
 }

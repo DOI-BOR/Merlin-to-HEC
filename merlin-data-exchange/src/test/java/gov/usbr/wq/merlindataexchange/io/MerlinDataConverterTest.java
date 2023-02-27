@@ -1,9 +1,8 @@
-package gov.usbr.wq.merlintohec.model;
+package gov.usbr.wq.merlindataexchange.io;
 
 import gov.usbr.wq.dataaccess.json.Data;
 import gov.usbr.wq.dataaccess.json.Event;
 import gov.usbr.wq.dataaccess.model.DataWrapper;
-import gov.usbr.wq.merlintohec.exceptions.MerlinInvalidTimestepException;
 import hec.data.Units;
 import hec.data.UnitsConversionException;
 import hec.heclib.util.HecTime;
@@ -11,7 +10,10 @@ import hec.io.TimeSeriesContainer;
 import hec.lang.Const;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +24,7 @@ class MerlinDataConverterTest
 	private static final String TEST_TIMESERIES_ID = "Shasta Lake-Shasta Dam-Outflow/Flow/INST-VAL/60/0/35-230.11.125.1.1";
 
 	@Test
-	void dataWrapperToTimeSeries() throws MerlinInvalidTimestepException
+	void dataWrapperToTimeSeries()
 	{
 		ZonedDateTime startTime = ZonedDateTime.now()
 											   .withYear(2019)
@@ -39,6 +41,7 @@ class MerlinDataConverterTest
 											 .withSecond(0)
 											 .withNano(0);
 		Data data = new Data().seriesString(TEST_TIMESERIES_ID);
+		data.setTimeZone("UTC-08:00");
 		ZonedDateTime curTime = startTime;
 		Double value = null;
 
@@ -47,7 +50,7 @@ class MerlinDataConverterTest
 
 		while (curTime.isBefore(endTime))
 		{
-			HecTime hecTime = MerlinDataConverter.fromZonedDateTime(curTime);
+			HecTime hecTime = MerlinDataConverter.fromZonedDateTime(curTime, ZoneId.of(data.getTimeZone()));
 			times.add(hecTime.value());
 			values.add(value);
 			data.addEventsItem(new Event().date(curTime.toOffsetDateTime())
@@ -86,11 +89,9 @@ class MerlinDataConverterTest
 		DataWrapper wrapper = new DataWrapper(data);
 		try
 		{
-			TimeSeriesContainer tsc = MerlinDataConverter.dataToTimeSeries(wrapper, "SI", null, null
-            );
+			TimeSeriesContainer tsc = MerlinDataConverter.dataToTimeSeries(wrapper, "SI", null, null);
 			int[] receivedTimes = tsc.times;
 			double[] receivedValues = tsc.values;
-
 			assertArrayEquals(expectedTimes, receivedTimes);
 			assertArrayEquals(expectedVals, receivedValues, 0.0001);
 		}
@@ -100,4 +101,15 @@ class MerlinDataConverterTest
 		}
 
 	}
+
+	@Test
+	void testTimeZoneConversion()
+	{
+		ZonedDateTime nowPST = ZonedDateTime.now(ZoneId.of("UTC-08:00"));
+		HecTime hecTime7HourDiff = MerlinDataConverter.fromZonedDateTime(nowPST, ZoneId.of("UTC-01:00"));
+		assertNotEquals(nowPST.toLocalDateTime(), hecTime7HourDiff.getLocalDateTime());
+		LocalDateTime expected = nowPST.toLocalDateTime().plusHours(7).truncatedTo(ChronoUnit.MINUTES);
+		assertEquals(expected, hecTime7HourDiff.getLocalDateTime());
+	}
+
 }

@@ -1,4 +1,4 @@
-package gov.usbr.wq.merlintohec.exceptions;
+package gov.usbr.wq.merlindataexchange.io;
 
 public final class MerlinInvalidTimestepException extends Exception
 {

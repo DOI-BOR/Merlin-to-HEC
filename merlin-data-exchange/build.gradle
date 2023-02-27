@@ -18,18 +18,30 @@ publishing {
 }
 
 dependencies {
-    implementation project(":merlin-to-hec-timeseries")
     implementation 'mil.army.usace.hec:service-annotations:1.2.1'
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3"
     implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
+    implementation 'mil.army.usace.hec:hec-rma:6.0-20220607.200819-127'
+    implementation "com.google.flogger:flogger:0.5.1"
+    implementation "com.google.code.findbugs:jsr305:3.0.1"
+    implementation "com.google.errorprone:error_prone_annotations:2.3.2"
+    implementation 'mil.army.usace.hec:lookup:1.1'
+    implementation 'mil.army.usace.hec:hec-core:6.0-20220607.200756-129!!'
+    implementation 'mil.army.usace.hec:hec-data:6.0-20220607.200804-129!!'
+    implementation 'mil.army.usace.hec:hec-lib:6.0-20220607.200812-129!!'
+    implementation 'gov.usbr.wq:merlin-web-client:4.0.4'
+
+    runtimeOnly "com.google.flogger:flogger-system-backend:0.5.1"
 
     windows_x64 'mil.army.usace.hec:javaHeclib:7-IQ-0-win-x86_64@zip'
     linux_x64 'mil.army.usace.hec:javaHeclib:7-IQ-0-linux-x86_64@zip'
 
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 
     annotationProcessor("mil.army.usace.hec:service-annotations:1.2.1")
+
 }
 
 task extractNatives(type: Copy) { copyTask ->

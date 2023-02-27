@@ -16,8 +16,6 @@ import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordHolder;
 import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordNotFoundException;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
-import gov.usbr.wq.merlintohec.exceptions.MerlinInvalidTimestepException;
-import gov.usbr.wq.merlintohec.model.MerlinDaoConversionUtil;
 import hec.io.TimeSeriesContainer;
 import hec.ui.ProgressListener;
 import hec.ui.ProgressListener.MessageType;
@@ -110,7 +108,7 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
         TimeSeriesContainer retVal = null;
         try
         {
-            retVal = MerlinDaoConversionUtil.convertToTsc(data, unitSystemToConvertTo, fPartOverride, progressListener);
+            retVal = MerlinDataConverter.dataToTimeSeries(data, unitSystemToConvertTo, fPartOverride, progressListener);
         }
         catch (MerlinInvalidTimestepException e)
         {
