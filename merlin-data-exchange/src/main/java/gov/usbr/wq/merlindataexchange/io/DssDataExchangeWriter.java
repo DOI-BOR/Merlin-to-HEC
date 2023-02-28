@@ -76,6 +76,14 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
 
     static int getExpectedNumValues(Instant start, Instant end, String ePart, ZoneId tscZoneId, HecTime firstRealTime, HecTime lastRealTime)
     {
+        if(start == null)
+        {
+            start = firstRealTime.getInstant(tscZoneId);
+        }
+        if(end == null)
+        {
+            end = lastRealTime.getInstant(tscZoneId);
+        }
         int intervalMinutes = HecTimeSeriesBase.getIntervalFromEPart(ePart);
         long durationMinutes = Duration.between(start, end).toMinutes();
         boolean startIsBeforeFirstRealTime = start.isBefore(firstRealTime.getInstant(tscZoneId));

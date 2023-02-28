@@ -119,13 +119,23 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
         }
         catch (MerlinInvalidTimestepException e)
         {
-            String msg = "Skipping " + data.getSeriesId() + " with unsupported timestep: " + data.getTimestep();
+            String msg = "Skipping " + data.getSeriesId() + " with unsupported timestep: " + data.getTimestep() + " | Is processed: " + isProcessed;
             logFileLogger.log(msg);
             logProgressMessage(progressListener, msg);
             LOGGER.log(Level.CONFIG, e, () -> "Unsupported timestep: " + data.getTimestep());
         }
         catch (NoEventsException e)
         {
+            if(start == null)
+            {
+                start = data.getStartTime().toInstant();
+            }
+            if(end == null)
+            {
+                end = data.getEndTime().toInstant();
+            }
+            Instant startDetermined = start;
+            Instant endDetermined = end;
             ZoneId zoneId = ZoneId.of(data.getTimeZone().getId().replace("UTC-", "GMT-"));
             String progressMsg = "Read " + data.getSeriesId() + " | Is processed: " + isProcessed + " | Events read: 0"
                     + ", expected " + DssDataExchangeWriter.getExpectedNumValues(start, end,
@@ -137,7 +147,7 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
             int nothingToWritePercentIncrement = completionTracker.writeTaskCompleted();
             logFileLogger.log(e.getMessage());
             logProgressMessage(progressListener, e.getMessage(), nothingToWritePercentIncrement);
-            LOGGER.log(Level.CONFIG, e, () -> "No events for " + data.getSeriesId() + " in time window " + start + " | " + end);
+            LOGGER.log(Level.CONFIG, e, () -> "No events for " + data.getSeriesId() + " in time window " + startDetermined + " | " + endDetermined);
         }
         return retVal;
     }
