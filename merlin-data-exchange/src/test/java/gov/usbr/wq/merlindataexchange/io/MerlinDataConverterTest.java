@@ -3,6 +3,7 @@ package gov.usbr.wq.merlindataexchange.io;
 import gov.usbr.wq.dataaccess.json.Data;
 import gov.usbr.wq.dataaccess.json.Event;
 import gov.usbr.wq.dataaccess.model.DataWrapper;
+import gov.usbr.wq.merlindataexchange.NoEventsException;
 import hec.data.Units;
 import hec.data.UnitsConversionException;
 import hec.heclib.util.HecTime;
@@ -24,7 +25,7 @@ class MerlinDataConverterTest
 	private static final String TEST_TIMESERIES_ID = "Shasta Lake-Shasta Dam-Outflow/Flow/INST-VAL/60/0/35-230.11.125.1.1";
 
 	@Test
-	void dataWrapperToTimeSeries()
+	void dataWrapperToTimeSeries() throws NoEventsException
 	{
 		ZonedDateTime startTime = ZonedDateTime.now()
 											   .withYear(2019)

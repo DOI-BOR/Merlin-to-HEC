@@ -10,6 +10,7 @@ package gov.usbr.wq.merlindataexchange.io;
 
 import gov.usbr.wq.dataaccess.model.DataWrapper;
 import gov.usbr.wq.dataaccess.model.EventWrapper;
+import gov.usbr.wq.merlindataexchange.NoEventsException;
 import hec.data.Units;
 import hec.data.UnitsConversionException;
 import hec.heclib.dss.DSSPathname;
@@ -22,6 +23,7 @@ import hec.ui.ProgressListener;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.NavigableSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,7 +42,7 @@ final class MerlinDataConverter
 	}
 
 	static TimeSeriesContainer dataToTimeSeries(DataWrapper data, String unitSystemToConvertTo, String fPartOverride, ProgressListener progressListener)
-			throws MerlinInvalidTimestepException
+			throws MerlinInvalidTimestepException, NoEventsException
 	{
 		TimeSeriesContainer output = new TimeSeriesContainer();
 		if(data != null && data.getSeriesId() != null && !data.getSeriesId().isEmpty())
@@ -67,8 +69,13 @@ final class MerlinDataConverter
 			pathname._delimiter = "/";
 			pathname.setEPart("" + interval);
 			pathname.setDPart("");
+			if(data.getEvents().isEmpty())
+			{
+				throw new NoEventsException(pathname.getPathname(), data.getSeriesId());
+			}
 			output.fullName = pathname.getPathname();
 			ZoneId dataZoneId = data.getTimeZone();
+			dataZoneId = ZoneId.of(dataZoneId.getId().replace("UTC-", "GMT-"));
 			output.setTimeZoneID(dataZoneId.getId());
 			output.locationTimezone = dataZoneId.getId();
 			output.units = data.getUnits();
