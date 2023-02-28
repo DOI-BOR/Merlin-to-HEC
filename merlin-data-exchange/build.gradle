@@ -22,9 +22,6 @@ dependencies {
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3"
     implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
     implementation 'mil.army.usace.hec:hec-rma:6.0-20220607.200819-127'
-    implementation "com.google.flogger:flogger:0.5.1"
-    implementation "com.google.code.findbugs:jsr305:3.0.1"
-    implementation "com.google.errorprone:error_prone_annotations:2.3.2"
     implementation 'mil.army.usace.hec:lookup:1.1'
     implementation 'mil.army.usace.hec:hec-core:6.0-20220607.200756-129!!'
     implementation 'mil.army.usace.hec:hec-data:6.0-20220607.200804-129!!'
