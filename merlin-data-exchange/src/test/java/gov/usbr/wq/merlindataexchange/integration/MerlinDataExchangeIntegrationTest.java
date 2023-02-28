@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -29,11 +30,12 @@ final class MerlinDataExchangeIntegrationTest
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
-        Path mockXml = getMockXml("merlin_mock_config_dx.xml");
+        String mockXmlFileName = "merlin_mock_config_dx.xml";
+        Path mockXml = getMockXml(mockXmlFileName);
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
-        Instant start = Instant.parse("2019-01-01T08:00:00Z");
-        Instant end = Instant.parse("2022-08-30T08:00:00Z");
+        Instant start = Instant.parse("2016-02-01T12:00:00Z");
+        Instant end = Instant.parse("2016-02-21T12:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");

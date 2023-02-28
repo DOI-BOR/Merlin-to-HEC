@@ -1,37 +1,67 @@
 package gov.usbr.wq.merlindataexchange;
 
+import com.rma.io.DssFileManagerImpl;
+import gov.usbr.wq.dataaccess.MerlinTimeSeriesDataAccess;
+import gov.usbr.wq.dataaccess.http.ApiConnectionInfo;
+import gov.usbr.wq.dataaccess.http.HttpAccessException;
+import gov.usbr.wq.dataaccess.http.HttpAccessUtils;
+import gov.usbr.wq.dataaccess.http.TokenContainer;
+import gov.usbr.wq.dataaccess.model.DataWrapper;
+import gov.usbr.wq.dataaccess.model.EventWrapper;
+import gov.usbr.wq.dataaccess.model.MeasureWrapper;
+import gov.usbr.wq.dataaccess.model.TemplateWrapper;
+import gov.usbr.wq.dataaccess.model.TemplateWrapperBuilder;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeConfiguration;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParametersBuilder;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParametersBuilder;
+import hec.heclib.dss.DSSPathname;
+import hec.heclib.dss.HecTimeSeriesBase;
+import hec.heclib.util.HecTime;
+import hec.io.DSSIdentifier;
+import hec.io.TimeSeriesContainer;
 import hec.io.impl.StoreOptionImpl;
 import org.junit.jupiter.api.Test;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 final class MerlinDataExchangeEngineTest
 {
     @Test
-    void testRunExtract() throws IOException
+    void testRunExtract() throws IOException, XMLStreamException, HttpAccessException
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
-        Path mockXml = getMockXml("merlin_mock_config_dx.xml");
-        Path mockXml2 = getMockXml("merlin_mock_config_dx2.xml");
-        List<Path> mocks = Arrays.asList(mockXml, mockXml2);
+        String mockFileName = "merlin_mock_config_dx.xml";
+        Path mockXml = getMockXml(mockFileName);
+        //Path mockXml2 = getMockXml("merlin_mock_config_dx2.xml");
+        List<Path> mocks = Arrays.asList(mockXml);
         Path testDirectory = getTestDirectory();
-        Instant start = Instant.parse("2019-01-01T08:00:00Z");
-        Instant end = Instant.parse("2022-08-30T08:00:00Z");
+        Path dssFile = testDirectory.resolve(mockFileName.replace(".xml", ".dss"));
+        if(Files.exists(dssFile))
+        {
+            Files.delete(dssFile);
+        }
+        Instant start = Instant.parse("2016-02-01T12:00:00Z");
+        Instant end = Instant.parse("2016-02-21T12:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
@@ -55,6 +85,60 @@ final class MerlinDataExchangeEngineTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        Map<String, DataWrapper> expectedDssToData = buildExpectedDss(mocks, start, end, username, password);
+        assertNotNull(expectedDssToData);
+        String dssFileName = testDirectory.resolve(mockFileName.replace(".xml", ".dss")).toString();
+        for(Map.Entry<String, DataWrapper> entry : expectedDssToData.entrySet())
+        {
+            String dssPath = entry.getKey();
+            DataWrapper merlinData = entry.getValue();
+            TimeSeriesContainer tsc = DssFileManagerImpl.getDssFileManager().readTS(new DSSIdentifier(dssFileName, dssPath), false);
+            assertNotNull(tsc);
+            assertEquals(merlinData.getEvents().size(), tsc.getNumberValues());
+            DSSPathname pathname = new DSSPathname(tsc.getFullName());
+            assertEquals( HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(merlinData.getTimestep())), pathname.ePart());
+            //assertEquals(merlinData.getStartTime(), tsc.getStartTime());
+            DecimalFormat df = new DecimalFormat("#.####");
+            int i=0;
+            for(EventWrapper event : merlinData.getEvents())
+            {
+                HecTime merlinTime = HecTime.fromZonedDateTime(event.getDate());
+                HecTime tscTime = tsc.getTimes().elementAt(i);
+                assertEquals(Double.parseDouble(df.format(event.getValue())), Double.parseDouble(df.format(tsc.getValue(i))));
+                //assertEquals(merlinTime, HecTime.convertToTimeZone(tscTime, tsc.getTimes().getTimeZone(), TimeZone.getTimeZone("GMT")));
+                i++;
+            }
+        }
+
+    }
+
+    private Map<String, DataWrapper> buildExpectedDss(List<Path> mocks, Instant start, Instant end, String username, char[] pw) throws XMLStreamException, IOException, HttpAccessException {
+        ApiConnectionInfo connectionInfo = new ApiConnectionInfo("https://www.grabdata2.com");
+        TokenContainer token = HttpAccessUtils.authenticate(connectionInfo, username, pw);
+        MerlinTimeSeriesDataAccess access = new MerlinTimeSeriesDataAccess();
+        Map<String, DataWrapper> retVal = new HashMap<>();
+        for (Path mock : mocks) {
+            DataExchangeConfiguration config = MerlinDataExchangeParser.parseXmlFile(mock);
+            for (DataExchangeSet set : config.getDataExchangeSets()) {
+                int templateId = set.getTemplateId();
+                TemplateWrapper templateWrapper = new TemplateWrapperBuilder().withDprID(templateId).build();
+                List<MeasureWrapper> measures = access.getMeasurementsByTemplate(connectionInfo, token, templateWrapper);
+                for (MeasureWrapper measure : measures) {
+                    DataWrapper data = access.getEventsBySeries(connectionInfo, token, measure, 1,
+                            start, end);
+                    String timeStep = data.getTimestep();
+                    if (timeStep != null && !timeStep.contains(",") && !data.getSeriesId().isEmpty() && !data.getEvents().isEmpty())
+                    {
+                        String range = "";
+                        int parsedInterval = Integer.parseInt(data.getTimestep());
+                        String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
+                        retVal.put("/" + data.getProject() + "/" + data.getStation() + "-" + data.getSensor() + "/" +
+                                data.getParameter() + "/" + range + "/" + interval + "/fPart/", data);
+                    }
+                }
+            }
+        }
+        return retVal;
     }
 
     @Test

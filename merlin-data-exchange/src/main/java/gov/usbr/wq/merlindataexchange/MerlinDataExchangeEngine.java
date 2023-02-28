@@ -200,23 +200,23 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         Collection<MerlinDataExchangeLogger> fileLoggers = _fileLoggers.values();
         if(_isCancelled.get())
         {
-            fileLoggers.forEach(logger -> logger.logToFooter("Extract Cancelled| " + finishedTimeMsg + " | " + formattedDurationMsg));
+            fileLoggers.forEach(logger -> logger.logToFooter("Extract Cancelled | " + finishedTimeMsg + " | " + formattedDurationMsg));
             logCompletionProgress("Extract Cancelled | " + finishedTimeMsg + " | " + formattedDurationMsg);
         }
         else if(retVal == MerlinDataExchangeStatus.PARTIAL_SUCCESS)
         {
-            fileLoggers.forEach(logger -> logger.logToFooter("Extract Completed Partially| " + finishedTimeMsg + " | " + formattedDurationMsg));
-            logCompletionProgress("Extract Completed Partially| " + finishedTimeMsg + " | " + formattedDurationMsg);
+            fileLoggers.forEach(logger -> logger.logToFooter("Extract Completed Partially | " + finishedTimeMsg + " | " + formattedDurationMsg));
+            logCompletionProgress("Extract Completed Partially | " + finishedTimeMsg + " | " + formattedDurationMsg);
         }
         else if(retVal == MerlinDataExchangeStatus.COMPLETE_SUCCESS)
         {
-            fileLoggers.forEach(logger -> logger.logToFooter("Extract Completed!| " + finishedTimeMsg + " | " + formattedDurationMsg));
-            logCompletionProgress("Extract Completed!| " + finishedTimeMsg + " | " + formattedDurationMsg);
+            fileLoggers.forEach(logger -> logger.logToFooter("Extract Completed! | " + finishedTimeMsg + " | " + formattedDurationMsg));
+            logCompletionProgress("Extract Completed! | " + finishedTimeMsg + " | " + formattedDurationMsg);
         }
         else
         {
-            fileLoggers.forEach(logger -> logger.logToFooter("Extract Failed!| " + finishedTimeMsg + " | " + formattedDurationMsg));
-            logCompletionProgress("Extract Failed!| " + finishedTimeMsg + " | " + formattedDurationMsg);
+            fileLoggers.forEach(logger -> logger.logToFooter("Extract Failed! | " + finishedTimeMsg + " | " + formattedDurationMsg));
+            logCompletionProgress("Extract Failed! | " + finishedTimeMsg + " | " + formattedDurationMsg);
         }
     }
 
@@ -667,7 +667,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         logGeneralProgress("Retrieved " + cache.getCachedTemplateToMeasures().values().size() + " measure(s) for template(s): "
                 + cache.getCachedTemplateToMeasures().keySet().stream()
                 .map(TemplateWrapper::getName)
-                .collect(Collectors.joining(",")), PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP);
+                .collect(Collectors.joining(", ")), PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP);
     }
 
 }
