@@ -23,7 +23,6 @@ import hec.ui.ProgressListener;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.NavigableSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -148,13 +147,7 @@ final class MerlinDataConverter
 		{
 			convertToUnitSystemId = Unit.SI_ID;
 		}
-		String unitsTo = Units.getUnitsInUnitSystem(unitSystemToConvertTo, data.getUnits());
-		String unitsFrom = data.getUnits();
-		if (!unitsFrom.equalsIgnoreCase(unitsTo))
-		{
-			Units.convertUnits(output, convertToUnitSystemId);
-		}
-		output.setUnits(unitsTo);
+		Units.convertUnits(output, convertToUnitSystemId);
 	}
 
 	static HecTime fromZonedDateTime(ZonedDateTime zonedDateTime, ZoneId zoneIdToConvertTo)
