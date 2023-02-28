@@ -76,15 +76,4 @@ final class MerlinDataExchangeIntegrationTest
         }
         return new File(resourceUrl.getFile()).toPath();
     }
-
-    private List<String> getExpectedDssPathsFromResource(String resourceFileName) throws IOException
-    {
-        String resource = "gov/usbr/wq/merlindataexchange/" + resourceFileName;
-        URL resourceUrl = getClass().getClassLoader().getResource(resource);
-        if (resourceUrl == null)
-        {
-            throw new IOException("Failed to get resource: " + resource);
-        }
-        return Files.readAllLines(new File(resourceUrl.getFile()).toPath());
-    }
 }
