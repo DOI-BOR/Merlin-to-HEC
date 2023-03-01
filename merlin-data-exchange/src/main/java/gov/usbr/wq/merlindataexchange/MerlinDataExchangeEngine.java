@@ -178,6 +178,12 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 bodyWithError.log(errorMsg);
                 _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
             }
+            catch (HttpAccessException e)
+            {
+                retVal = MerlinDataExchangeStatus.AUTHENTICATION_FAILURE;
+                LOGGER.log(Level.CONFIG, e, () -> "User authentication failed");
+
+            }
             catch (IOException e)
             {
                 logError("Failed to initialize templates, quality versions, and measures cache", e);
@@ -279,7 +285,8 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         return(sb.toString());
     }
 
-    private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions) throws IOException, UnsupportedTemplateException
+    private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions)
+            throws IOException, UnsupportedTemplateException, HttpAccessException
     {
         try
         {
@@ -294,8 +301,9 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     }
 
     private void initializeCacheForMerlinUrlWithAuthentication(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions, UsernamePasswordHolder usernamePassword)
-            throws IOException, UnsupportedTemplateException
+            throws IOException, UnsupportedTemplateException, HttpAccessException
     {
+
         try
         {
             TokenContainer token = HttpAccessUtils.authenticate(connectionInfo, usernamePassword.getUsername(), usernamePassword.getPassword());
@@ -303,8 +311,15 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
         catch (HttpAccessException e)
         {
-            logError("Failed to authenticate user: " + usernamePassword.getUsername() + " for URL: " + connectionInfo.getApiRoot(), e);
-            throw new IOException(e);
+            String errorMsg = "Failed to authenticate user: " + usernamePassword.getUsername() + " for URL: " + connectionInfo.getApiRoot();
+            logError(errorMsg, e);
+            _fileLoggers.values().forEach(fl ->
+            {
+                MerlinDataExchangeLogBody logBody = new MerlinDataExchangeLogBody();
+                logBody.log(errorMsg);
+                fl.logBody(logBody);
+            });
+            throw e;
         }
     }
 
