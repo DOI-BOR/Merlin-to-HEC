@@ -39,7 +39,6 @@ import java.util.Optional;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -329,6 +328,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 logBody.log(errorMsg);
                 fl.logBody(logBody);
             }
+            LOGGER.log(Level.CONFIG, e, () -> "Error occurred while initializing with authentication for url: " +connectionInfo.getApiRoot());
             throw e;
         }
     }
