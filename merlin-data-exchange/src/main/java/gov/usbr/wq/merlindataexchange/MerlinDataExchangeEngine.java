@@ -182,9 +182,10 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             catch (MerlinAuthorizationException e)
             {
                 retVal = MerlinDataExchangeStatus.AUTHENTICATION_FAILURE;
-                logError(e.getMessage(), e);
+                String errorMsg = getMessageFromHttpAccessException(e.getMessage(), e.getAccessException(), e.getConnectionInfo());
+                logError(errorMsg, e);
                 MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
-                bodyWithError.log(e.getMessage());
+                bodyWithError.log(errorMsg);
                 _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
             }
             catch (MerlinInitializationException e)
@@ -299,7 +300,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         {
             String errorMsg = "Failed to find matching username/password for given URL in config: " + connectionInfo.getApiRoot();
             LOGGER.log(Level.CONFIG, e, () -> errorMsg);
-            throw new MerlinAuthorizationException(e.getMessage());
+            throw new MerlinInitializationException(errorMsg, e);
         }
     }
 
@@ -312,9 +313,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
         catch (HttpAccessException e)
         {
-            String errorMsg = "Failed to authenticate user: " + usernamePassword.getUsername();
-            errorMsg = getMessageFromHttpAccessException(errorMsg, e, connectionInfo);
-            throw new MerlinAuthorizationException(errorMsg);
+            throw new MerlinAuthorizationException(e, usernamePassword, connectionInfo);
         }
         try
         {

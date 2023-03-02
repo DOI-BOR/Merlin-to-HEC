@@ -475,6 +475,43 @@ final class MerlinDataExchangeEngineTest
         assertEquals(MerlinDataExchangeStatus.AUTHENTICATION_FAILURE, status);
     }
 
+    @Test
+    void testMismatchedAuthenticationUrlFromWhatsInConfig() throws IOException
+    {
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        String mockFileName = "merlin_mock_config_dx_bad_endpoint.xml";
+        Path mockXml = getMockXml(mockFileName);
+        List<Path> mocks = Arrays.asList(mockXml);
+        Path testDirectory = getTestDirectory();
+        Instant start = Instant.parse("2016-02-01T12:00:00Z");
+        Instant end = Instant.parse("2016-02-21T12:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        //config doesn't have this url, so should get a mismatch error and failure
+                        .forUrl("https://www.grabdata2.com/")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
+        assertEquals(MerlinDataExchangeStatus.FAILURE, status);
+    }
+
 
     private TestLogProgressListener buildLoggingProgressListener() throws IOException
     {
