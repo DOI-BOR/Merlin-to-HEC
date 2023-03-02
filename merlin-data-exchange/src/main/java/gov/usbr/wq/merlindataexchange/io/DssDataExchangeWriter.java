@@ -44,9 +44,10 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         {
             DSSPathname pathname = new DSSPathname(timeSeriesContainer.fullName);
             int numTrimmedValues = getNumTrimmedValues(timeSeriesContainer);
+            int numExpected = getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(),
+                    ZoneId.of(timeSeriesContainer.getTimeZoneID()), timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
             String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Values read: " + timeSeriesContainer.getNumberValues()
-                    + ", " + numTrimmedValues + " missing, " + getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(),
-                    ZoneId.of(timeSeriesContainer.getTimeZoneID()), timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime()) + " expected" ;
+                    + ", " + numTrimmedValues + " missing, " +  numExpected + " expected" ;
             logFileLogger.log(progressMsg);
             int percentComplete = completionTracker.readTaskCompleted();
             logProgress(progressListener, progressMsg, percentComplete);
@@ -78,31 +79,15 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
 
     private int getNumTrimmedValues(TimeSeriesContainer timeSeriesContainer)
     {
-        int missingCountEnd = 0;
+        int missingCount = 0;
         for(double val : timeSeriesContainer.getValues())
         {
             if(val == Const.UNDEFINED_DOUBLE)
             {
-                missingCountEnd ++;
-            }
-            else
-            {
-                missingCountEnd = 0;
+                missingCount ++;
             }
         }
-        int missingCountBeginning = 0;
-        for(double val : timeSeriesContainer.getValues())
-        {
-            if(val == Const.UNDEFINED_DOUBLE)
-            {
-                missingCountBeginning ++;
-            }
-            else
-            {
-               break;
-            }
-        }
-        return missingCountEnd + missingCountBeginning;
+        return missingCount;
     }
 
     static int getExpectedNumValues(Instant start, Instant end, String ePart, ZoneId tscZoneId, HecTime firstRealTime, HecTime lastRealTime)

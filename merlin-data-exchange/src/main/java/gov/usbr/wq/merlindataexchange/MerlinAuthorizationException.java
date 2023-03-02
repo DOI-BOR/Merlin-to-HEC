@@ -4,25 +4,26 @@ import gov.usbr.wq.dataaccess.http.ApiConnectionInfo;
 import gov.usbr.wq.dataaccess.http.HttpAccessException;
 import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordHolder;
 
+import java.net.UnknownHostException;
+
 final class MerlinAuthorizationException extends Exception
 {
-    private final HttpAccessException _accessException;
-    private final ApiConnectionInfo _connectionInfo;
-
     MerlinAuthorizationException(HttpAccessException ex, UsernamePasswordHolder usernamePassword, ApiConnectionInfo connectionInfo)
     {
-        super("Failed to authenticate user: " + usernamePassword.getUsername(), ex);
-        _accessException = ex;
-        _connectionInfo = connectionInfo;
+        super(getMessageFromHttpAccessException("Failed to authenticate user: " + usernamePassword.getUsername(), ex, connectionInfo), ex);
     }
 
-    HttpAccessException getAccessException()
+    private static String getMessageFromHttpAccessException(String errorMsg, HttpAccessException e, ApiConnectionInfo connectionInfo)
     {
-        return _accessException;
-    }
-
-    ApiConnectionInfo getConnectionInfo()
-    {
-        return _connectionInfo;
+        String retVal = errorMsg;
+        if(e.getResponseMessage() != null)
+        {
+            retVal += " for URL: " + connectionInfo.getApiRoot() + " | Error code: " + e.getResponseCode() + " (" + e.getResponseMessage() + ")";
+        }
+        else if(e.getCause() instanceof UnknownHostException)
+        {
+            retVal += " for unknown URL: " + connectionInfo.getApiRoot();
+        }
+        return retVal;
     }
 }

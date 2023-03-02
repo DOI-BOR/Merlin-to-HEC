@@ -182,7 +182,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             catch (MerlinAuthorizationException e)
             {
                 retVal = MerlinDataExchangeStatus.AUTHENTICATION_FAILURE;
-                String errorMsg = getMessageFromHttpAccessException(e.getMessage(), e.getAccessException(), e.getConnectionInfo());
+                String errorMsg = e.getMessage();
                 logError(errorMsg, e);
                 MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
                 bodyWithError.log(errorMsg);
@@ -290,7 +290,8 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     }
 
     private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions)
-            throws UnsupportedTemplateException, MerlinAuthorizationException, MerlinInitializationException {
+            throws UnsupportedTemplateException, MerlinAuthorizationException, MerlinInitializationException
+    {
         try
         {
             UsernamePasswordHolder usernamePassword = _runtimeParameters.getUsernamePasswordForUrl(connectionInfo.getApiRoot());
@@ -298,9 +299,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
         catch (UsernamePasswordNotFoundException e)
         {
-            String errorMsg = "Failed to find matching username/password for given URL in config: " + connectionInfo.getApiRoot();
-            LOGGER.log(Level.CONFIG, e, () -> errorMsg);
-            throw new MerlinInitializationException(errorMsg, e);
+            throw new MerlinInitializationException(connectionInfo, e);
         }
     }
 
@@ -321,32 +320,8 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
         catch (IOException | HttpAccessException e)
         {
-            String errorMsg = "Failed to initialize templates, quality versions, and measures";
-            if (e instanceof HttpAccessException)
-            {
-                errorMsg = getMessageFromHttpAccessException(errorMsg, (HttpAccessException) e, connectionInfo);
-            }
-            else
-            {
-                //IOException only occurs if the object mapper failed in merlin web client
-                errorMsg += " for URL: " + connectionInfo.getApiRoot() + " | Error converting data from Merlin into Java object";
-            }
-            throw new MerlinInitializationException(errorMsg, e);
+            throw new MerlinInitializationException(connectionInfo, e);
         }
-    }
-
-    private String getMessageFromHttpAccessException(String errorMsg, HttpAccessException e, ApiConnectionInfo connectionInfo)
-    {
-        String retVal = errorMsg;
-        if(e.getResponseMessage() != null)
-        {
-            retVal += " for URL: " + connectionInfo.getApiRoot() + " | Error code: " + e.getResponseCode() + " (" + e.getResponseMessage() + ")";
-        }
-        else if(e.getCause() instanceof UnknownHostException)
-        {
-            retVal += " for unknown URL: " + connectionInfo.getApiRoot();
-        }
-        return retVal;
     }
 
     private List<ApiConnectionInfo> getMerlinUrlPaths(Collection<DataExchangeConfiguration> configs)

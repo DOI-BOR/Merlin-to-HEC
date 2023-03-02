@@ -93,7 +93,7 @@ final class MerlinDataConverter
 				int time = hecTime.value();
 				times[i] = time;
 				double value = Const.UNDEFINED_DOUBLE;
-				if (event.getValue() != null || event.getQuality() != 0)
+				if (event.getValue() != null)
 				{
 					value = event.getValue();
 				}
