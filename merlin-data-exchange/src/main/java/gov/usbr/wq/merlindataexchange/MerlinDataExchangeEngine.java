@@ -173,7 +173,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             }
             catch (UnsupportedTemplateException e)
             {
-                String errorMsg = "Error occurred: " + e.getMessage();
+                String errorMsg = e.getMessage();
                 logError(errorMsg, e);
                 MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
                 bodyWithError.log(errorMsg);
@@ -192,7 +192,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             {
                 logError(e.getMessage(), e);
                 MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
-                bodyWithError.log("Error Occurred: " + e.getMessage());
+                bodyWithError.log(e.getMessage());
                 _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
             }
             logCompletion(retVal);
