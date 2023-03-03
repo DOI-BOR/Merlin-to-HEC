@@ -26,7 +26,7 @@ dependencies {
     implementation 'mil.army.usace.hec:hec-core:6.0-20220607.200756-129!!'
     implementation 'mil.army.usace.hec:hec-data:6.0-20220607.200804-129!!'
     implementation 'mil.army.usace.hec:hec-lib:6.0-20220607.200812-129!!'
-    implementation 'gov.usbr.wq:merlin-web-client:4.0.5'
+    implementation 'gov.usbr.wq:merlin-web-client:4.1.0'
 
     runtimeOnly "com.google.flogger:flogger-system-backend:0.5.1"
 

@@ -12,6 +12,7 @@ import hec.heclib.dss.HecTimeSeriesBase;
 import hec.heclib.util.HecTime;
 import hec.io.StoreOption;
 import hec.io.TimeSeriesContainer;
+import hec.lang.Const;
 import hec.ui.ProgressListener;
 import hec.ui.ProgressListener.MessageType;
 import rma.services.annotations.ServiceProvider;
@@ -42,9 +43,11 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         if(timeSeriesContainer != null && !isCancelled.get())
         {
             DSSPathname pathname = new DSSPathname(timeSeriesContainer.fullName);
-            String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Events read: " + timeSeriesContainer.getNumberValues()
-                    + ", expected " + getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(), ZoneId.of(timeSeriesContainer.getTimeZoneID()),
-                    timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
+            int numTrimmedValues = getNumTrimmedValues(timeSeriesContainer);
+            int numExpected = getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(),
+                    ZoneId.of(timeSeriesContainer.getTimeZoneID()), timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
+            String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Values read: " + timeSeriesContainer.getNumberValues()
+                    + ", " + numTrimmedValues + " missing, " +  numExpected + " expected" ;
             logFileLogger.log(progressMsg);
             int percentComplete = completionTracker.readTaskCompleted();
             logProgress(progressListener, progressMsg, percentComplete);
@@ -72,6 +75,19 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
                 LOGGER.config(() -> failMsg);
             }
         }
+    }
+
+    private int getNumTrimmedValues(TimeSeriesContainer timeSeriesContainer)
+    {
+        int missingCount = 0;
+        for(double val : timeSeriesContainer.getValues())
+        {
+            if(val == Const.UNDEFINED_DOUBLE)
+            {
+                missingCount ++;
+            }
+        }
+        return missingCount;
     }
 
     static int getExpectedNumValues(Instant start, Instant end, String ePart, ZoneId tscZoneId, HecTime firstRealTime, HecTime lastRealTime)

@@ -27,6 +27,7 @@ import hec.ui.ProgressListener.MessageType;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -172,17 +173,26 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             }
             catch (UnsupportedTemplateException e)
             {
-                String errorMsg = "Error occurred: " + e.getMessage();
+                String errorMsg = e.getMessage();
                 logError(errorMsg, e);
                 MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
                 bodyWithError.log(errorMsg);
                 _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
             }
-            catch (IOException e)
+            catch (MerlinAuthorizationException e)
             {
-                logError("Failed to initialize templates, quality versions, and measures cache", e);
+                retVal = MerlinDataExchangeStatus.AUTHENTICATION_FAILURE;
+                String errorMsg = e.getMessage();
+                logError(errorMsg, e);
                 MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
-                bodyWithError.log("Error Occurred: " + e.getMessage());
+                bodyWithError.log(errorMsg);
+                _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
+            }
+            catch (MerlinInitializationException e)
+            {
+                logError(e.getMessage(), e);
+                MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
+                bodyWithError.log(e.getMessage());
                 _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
             }
             logCompletion(retVal);
@@ -279,7 +289,8 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         return(sb.toString());
     }
 
-    private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions) throws IOException, UnsupportedTemplateException
+    private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions)
+            throws UnsupportedTemplateException, MerlinAuthorizationException, MerlinInitializationException
     {
         try
         {
@@ -288,23 +299,28 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
         catch (UsernamePasswordNotFoundException e)
         {
-            logError("Failed to match username/password for URL in config: " + connectionInfo.getApiRoot(), e);
-            throw new IOException(e);
+            throw new MerlinInitializationException(connectionInfo, e);
         }
     }
 
     private void initializeCacheForMerlinUrlWithAuthentication(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions, UsernamePasswordHolder usernamePassword)
-            throws IOException, UnsupportedTemplateException
-    {
+            throws UnsupportedTemplateException, MerlinAuthorizationException, MerlinInitializationException {
+        TokenContainer token;
         try
         {
-            TokenContainer token = HttpAccessUtils.authenticate(connectionInfo, usernamePassword.getUsername(), usernamePassword.getPassword());
-            initializeCacheForMerlinWithToken(parsedConfiguartions, connectionInfo, token);
+            token = HttpAccessUtils.authenticate(connectionInfo, usernamePassword.getUsername(), usernamePassword.getPassword());
         }
         catch (HttpAccessException e)
         {
-            logError("Failed to authenticate user: " + usernamePassword.getUsername() + " for URL: " + connectionInfo.getApiRoot(), e);
-            throw new IOException(e);
+            throw new MerlinAuthorizationException(e, usernamePassword, connectionInfo);
+        }
+        try
+        {
+            initializeCacheForMerlinWithToken(parsedConfiguartions, connectionInfo, token);
+        }
+        catch (IOException | HttpAccessException e)
+        {
+            throw new MerlinInitializationException(connectionInfo, e);
         }
     }
 

@@ -136,11 +136,12 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
             }
             Instant startDetermined = start;
             Instant endDetermined = end;
-            ZoneId zoneId = ZoneId.of(data.getTimeZone().getId().replace("UTC-", "GMT-"));
-            String progressMsg = "Read " + data.getSeriesId() + " | Is processed: " + isProcessed + " | Events read: 0"
-                    + ", expected " + DssDataExchangeWriter.getExpectedNumValues(start, end,
+            ZoneId zoneId = data.getTimeZone();
+            int expectedNumValues = DssDataExchangeWriter.getExpectedNumValues(start, end,
                     HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(data.getTimestep())), zoneId,
                     HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(start, zoneId)), HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(end, zoneId)));
+            String progressMsg = "Read " + data.getSeriesId() + " | Is processed: " + isProcessed + " | Values read: 0"
+                    + ", 0 missing, " + expectedNumValues + " expected";
             int readPercentIncrement = completionTracker.readTaskCompleted();
             logFileLogger.log(progressMsg);
             logProgressMessage(progressListener, progressMsg, readPercentIncrement);

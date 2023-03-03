@@ -74,7 +74,6 @@ final class MerlinDataConverter
 			}
 			output.fullName = pathname.getPathname();
 			ZoneId dataZoneId = data.getTimeZone();
-			dataZoneId = ZoneId.of(dataZoneId.getId().replace("UTC-", "GMT-"));
 			output.setTimeZoneID(dataZoneId.getId());
 			output.locationTimezone = dataZoneId.getId();
 			output.units = data.getUnits();
@@ -83,6 +82,7 @@ final class MerlinDataConverter
 			output.parameter = data.getParameter();
 			output.location = pathname.bPart();
 			output.version = pathname.fPart();
+			output.setStoreAsDoubles(true);
 
 			NavigableSet<EventWrapper> events = data.getEvents();
 			int[] times = new int[events.size()];
