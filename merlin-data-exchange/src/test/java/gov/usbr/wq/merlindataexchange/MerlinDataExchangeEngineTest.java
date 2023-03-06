@@ -211,7 +211,8 @@ final class MerlinDataExchangeEngineTest
         return missingCount;
     }
 
-    private Map<String, DataWrapper> buildExpectedDss(List<Path> mocks, Instant start, Instant end, String username, char[] pw) throws XMLStreamException, IOException, HttpAccessException {
+    private Map<String, DataWrapper> buildExpectedDss(List<Path> mocks, Instant start, Instant end, String username, char[] pw) throws XMLStreamException, IOException, HttpAccessException
+    {
         ApiConnectionInfo connectionInfo = new ApiConnectionInfo("https://www.grabdata2.com");
         TokenContainer token = HttpAccessUtils.authenticate(connectionInfo, username, pw);
         MerlinTimeSeriesDataAccess access = new MerlinTimeSeriesDataAccess();
@@ -429,7 +430,7 @@ final class MerlinDataExchangeEngineTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         //this will become authentication failure status once fix to return status code 401 is in
-        assertEquals(MerlinDataExchangeStatus.FAILURE, status);
+        assertEquals(MerlinDataExchangeStatus.AUTHENTICATION_FAILURE, status);
     }
 
     @Test

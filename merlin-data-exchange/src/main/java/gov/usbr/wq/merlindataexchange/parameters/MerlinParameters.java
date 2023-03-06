@@ -4,6 +4,7 @@ import hec.io.StoreOption;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class MerlinParameters
@@ -65,5 +66,10 @@ public final class MerlinParameters
                 .findFirst()
                 .orElseThrow(() -> new UsernamePasswordNotFoundException(url))
                 .getUsernamePassword();
+    }
+
+    List<AuthenticationParameters> getAuthenticationParameters()
+    {
+        return new ArrayList<>(_authenticationParameters);
     }
 }

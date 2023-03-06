@@ -74,7 +74,6 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         _progressListener = progressListener;
     }
 
-
     private static int getThreadPoolSize()
     {
         int retVal;
@@ -270,7 +269,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
         if(minutes == 1)
         {
-            sb.append(1 + "Minute");
+            sb.append(1 + " Minute");
         }
         else if (minutes > 1)
         {
@@ -571,20 +570,6 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
     }
 
-    private List<MeasureWrapper> retrieveMeasures(ApiConnectionInfo connectionInfo, TokenContainer accessToken, TemplateWrapper template)
-    {
-        List<MeasureWrapper> retVal = new ArrayList<>();
-        try
-        {
-            retVal = _merlinDataAccess.getMeasurementsByTemplate(connectionInfo, accessToken, template);
-        }
-        catch (HttpAccessException | IOException ex)
-        {
-            logError("Unable to access the merlin web services to retrieve measures for template " + template, ex);
-        }
-        return retVal;
-    }
-
     private TemplateWrapper getTemplateFromDataExchangeSet(DataExchangeSet dataExchangeSet, DataStore dataStore)
     {
         String dataStorePath = dataStore.getPath();
@@ -653,7 +638,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     }
 
     private void initializeCachedMeasurementsForMerlin(DataExchangeCache cache, Map<Path, DataExchangeConfiguration> parsedConfigurations,
-                                                       ApiConnectionInfo connectionInfo, TokenContainer token) throws UnsupportedTemplateException
+                                                       ApiConnectionInfo connectionInfo, TokenContainer token) throws UnsupportedTemplateException, IOException, HttpAccessException
     {
         for(Map.Entry<Path, DataExchangeConfiguration> entry : parsedConfigurations.entrySet())
         {
@@ -669,7 +654,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                     List<MeasureWrapper> measures;
                     if(!alreadyCached)
                     {
-                        measures = retrieveMeasures(connectionInfo, token, template);
+                        measures = _merlinDataAccess.getMeasurementsByTemplate(connectionInfo, token, template);
                         cache.cacheSeriesIds(template, measures);
                     }
                     else
