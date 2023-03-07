@@ -50,7 +50,7 @@ final class MerlinDataExchangeEngineTest
 {
 
     @Test
-    void testRunExtract() throws IOException, XMLStreamException, HttpAccessException
+    void testRunExtract() throws IOException, XMLStreamException, HttpAccessException, MerlinConfigParseException
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
@@ -118,7 +118,7 @@ final class MerlinDataExchangeEngineTest
     }
 
     @Test
-    void testRunExtractLargeTimeWindow() throws IOException, XMLStreamException, HttpAccessException
+    void testRunExtractLargeTimeWindow() throws IOException, XMLStreamException, HttpAccessException, MerlinConfigParseException
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
@@ -211,7 +211,7 @@ final class MerlinDataExchangeEngineTest
         return missingCount;
     }
 
-    private Map<String, DataWrapper> buildExpectedDss(List<Path> mocks, Instant start, Instant end, String username, char[] pw) throws XMLStreamException, IOException, HttpAccessException
+    private Map<String, DataWrapper> buildExpectedDss(List<Path> mocks, Instant start, Instant end, String username, char[] pw) throws XMLStreamException, IOException, HttpAccessException, MerlinConfigParseException
     {
         ApiConnectionInfo connectionInfo = new ApiConnectionInfo("https://www.grabdata2.com");
         TokenContainer token = HttpAccessUtils.authenticate(connectionInfo, username, pw);
@@ -247,6 +247,111 @@ final class MerlinDataExchangeEngineTest
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
         Path mockXml = getMockXml("merlin_mock_config_dx_bad_template.xml");
+        List<Path> mocks = Collections.singletonList(mockXml);
+        Path testDirectory = getTestDirectory();
+        Instant start = Instant.parse("2019-01-01T08:00:00Z");
+        Instant end = Instant.parse("2022-08-30T08:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
+        assertEquals(MerlinDataExchangeStatus.FAILURE, status);
+    }
+
+    @Test
+    void testRunExtractWithBadConfigParse() throws IOException
+    {
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        Path mockXml = getMockXml("merlin_mock_bad_config.xml");
+        List<Path> mocks = Collections.singletonList(mockXml);
+        Path testDirectory = getTestDirectory();
+        Instant start = Instant.parse("2019-01-01T08:00:00Z");
+        Instant end = Instant.parse("2022-08-30T08:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
+        assertEquals(MerlinDataExchangeStatus.FAILURE, status);
+    }
+
+    @Test
+    void testRunExtractWithMissingDataSetsParse() throws IOException
+    {
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        Path mockXml = getMockXml("merlin_mock_missing_datasets.xml");
+        List<Path> mocks = Collections.singletonList(mockXml);
+        Path testDirectory = getTestDirectory();
+        Instant start = Instant.parse("2019-01-01T08:00:00Z");
+        Instant end = Instant.parse("2022-08-30T08:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
+        assertEquals(MerlinDataExchangeStatus.FAILURE, status);
+    }
+
+    @Test
+    void testRunExtractWithMissingDataStoreParse() throws IOException
+    {
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        Path mockXml = getMockXml("merlin_mock_missing_datastores.xml");
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
         Instant start = Instant.parse("2019-01-01T08:00:00Z");

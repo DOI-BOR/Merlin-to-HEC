@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data-exchange-configuration xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance">
+    <datastore id="www.grabdata2.com">
+        <datastore-type>merlin</datastore-type>
+        <path>https://www.grabdata2.com</path>
+    </datastore>
+    <datastore id="Shasta_flow_in">
+        <datastore-type>dss</datastore-type>
+        <path>$WATERSHED/shared/DMS.Shasta.flow.in.dss</path>
+    </datastore>
+    <datastore id="Shasta_release">
+        <datastore-type>dss</datastore-type>
+        <path>$WATERSHED/shared/DMS.Shasta.release.dss</path>
+    </datastore>
+    <datastore id="CC_temperature">
+        <datastore-type>dss</datastore-type>
+        <path>$WATERSHED/shared/DMS.CC.water-tmp.dss</path>
+    </datastore>
+</data-exchange-configuration>
