@@ -68,8 +68,10 @@ public final class MerlinDataExchangeParser
             {
                 throw new MerlinConfigParseException(configFilepath, "Missing datastore-ref-b in data-exchange-set " + set.getId());
             }
-            DataStore dataStoreA = config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefA.getId()));
-            DataStore dataStoreB = config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefB.getId()));
+            DataStore dataStoreA = config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefA.getId()
+                    + " in data-exchange-set " + set.getId()));
+            DataStore dataStoreB = config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefB.getId()
+                    + " in data-exchange-set " + set.getId()));
             validateDataStore(configFilepath, dataStoreA);
             validateDataStore(configFilepath, dataStoreB);
         }
