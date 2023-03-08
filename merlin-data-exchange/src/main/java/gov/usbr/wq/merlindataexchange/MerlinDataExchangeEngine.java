@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -160,24 +161,24 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             String fPartOverrideMsg = "DSS f-part override: " + (fPartOverride == null ? "Not Overridden" : fPartOverride);
             logImportantProgress(performedOnMsg);
             logImportantProgress(timeWindowMsg);
-            Map<Path, DataExchangeConfiguration> parsedConfigurations = parseConfigurations();
+            setUpLoggingForConfigs(_configurationFiles, _runtimeParameters.getLogFileDirectory());
+            _fileLoggers.values().forEach(logger ->
+            {
+                logger.logToHeader(performedOnMsg);
+                logger.logToHeader(timeWindowMsg);
+                logger.logToHeader(studyDirMsg);
+                logger.logToHeader(logFileFirMsg);
+                logger.logToHeader(storeRuleMsg);
+                logger.logToHeader(fPartOverrideMsg);
+                for(AuthenticationParameters authParam : authParams)
+                {
+                    logger.logToHeader("Username for " + authParam.getUrl() + ": " + authParam.getUsername());
+                }
+            });
             MerlinDataExchangeStatus retVal = MerlinDataExchangeStatus.FAILURE;
             try
             {
-                setUpLoggingForConfigs(parsedConfigurations, _runtimeParameters.getLogFileDirectory());
-                _fileLoggers.values().forEach(logger ->
-                {
-                    logger.logToHeader(performedOnMsg);
-                    logger.logToHeader(timeWindowMsg);
-                    logger.logToHeader(studyDirMsg);
-                    logger.logToHeader(logFileFirMsg);
-                    logger.logToHeader(storeRuleMsg);
-                    logger.logToHeader(fPartOverrideMsg);
-                    for(AuthenticationParameters authParam : authParams)
-                    {
-                        logger.logToHeader("Username for " + authParam.getUrl() + ": " + authParam.getUsername());
-                    }
-                });
+                Map<Path, DataExchangeConfiguration> parsedConfigurations = parseConfigurations();
                 List<ApiConnectionInfo> merlinRoots = getMerlinUrlPaths(parsedConfigurations.values());
                 for(ApiConnectionInfo connectionInfo : merlinRoots)
                 {
@@ -189,13 +190,13 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 }
                 retVal = _completionTracker.getCompletionStatus();
             }
-            catch (UnsupportedTemplateException e)
+            catch (MerlinConfigParseException | UnsupportedTemplateException | MerlinInitializationException e)
             {
                 String errorMsg = e.getMessage();
                 logError(errorMsg, e);
-                MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
-                bodyWithError.log(errorMsg);
-                _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
+                MerlinDataExchangeLogBody body = new MerlinDataExchangeLogBody();
+                body.log(errorMsg);
+                _fileLoggers.values().forEach(fl -> fl.logBody(body));
             }
             catch (MerlinAuthorizationException e)
             {
@@ -204,13 +205,6 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 logError(errorMsg, e);
                 MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
                 bodyWithError.log(errorMsg);
-                _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
-            }
-            catch (MerlinInitializationException e)
-            {
-                logError(e.getMessage(), e);
-                MerlinDataExchangeLogBody bodyWithError = new MerlinDataExchangeLogBody();
-                bodyWithError.log(e.getMessage());
                 _fileLoggers.values().forEach(logger -> logger.logBody(bodyWithError));
             }
             logCompletion(retVal);
@@ -389,6 +383,8 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             MerlinDataExchangeLogger logFileLogger = _fileLoggers.get(configPath);
             String logMessage = "Running Extract for config: " + configPath;
             logImportantProgress(logMessage);
+            String logFileMessage = "Logging extract to: " + logFileLogger.getLogFile();
+            logImportantProgress(logFileMessage);
             MerlinDataExchangeLogBody logBody = new MerlinDataExchangeLogBody();
             logBody.log(logMessage);
             logFileLogger.logBody(logBody);
@@ -413,10 +409,13 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         _completionTracker.reset();
     }
 
-    private Map<Path, DataExchangeConfiguration> parseConfigurations()
+    private Map<Path, DataExchangeConfiguration> parseConfigurations() throws MerlinConfigParseException
     {
         Map<Path, DataExchangeConfiguration> retVal = new TreeMap<>();
-        _configurationFiles.forEach(configFilepath -> retVal.put(configFilepath, parseDataExchangeConfiguration(configFilepath)));
+        for (Path configFilepath : _configurationFiles)
+        {
+            retVal.put(configFilepath, parseDataExchangeConfiguration(configFilepath));
+        }
         logGeneralProgress("Read configuration files", 1);
         return retVal;
     }
@@ -438,9 +437,9 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
     }
 
-    private void setUpLoggingForConfigs(Map<Path, DataExchangeConfiguration> parsedConfigurations, Path logDirectory)
+    private void setUpLoggingForConfigs(List<Path> configurationPaths, Path logDirectory)
     {
-        for(Path configPath : parsedConfigurations.keySet())
+        for(Path configPath : configurationPaths)
         {
             String configNameWithoutExtension = configPath.getFileName().toString().split("\\.")[0];
             Path logFile = logDirectory.resolve(configNameWithoutExtension + ".log");
@@ -615,19 +614,10 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         return retVal;
     }
 
-    private DataExchangeConfiguration parseDataExchangeConfiguration(Path xmlConfigurationFile)
+    private DataExchangeConfiguration parseDataExchangeConfiguration(Path xmlConfigurationFile) throws MerlinConfigParseException
     {
-        DataExchangeConfiguration retVal = null;
-        try
-        {
-            retVal = MerlinDataExchangeParser.parseXmlFile(xmlConfigurationFile);
-            logImportantProgress("Read configuration file: " + xmlConfigurationFile);
-        }
-        catch (IOException | XMLStreamException e)
-        {
-            String errorMsg = "Failed to read configuration file: " + xmlConfigurationFile;
-            logError(errorMsg, e);
-        }
+        DataExchangeConfiguration retVal = MerlinDataExchangeParser.parseXmlFile(xmlConfigurationFile);
+        logImportantProgress("Read configuration file: " + xmlConfigurationFile);
         return retVal;
     }
 

@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 final class MerlinDataExchangeParserTest
 {
     @Test
-    void testParseXmlFile() throws IOException, XMLStreamException
+    void testParseXmlFile() throws IOException, MerlinConfigParseException
     {
         Path mockXml = getMockXml();
         DataExchangeConfiguration dataExchangeConfig = MerlinDataExchangeParser.parseXmlFile(mockXml);

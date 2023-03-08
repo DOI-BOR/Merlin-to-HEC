@@ -44,7 +44,7 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         {
             DSSPathname pathname = new DSSPathname(timeSeriesContainer.fullName);
             int numTrimmedValues = getNumTrimmedValues(timeSeriesContainer);
-            int numExpected = getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(),
+            int numExpected = ExpectedNumberValuesCalculator.getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(),
                     ZoneId.of(timeSeriesContainer.getTimeZoneID()), timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
             String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Values read: " + timeSeriesContainer.getNumberValues()
                     + ", " + numTrimmedValues + " missing, " +  numExpected + " expected" ;
@@ -90,27 +90,6 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         return missingCount;
     }
 
-    static int getExpectedNumValues(Instant start, Instant end, String ePart, ZoneId tscZoneId, HecTime firstRealTime, HecTime lastRealTime)
-    {
-        if(start == null)
-        {
-            start = firstRealTime.getInstant(tscZoneId);
-        }
-        if(end == null)
-        {
-            end = lastRealTime.getInstant(tscZoneId);
-        }
-        int intervalMinutes = HecTimeSeriesBase.getIntervalFromEPart(ePart);
-        long durationMinutes = Duration.between(start, end).toMinutes();
-        boolean startIsBeforeFirstRealTime = start.isBefore(firstRealTime.getInstant(tscZoneId));
-        boolean endIsAfterLastRealTime = end.isAfter(lastRealTime.getInstant(tscZoneId));
-        int retVal = (int) (durationMinutes / ((double) intervalMinutes));
-        if(!(startIsBeforeFirstRealTime && endIsAfterLastRealTime))
-        {
-            retVal ++;
-        }
-        return retVal;
-    }
 
     @Override
     public void initialize(DataStore dataStore, MerlinParameters parameters)

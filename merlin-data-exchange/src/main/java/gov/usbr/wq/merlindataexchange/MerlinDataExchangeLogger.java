@@ -85,4 +85,9 @@ final class MerlinDataExchangeLogger
         return retVal.toString();
     }
 
+    Path getLogFile()
+    {
+        return _logFile;
+    }
+
 }

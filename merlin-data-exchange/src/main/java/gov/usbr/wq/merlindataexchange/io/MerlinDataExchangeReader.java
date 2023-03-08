@@ -137,7 +137,7 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
             Instant startDetermined = start;
             Instant endDetermined = end;
             ZoneId zoneId = data.getTimeZone();
-            int expectedNumValues = DssDataExchangeWriter.getExpectedNumValues(start, end,
+            int expectedNumValues = ExpectedNumberValuesCalculator.getExpectedNumValues(start, end,
                     HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(data.getTimestep())), zoneId,
                     HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(start, zoneId)), HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(end, zoneId)));
             String progressMsg = "Read " + data.getSeriesId() + " | Is processed: " + isProcessed + " | Values read: 0"
