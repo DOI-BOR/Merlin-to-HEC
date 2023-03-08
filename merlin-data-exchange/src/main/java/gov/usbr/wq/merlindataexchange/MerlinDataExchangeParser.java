@@ -17,6 +17,7 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public final class MerlinDataExchangeParser
 {
@@ -56,6 +57,11 @@ public final class MerlinDataExchangeParser
 
     private static void validateParsedConfig(Path configFilepath, DataExchangeConfiguration config) throws MerlinConfigParseException
     {
+        List<DataStore> dataStores = config.getDataStores();
+        for(DataStore dataStore : dataStores)
+        {
+            validateDataStore(configFilepath, dataStore);
+        }
         for (DataExchangeSet set : config.getDataExchangeSets())
         {
             DataStoreRef dataStoreRefA = set.getDataStoreRefA();
@@ -68,17 +74,20 @@ public final class MerlinDataExchangeParser
             {
                 throw new MerlinConfigParseException(configFilepath, "Missing datastore-ref-b in data-exchange-set " + set.getId());
             }
-            DataStore dataStoreA = config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefA.getId()
+            config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefA.getId()
                     + " in data-exchange-set " + set.getId()));
-            DataStore dataStoreB = config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefB.getId()
+            config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefB.getId()
                     + " in data-exchange-set " + set.getId()));
-            validateDataStore(configFilepath, dataStoreA);
-            validateDataStore(configFilepath, dataStoreB);
+
         }
     }
 
     private static void validateDataStore(Path configFilepath, DataStore dataStore) throws MerlinConfigParseException
     {
+        if(dataStore.getId() == null || dataStore.getId().isEmpty())
+        {
+            throw new MerlinConfigParseException(configFilepath, "Missing id for datastore");
+        }
         if(dataStore.getDataStoreType() == null || dataStore.getDataStoreType().trim().isEmpty())
         {
             throw new MerlinConfigParseException(configFilepath, "Missing data-type for datastore " + dataStore.getId());
