@@ -159,8 +159,6 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             String logFileFirMsg = "Log file directory: " + logFileDirectory.toString();
             String storeRuleMsg = "Regular store rule: " + regularStoreRule;
             String fPartOverrideMsg = "DSS f-part override: " + (fPartOverride == null ? "Not Overridden" : fPartOverride);
-            logImportantProgress(performedOnMsg);
-            logImportantProgress(timeWindowMsg);
             setUpLoggingForConfigs(_configurationFiles, _runtimeParameters.getLogFileDirectory());
             _fileLoggers.values().forEach(logger ->
             {
