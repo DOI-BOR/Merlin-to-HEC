@@ -10,7 +10,7 @@ public final class DataExchangeSet
     @JacksonXmlProperty(isAttribute = true, localName = "source-id")
     private String _sourceId;
     @JacksonXmlProperty(isAttribute = true, localName = "template-id")
-    private int _templateId;
+    private Integer _templateId;
     @JacksonXmlProperty(isAttribute = true, localName = "template-name")
     private String _templateName;
     @JacksonXmlProperty(isAttribute = true, localName = "quality-version-id")
@@ -18,7 +18,7 @@ public final class DataExchangeSet
     @JacksonXmlProperty(isAttribute = true, localName = "quality-version-name")
     private String _qualityVersionName;
     @JacksonXmlProperty(isAttribute = true, localName = "unit-system")
-    private String _unitSystem = Unit.SI;
+    private String _unitSystem = Unit.ENGLISH;
     @JacksonXmlProperty(localName = "data-type")
     private String _dataType;
     @JacksonXmlProperty(localName = "datastore-ref-a")
@@ -47,7 +47,7 @@ public final class DataExchangeSet
         _sourceId = sourceId;
     }
 
-    public int getTemplateId()
+    public Integer getTemplateId()
     {
         return _templateId;
     }

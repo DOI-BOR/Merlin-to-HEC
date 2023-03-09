@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data-exchange-configuration xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance">
+    <datastore id="www.grabdata2.com">
+        <datastore-type>merlin</datastore-type>
+        <path>https://www.grabdata2.com</path>
+    </datastore>
+    <datastore id="wat">
+        <datastore-type>dss</datastore-type>
+        <path>$WATERSHED/merlin_mock_config_dx.dss</path>
+    </datastore>
+    <data-exchange-set id="Shasta Lake - MR Boundary Flow" template-id="98" template-name = "Shasta Lake - MR Boundary Flow" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="SI">
+        <data-type>time-series</data-type>
+        <datastore-ref-a id="www.grabdata2.com"/>
+        <datastore-ref-b id="wat"/>
+    </data-exchange-set>
+    <data-exchange-set id="Shasta Lake - MR Outlet Release 1" source-id="www.grabdata2.com" template-id="102" template-name = "Shasta Lake - MR Outlet Release 1" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="SI">
+        <data-type>time-series</data-type>
+        <datastore-ref-a id="www.grabdata2.com"/>
+        <datastore-ref-b id="wat"/>
+    </data-exchange-set>
+</data-exchange-configuration>

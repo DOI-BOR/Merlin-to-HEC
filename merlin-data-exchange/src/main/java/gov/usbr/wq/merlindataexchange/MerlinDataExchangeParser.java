@@ -6,6 +6,7 @@ import gov.usbr.wq.merlindataexchange.configuration.DataExchangeConfiguration;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import gov.usbr.wq.merlindataexchange.configuration.DataStoreRef;
+import hec.heclib.util.Unit;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -17,6 +18,7 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 
 public final class MerlinDataExchangeParser
@@ -66,6 +68,34 @@ public final class MerlinDataExchangeParser
         {
             DataStoreRef dataStoreRefA = set.getDataStoreRefA();
             DataStoreRef dataStoreRefB = set.getDataStoreRefB();
+            String type = set.getDataType();
+            String templateName = set.getTemplateName();
+            Integer templateId = set.getTemplateId();
+            String qualityVersionName = set.getQualityVersionName();
+            Integer qualityVersionId = set.getQualityVersionId();
+            String unitSystem = set.getUnitSystem();
+            String sourceId = set.getSourceId();
+            List<String> validUnitSystems = Arrays.asList(Unit.getUnitSystems());
+            if(type == null || type.trim().isEmpty())
+            {
+                throw new MerlinConfigParseException(configFilepath, "Missing type in data-exchange-set " + set.getId());
+            }
+            if((templateName == null || templateName.trim().isEmpty()) && templateId == null)
+            {
+                throw new MerlinConfigParseException(configFilepath, "Missing template in data-exchange-set " + set.getId());
+            }
+            if((qualityVersionName == null || qualityVersionName.trim().isEmpty()) && qualityVersionId == null)
+            {
+                throw new MerlinConfigParseException(configFilepath, "Missing quality-version in data-exchange-set " + set.getId());
+            }
+            if(!validUnitSystem(validUnitSystems, unitSystem))
+            {
+                throw new MerlinConfigParseException(configFilepath, "Unit System " + unitSystem + " does not match an accepted unit system: " + validUnitSystems);
+            }
+            if(sourceId == null || sourceId.trim().isEmpty())
+            {
+                throw new MerlinConfigParseException(configFilepath, "Missing source-id in data-exchange-set " + set.getId());
+            }
             if(dataStoreRefA == null)
             {
                 throw new MerlinConfigParseException(configFilepath, "Missing datastore-ref-a in data-exchange-set " + set.getId());
@@ -80,6 +110,20 @@ public final class MerlinDataExchangeParser
                     + " in data-exchange-set " + set.getId()));
 
         }
+    }
+
+    private static boolean validUnitSystem(List<String> validUnitSystems, String unitSystem)
+    {
+        boolean retVal = false;
+        for(String validUnitSystem : validUnitSystems)
+        {
+            if(validUnitSystem.equalsIgnoreCase(unitSystem))
+            {
+                retVal = true;
+                break;
+            }
+        }
+        return retVal;
     }
 
     private static void validateDataStore(Path configFilepath, DataStore dataStore) throws MerlinConfigParseException
