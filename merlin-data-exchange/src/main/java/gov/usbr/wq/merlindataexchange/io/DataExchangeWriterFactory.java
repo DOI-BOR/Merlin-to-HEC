@@ -14,7 +14,7 @@ public final class DataExchangeWriterFactory
         DataExchangeWriter retVal = lookup.lookup(DataExchangeWriter.class);
         if(retVal == null)
         {
-            throw new DataExchangeLookupException("Failed to look up DataExchangeWrite using lookup path: " + lookupPath);
+            throw new DataExchangeLookupException(destination);
         }
         return retVal;
     }

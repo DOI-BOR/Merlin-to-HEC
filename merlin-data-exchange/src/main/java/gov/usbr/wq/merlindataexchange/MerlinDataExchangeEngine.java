@@ -516,6 +516,11 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 {
                     throw new UnsupportedTemplateException(dataExchangeSet.getTemplateName(), dataExchangeSet.getTemplateId());
                 }
+                Optional<QualityVersionWrapper> qualityVersion = getQualityVersionIdFromDataExchangeSet(dataExchangeSet, cache);
+                if(!qualityVersion.isPresent())
+                {
+                    throw new UnsupportedQualityVersionException(dataExchangeSet.getQualityVersionName(), dataExchangeSet.getQualityVersionId());
+                }
                 List<MeasureWrapper> measures = cache.getCachedTemplateToMeasures().get(template);
                 List<CompletableFuture<Void>> measurementFutures = new ArrayList<>();
                 try
@@ -532,14 +537,9 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 }
             }
         }
-        catch (DataExchangeLookupException e)
+        catch (DataExchangeLookupException | UnsupportedTemplateException | UnsupportedQualityVersionException e)
         {
-            logError("Lookup failed!", e);
-            logBody.log("Error Occurred: " + e.getMessage());
-        }
-        catch (UnsupportedTemplateException e)
-        {
-            _completionTracker.addNumberOfMeasuresToComplete(1); //adding 1 here so extract of this set is flagged as failed
+            _completionTracker.addNumberOfMeasuresToComplete(1);
             logError(e.getMessage(), e);
             logBody.log(e.getMessage());
         }
@@ -623,6 +623,23 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                         .findFirst()
                         .orElse(null);
             }
+        }
+        return retVal;
+    }
+
+    private Optional<QualityVersionWrapper> getQualityVersionIdFromDataExchangeSet(DataExchangeSet dataExchangeSet, DataExchangeCache cache)
+    {
+        String qualityVersionNameFromSet = dataExchangeSet.getQualityVersionName();
+        Integer qualityVersionIdFromSet = dataExchangeSet.getQualityVersionId();
+        List<QualityVersionWrapper> qualityVersions = cache.getCachedQualityVersions();
+        Optional<QualityVersionWrapper> retVal = qualityVersions.stream()
+                .filter(qualityVersion -> qualityVersion.getQualityVersionName().equalsIgnoreCase(qualityVersionNameFromSet))
+                .findFirst();
+        if(!retVal.isPresent())
+        {
+            retVal = qualityVersions.stream()
+                    .filter(qualityVersion -> qualityVersion.getQualityVersionID().intValue() == qualityVersionIdFromSet)
+                    .findFirst();
         }
         return retVal;
     }

@@ -4,6 +4,10 @@ import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import rma.util.lookup.Lookup;
 import rma.util.lookup.Lookups;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
+
 public final class DataExchangeReaderFactory
 {
     public static DataExchangeReader lookupReader(DataStore source) throws DataExchangeLookupException
@@ -14,7 +18,7 @@ public final class DataExchangeReaderFactory
         DataExchangeReader retVal = lookup.lookup(DataExchangeReader.class);
         if(retVal == null)
         {
-            throw new DataExchangeLookupException("Failed to look up DataExchangeReader using lookup path: " + lookupPath);
+            throw new DataExchangeLookupException(source);
         }
         return retVal;
     }

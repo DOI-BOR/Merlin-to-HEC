@@ -229,12 +229,6 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
                     .filter(qualityVersion -> qualityVersion.getQualityVersionID().intValue() == qualityVersionIdFromSet)
                     .findFirst();
         }
-        if(!retVal.isPresent())
-        {
-            LOGGER.log(Level.WARNING, () -> "Failed to find matching quality version ID in retrieved quality versions for quality version name "
-                    + qualityVersionNameFromSet + " or id " + qualityVersionIdFromSet
-                    + ". Using NULL for quality version.");
-        }
         return retVal;
     }
 
