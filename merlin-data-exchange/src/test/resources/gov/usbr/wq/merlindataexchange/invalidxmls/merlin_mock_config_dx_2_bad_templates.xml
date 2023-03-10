@@ -6,14 +6,14 @@
     </datastore>
     <datastore id="wat">
         <datastore-type>dss</datastore-type>
-        <path>$WATERSHED/merlin_mock_config_dx.dss</path>
+        <path>$WATERSHED/merlin_mock_config_dx_2_bad_templates.dss</path>
     </datastore>
-    <data-exchange-set id="Lower American R - MR Flow" source-id="www.grabdata2.com" template-id="86" template-name = "Lower American R - MR Flow" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="SI">
+    <data-exchange-set id="Non Existent -Template Name" source-id="www.grabdata2.com" template-id="982" template-name = "Non Existent -Template Name" quality-version-id="0" quality-version-name = "All" unit-system="SI">
         <data-type>time-series</data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>
     </data-exchange-set>
-    <data-exchange-set id="Shasta Lake - MR Outlet Release 1" source-id="www.grabdata2.com" template-id="102" template-name = "Shasta Lake - MR Outlet Release 1" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="SI">
+    <data-exchange-set id="Non Existent -Template Name" source-id="www.grabdata2.com" template-id="982" template-name = "Non Existent -Template Name" quality-version-id="0" quality-version-name = "All" unit-system="SI">
         <data-type>time-series</data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>
