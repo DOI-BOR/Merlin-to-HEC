@@ -471,11 +471,11 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
         if(dataStoreDestinationOpt.isPresent() && dataStoreSourceOpt.isPresent())
         {
-            exchangeData(dataExchangeSet, dataExchangeConfig, dataStoreSourceOpt.get(), dataStoreDestinationOpt.get(), logBody);
+            exchangeData(dataExchangeSet, dataStoreSourceOpt.get(), dataStoreDestinationOpt.get(), logBody);
         }
     }
 
-    private void exchangeData(DataExchangeSet dataExchangeSet, DataExchangeConfiguration dataExchangeConfig, DataStore dataStoreSource, DataStore dataStoreDestination, MerlinDataExchangeLogBody logBody)
+    private void exchangeData(DataExchangeSet dataExchangeSet, DataStore dataStoreSource, DataStore dataStoreDestination, MerlinDataExchangeLogBody logBody)
     {
         try
         {
