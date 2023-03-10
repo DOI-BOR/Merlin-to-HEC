@@ -220,7 +220,7 @@ final class MerlinDataExchangeEngineTest
         for (Path mock : mocks) {
             DataExchangeConfiguration config = MerlinDataExchangeParser.parseXmlFile(mock);
             for (DataExchangeSet set : config.getDataExchangeSets()) {
-                int templateId = set.getTemplateId();
+                Integer templateId = set.getTemplateId();
                 TemplateWrapper templateWrapper = new TemplateWrapperBuilder().withDprID(templateId).build();
                 List<MeasureWrapper> measures = access.getMeasurementsByTemplate(connectionInfo, token, templateWrapper);
                 for (MeasureWrapper measure : measures) {

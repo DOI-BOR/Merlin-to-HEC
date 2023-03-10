@@ -31,7 +31,7 @@ public final class MerlinConfigParseException extends Exception
             retVal += ":\n" + ((UnrecognizedPropertyException)e).getOriginalMessage()
                     + ".\nExpected one of the following fields: " + getExpectedFields((UnrecognizedPropertyException) e);
         }
-        if(e instanceof SAXParseException)
+        else if(e instanceof SAXParseException)
         {
             SAXParseException saxException = (SAXParseException) e;
             retVal += ":\n" + saxException.getMessage() + "\n"

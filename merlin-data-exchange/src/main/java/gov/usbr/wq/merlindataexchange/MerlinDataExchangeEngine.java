@@ -35,9 +35,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -591,7 +591,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     {
         String dataStorePath = dataStore.getPath();
         String templateNameFromSet = dataExchangeSet.getTemplateName();
-        int templateIdFromSet = dataExchangeSet.getTemplateId();
+        Integer templateIdFromSet = dataExchangeSet.getTemplateId();
         DataExchangeCache cache = _dataExchangeCache.get(new ApiConnectionInfo(dataStorePath));
         TemplateWrapper retVal = null;
         if(cache != null)
@@ -604,7 +604,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             if(retVal == null)
             {
                 retVal = cachedTemplates.stream()
-                        .filter(template -> template.getDprId() == templateIdFromSet)
+                        .filter(template -> Objects.equals(template.getDprId(), templateIdFromSet))
                         .findFirst()
                         .orElse(null);
             }
