@@ -545,7 +545,7 @@ final class MerlinDataExchangeEngineTest
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
-        Path mockXml = getMockXml("invalidXmls/merlin_mock_config_dx_2_bad_templates.xml");
+        Path mockXml = getMockXml("merlin_mock_config_dx_2_bad_templates.xml");
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
         Instant start = Instant.parse("2019-01-01T08:00:00Z");

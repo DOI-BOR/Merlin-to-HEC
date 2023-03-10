@@ -9,6 +9,7 @@ import gov.usbr.wq.merlindataexchange.configuration.DataStoreRef;
 import hec.heclib.util.Unit;
 import org.xml.sax.SAXException;
 
+import javax.xml.crypto.Data;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -96,6 +97,10 @@ public final class MerlinDataExchangeParser
             {
                 throw new MerlinConfigParseException(configFilepath, "Missing source-id in data-exchange-set " + set.getId());
             }
+            if(!sourceIdMatchesADataStore(sourceId, dataStores))
+            {
+                throw new MerlinConfigParseException(configFilepath, "source-id " + set.getSourceId() + " does not match any datastores in configuration file");
+            }
             if(dataStoreRefA == null)
             {
                 throw new MerlinConfigParseException(configFilepath, "Missing datastore-ref-a in data-exchange-set " + set.getId());
@@ -110,6 +115,20 @@ public final class MerlinDataExchangeParser
                     + " in data-exchange-set " + set.getId()));
 
         }
+    }
+
+    private static boolean sourceIdMatchesADataStore(String sourceId, List<DataStore> dataStores)
+    {
+        boolean retVal = false;
+        for(DataStore dataStore : dataStores)
+        {
+            if(dataStore.getId().equalsIgnoreCase(sourceId))
+            {
+                retVal = true;
+                break;
+            }
+        }
+        return retVal;
     }
 
     private static boolean validUnitSystem(List<String> validUnitSystems, String unitSystem)

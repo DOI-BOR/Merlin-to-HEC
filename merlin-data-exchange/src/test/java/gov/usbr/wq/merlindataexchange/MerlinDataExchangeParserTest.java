@@ -81,19 +81,22 @@ final class MerlinDataExchangeParserTest
                     .map(Path::toFile)
                     .filter(File::isFile)
                     .collect(toList());
-            invalidXmlFiles.forEach(file -> assertThrows(MerlinConfigParseException.class, () ->
+            for (File file : invalidXmlFiles)
             {
-                try
+                assertThrows(MerlinConfigParseException.class, () ->
                 {
-                    MerlinDataExchangeParser.parseXmlFile(file.toPath());
-                }
-                catch (MerlinConfigParseException e)
-                {
-                    System.out.println(e.getMessage());
-                    System.out.println("-------------------------------------------------------------------");
-                    throw e;
-                }
-            }));
+                    try
+                    {
+                        MerlinDataExchangeParser.parseXmlFile(file.toPath());
+                    }
+                    catch (MerlinConfigParseException e)
+                    {
+                        System.out.println(e.getMessage());
+                        System.out.println("-------------------------------------------------------------------");
+                        throw e;
+                    }
+                }, "Expected " + file.toString() + " to fail");
+            }
         }
     }
 
