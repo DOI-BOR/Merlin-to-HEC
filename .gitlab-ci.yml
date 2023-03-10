@@ -27,7 +27,7 @@ build-java-code:
 deploy-to-nexus:
   stage: deploy
   script:
-    - ./gradlew publish -PnexusUser="$NEXUS_USER" -PnexusPassword="$NEXUS_PASSWORD" -PrmaNexusUser="$RMA_NEXUS_USER" -PrmaNexusPassword="$RMA_NEXUS_PASSWORD" --no-daemon --build-cache --gradle-user-home cache/ -x test
+    - ./gradlew publish -PnexusUser="$NEXUS_USER" -PnexusPassword="$NEXUS_PASSWORD" -PrmaNexusUser="$RMA_NEXUS_USER" -PrmaNexusPassword="$RMA_NEXUS_PASSWORD" --no-daemon --build-cache --gradle-user-home cache/
   dependencies:
     - build-java-code
   tags:

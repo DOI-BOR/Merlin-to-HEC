@@ -29,7 +29,7 @@ final class MerlinDataExchangeIntegrationTest
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
-        String mockXmlFileName = "merlin_mock_config_partial_dx.xml";
+        String mockXmlFileName = "merlin_mock_config_dx.xml";
         Path mockXml = getMockXml(mockXmlFileName);
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();

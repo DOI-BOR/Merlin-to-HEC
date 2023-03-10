@@ -352,31 +352,7 @@ final class MerlinDataExchangeEngineTest
         List<Path> originalConfigMock = Collections.singletonList(getMockXml("merlin_mock_config_partial_dx.xml"));
         Map<String, DataWrapper> expectedDssToData = buildExpectedDss(originalConfigMock, start, end, username, password);
         assertNotNull(expectedDssToData);
-        String dssFileName = testDirectory.resolve(mockFileName.replace(".xml", ".dss")).toString();
-        for(Map.Entry<String, DataWrapper> entry : expectedDssToData.entrySet())
-        {
-            String dssPath = entry.getKey();
-            DataWrapper merlinData = entry.getValue();
-            TimeSeriesContainer tsc = DssFileManagerImpl.getDssFileManager().readTS(new DSSIdentifier(dssFileName, dssPath), false);
-            assertNotNull(tsc);
-            assertEquals(merlinData.getEvents().size(), tsc.getNumberValues());
-            DSSPathname pathname = new DSSPathname(tsc.getFullName());
-            assertEquals( HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(merlinData.getTimestep())), pathname.ePart());
-            assertEquals(merlinData.getParameter(), pathname.cPart());
-            assertEquals(merlinData.getStation() + "-" + merlinData.getSensor(), pathname.getBPart());
-            assertEquals(merlinData.getProject(), pathname.getAPart());
-            int i=0;
-            for(EventWrapper event : merlinData.getEvents())
-            {
-                HecTime merlinTimeZulu = HecTime.fromZonedDateTime(event.getDate());
-                HecTime tscTimeZulu = tsc.getTimes().elementAt(i);
-                tscTimeZulu = HecTime.convertToTimeZone(tscTimeZulu, TimeZone.getTimeZone("GMT-8"), TimeZone.getTimeZone("Z"));
-                double tscVal = Units.convertUnits(tsc.getValue(i), tsc.units, merlinData.getUnits());
-                assertEquals(event.getValue(), tscVal, 1.0E-14);
-                assertEquals(merlinTimeZulu.date(), tscTimeZulu.date());
-                i++;
-            }
-        }
+        verifyData(expectedDssToData, testDirectory, mockFileName);
     }
 
     @Test
@@ -421,31 +397,7 @@ final class MerlinDataExchangeEngineTest
         List<Path> originalConfigMock = Collections.singletonList(getMockXml("merlin_mock_config_partial_dx.xml"));
         Map<String, DataWrapper> expectedDssToData = buildExpectedDss(originalConfigMock, start, end, username, password);
         assertNotNull(expectedDssToData);
-        String dssFileName = testDirectory.resolve(mockFileName.replace(".xml", ".dss")).toString();
-        for(Map.Entry<String, DataWrapper> entry : expectedDssToData.entrySet())
-        {
-            String dssPath = entry.getKey();
-            DataWrapper merlinData = entry.getValue();
-            TimeSeriesContainer tsc = DssFileManagerImpl.getDssFileManager().readTS(new DSSIdentifier(dssFileName, dssPath), false);
-            assertNotNull(tsc);
-            assertEquals(merlinData.getEvents().size(), tsc.getNumberValues());
-            DSSPathname pathname = new DSSPathname(tsc.getFullName());
-            assertEquals( HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(merlinData.getTimestep())), pathname.ePart());
-            assertEquals(merlinData.getParameter(), pathname.cPart());
-            assertEquals(merlinData.getStation() + "-" + merlinData.getSensor(), pathname.getBPart());
-            assertEquals(merlinData.getProject(), pathname.getAPart());
-            int i=0;
-            for(EventWrapper event : merlinData.getEvents())
-            {
-                HecTime merlinTimeZulu = HecTime.fromZonedDateTime(event.getDate());
-                HecTime tscTimeZulu = tsc.getTimes().elementAt(i);
-                tscTimeZulu = HecTime.convertToTimeZone(tscTimeZulu, TimeZone.getTimeZone("GMT-8"), TimeZone.getTimeZone("Z"));
-                double tscVal = Units.convertUnits(tsc.getValue(i), tsc.units, merlinData.getUnits());
-                assertEquals(event.getValue(), tscVal, 1.0E-14);
-                assertEquals(merlinTimeZulu.date(), tscTimeZulu.date());
-                i++;
-            }
-        }
+        verifyData(expectedDssToData, testDirectory, mockFileName);
     }
 
     @Test
@@ -490,31 +442,7 @@ final class MerlinDataExchangeEngineTest
         List<Path> originalConfigMock = Collections.singletonList(getMockXml("merlin_mock_config_partial_dx.xml"));
         Map<String, DataWrapper> expectedDssToData = buildExpectedDss(originalConfigMock, start, end, username, password);
         assertNotNull(expectedDssToData);
-        String dssFileName = testDirectory.resolve(mockFileName.replace(".xml", ".dss")).toString();
-        for(Map.Entry<String, DataWrapper> entry : expectedDssToData.entrySet())
-        {
-            String dssPath = entry.getKey();
-            DataWrapper merlinData = entry.getValue();
-            TimeSeriesContainer tsc = DssFileManagerImpl.getDssFileManager().readTS(new DSSIdentifier(dssFileName, dssPath), false);
-            assertNotNull(tsc);
-            assertEquals(merlinData.getEvents().size(), tsc.getNumberValues());
-            DSSPathname pathname = new DSSPathname(tsc.getFullName());
-            assertEquals( HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(merlinData.getTimestep())), pathname.ePart());
-            assertEquals(merlinData.getParameter(), pathname.cPart());
-            assertEquals(merlinData.getStation() + "-" + merlinData.getSensor(), pathname.getBPart());
-            assertEquals(merlinData.getProject(), pathname.getAPart());
-            int i=0;
-            for(EventWrapper event : merlinData.getEvents())
-            {
-                HecTime merlinTimeZulu = HecTime.fromZonedDateTime(event.getDate());
-                HecTime tscTimeZulu = tsc.getTimes().elementAt(i);
-                tscTimeZulu = HecTime.convertToTimeZone(tscTimeZulu, TimeZone.getTimeZone("GMT-8"), TimeZone.getTimeZone("Z"));
-                double tscVal = Units.convertUnits(tsc.getValue(i), tsc.units, merlinData.getUnits());
-                assertEquals(event.getValue(), tscVal, 1.0E-14);
-                assertEquals(merlinTimeZulu.date(), tscTimeZulu.date());
-                i++;
-            }
-        }
+        verifyData(expectedDssToData, testDirectory, mockFileName);
     }
 
     private void verifyData(Map<String, DataWrapper> expectedDssToData, Path testDirectory, String mockFileName) throws UnitsConversionException
