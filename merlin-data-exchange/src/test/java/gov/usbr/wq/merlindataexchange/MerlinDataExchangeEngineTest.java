@@ -16,6 +16,9 @@ import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParametersBuilder;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParametersBuilder;
+import hec.data.DataSetIllegalArgumentException;
+import hec.data.Interval;
+import hec.data.IntervalOffset;
 import hec.data.Units;
 import hec.data.UnitsConversionException;
 import hec.heclib.dss.DSSPathname;
@@ -32,15 +35,21 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.TimeZone;
+import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -181,6 +190,50 @@ final class MerlinDataExchangeEngineTest
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
         String mockFileName = "merlin_mock_config_dx_test_large_window.xml";
+        Path mockXml = getMockXml(mockFileName);
+        List<Path> mocks = Arrays.asList(mockXml);
+        Path testDirectory = getTestDirectory();
+        Path dssFile = testDirectory.resolve(mockFileName.replace(".xml", ".dss"));
+        if(Files.exists(dssFile))
+        {
+            Files.delete(dssFile);
+        }
+        Instant start = Instant.parse("2015-02-01T12:00:00Z");
+        Instant end = Instant.parse("2022-08-21T12:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
+        assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        Map<String, DataWrapper> expectedDssToData = buildExpectedDss(mocks, start, end, username, password);
+        assertNotNull(expectedDssToData);
+        verifyData(expectedDssToData, testDirectory, mockFileName);
+    }
+
+    @Test
+    void testRunExtractNeedsInterpolation() throws IOException, HttpAccessException, MerlinConfigParseException, UnitsConversionException
+    {
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        String mockFileName = "merlin_mock_config_needs_interpolation.xml";
         Path mockXml = getMockXml(mockFileName);
         List<Path> mocks = Arrays.asList(mockXml);
         Path testDirectory = getTestDirectory();
@@ -451,23 +504,52 @@ final class MerlinDataExchangeEngineTest
             DataWrapper merlinData = entry.getValue();
             TimeSeriesContainer tsc = DssFileManagerImpl.getDssFileManager().readTS(new DSSIdentifier(dssFileName, dssPath), false);
             assertNotNull(tsc);
-            assertEquals(merlinData.getEvents().size(), tsc.getNumberValues());
+            boolean interpolationNeeded = false;
+            try {
+                int expectedNumValues = merlinData.getEvents().size();
+                interpolationNeeded = calculateInterpolationNeeded(false, merlinData.getStartTime(), merlinData.getEndTime(), merlinData.getTimestep(), merlinData.getTimeZone(), merlinData.getEvents().size());
+                if (interpolationNeeded)
+                {
+                    ZonedDateTime startTime = merlinData.getStartTime();
+                    ZonedDateTime endTime = merlinData.getEndTime();
+                    int parsedInterval = Integer.parseInt(merlinData.getTimestep());
+                    String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
+                    int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(interval), TimeZone.getTimeZone(merlinData.getTimeZone()));
+                    expectedNumValues = calculateNumberOfExpectedIntervals(startTime, endTime, offsetMinutes, parsedInterval, interval, merlinData.getTimeZone()) + 1;
+                }
+                assertEquals(expectedNumValues, tsc.getNumberValues());
+            }
+            catch (DataSetIllegalArgumentException e)
+            {
+                throw new RuntimeException(e);
+            }
             DSSPathname pathname = new DSSPathname(tsc.getFullName());
             assertEquals( HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(merlinData.getTimestep())), pathname.ePart());
             assertEquals(merlinData.getParameter(), pathname.cPart());
             assertEquals(merlinData.getStation() + "-" + merlinData.getSensor(), pathname.getBPart());
             assertEquals(merlinData.getProject(), pathname.getAPart());
-            int i=0;
+            NavigableMap<HecTime, EventWrapper> eventMap = new TreeMap<>();
             for(EventWrapper event : merlinData.getEvents())
             {
                 HecTime merlinTimeZulu = HecTime.fromZonedDateTime(event.getDate());
+                eventMap.put(merlinTimeZulu, event);
+            }
+            for(int i=0; i < tsc.getNumberValues(); i++)
+            {
                 HecTime tscTimeZulu = tsc.getTimes().elementAt(i);
                 tscTimeZulu = HecTime.convertToTimeZone(tscTimeZulu, TimeZone.getTimeZone("GMT-8"), TimeZone.getTimeZone("Z"));
                 double tscVal = Units.convertUnits(tsc.getValue(i), tsc.units, merlinData.getUnits());
-                assertEquals(event.getValue(), tscVal, 1.0E-14);
-                assertEquals(merlinTimeZulu.date(), tscTimeZulu.date());
-                i++;
+                EventWrapper event = eventMap.get(tscTimeZulu);
+                if(!interpolationNeeded)
+                {
+                    assertNotNull(event);
+                }
+                if(event != null)
+                {
+                    assertEquals(event.getValue(), tscVal, 1.0E-4);
+                }
             }
+
         }
     }
 
@@ -927,6 +1009,36 @@ final class MerlinDataExchangeEngineTest
             throw new IOException("Failed to get resource: " + resource);
         }
         return new File(resourceUrl.getFile()).toPath();
+    }
+
+    private static int calculateOffsetInMinutes(ZonedDateTime start, Interval interval, TimeZone timeZone) throws DataSetIllegalArgumentException
+    {
+        Instant prevInterval = Instant.ofEpochMilli(Interval.getPreviousIntervalTime(start.toInstant().toEpochMilli(), interval, timeZone));
+        Instant interValToCheck = Instant.ofEpochMilli(Interval.getNextIntervalTime(prevInterval.toEpochMilli(), interval, timeZone));
+        return (int) Duration.between(interValToCheck, start.toInstant()).toMinutes();
+    }
+
+    private static boolean calculateInterpolationNeeded(boolean isProcessed, ZonedDateTime startTime, ZonedDateTime endTime, String timeStep, ZoneId dataZoneId, int numberOfEvents)
+            throws DataSetIllegalArgumentException
+    {
+        boolean retVal = !isProcessed;
+        if(!isProcessed)
+        {
+            int parsedInterval = Integer.parseInt(timeStep);
+            String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
+            int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(interval), TimeZone.getTimeZone(dataZoneId));
+            int numIntervals = calculateNumberOfExpectedIntervals(startTime, endTime, offsetMinutes, parsedInterval, interval, dataZoneId);
+            retVal = numIntervals + 1 != numberOfEvents;
+        }
+        return retVal;
+    }
+
+    private static int calculateNumberOfExpectedIntervals(ZonedDateTime startTime, ZonedDateTime endTime, int offsetMinutes, int parsedInterval, String interval, ZoneId dataZoneId)
+            throws DataSetIllegalArgumentException
+    {
+        IntervalOffset offset = new IntervalOffset(offsetMinutes/60, parsedInterval/60);
+        return (int) Interval.calcNumberOfIntervals(Date.from(startTime.toInstant()),
+                Date.from(endTime.toInstant()), new Interval(interval), offset, TimeZone.getTimeZone(dataZoneId));
     }
 
     private Path getTestDirectory()

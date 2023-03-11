@@ -11,19 +11,31 @@ package gov.usbr.wq.merlindataexchange.io;
 import gov.usbr.wq.dataaccess.model.DataWrapper;
 import gov.usbr.wq.dataaccess.model.EventWrapper;
 import gov.usbr.wq.merlindataexchange.NoEventsException;
+import hec.data.DataSetIllegalArgumentException;
+import hec.data.IllegalIntervalOffsetException;
+import hec.data.Interval;
+import hec.data.IntervalOffset;
 import hec.data.Units;
 import hec.data.UnitsConversionException;
 import hec.heclib.dss.DSSPathname;
 import hec.heclib.dss.HecTimeSeriesBase;
 import hec.heclib.util.HecTime;
 import hec.heclib.util.Unit;
+import hec.hecmath.HecMath;
+import hec.hecmath.HecMathException;
+import hec.hecmath.TimeSeriesMath;
+import hec.io.DataContainer;
 import hec.io.TimeSeriesContainer;
 import hec.lang.Const;
 import hec.ui.ProgressListener;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.NavigableSet;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,8 +52,8 @@ final class MerlinDataConverter
 		throw new AssertionError("This utility class is not intended to be instantiated.");
 	}
 
-	static TimeSeriesContainer dataToTimeSeries(DataWrapper data, String unitSystemToConvertTo, String fPartOverride, ProgressListener progressListener)
-			throws MerlinInvalidTimestepException, NoEventsException
+	static TimeSeriesContainer dataToTimeSeries(DataWrapper data, String unitSystemToConvertTo, String fPartOverride, boolean isProcessed, ProgressListener progressListener)
+			throws MerlinInvalidTimestepException, NoEventsException, HecMathException, DataSetIllegalArgumentException
 	{
 		TimeSeriesContainer output = new TimeSeriesContainer();
 		if(data != null && data.getSeriesId() != null && !data.getSeriesId().isEmpty())
@@ -88,6 +100,7 @@ final class MerlinDataConverter
 			int[] times = new int[events.size()];
 			double[] values = new double[events.size()];
 			int i = 0;
+			boolean needsInterpolation = calculateInterpolationNeeded(isProcessed, data.getStartTime(), data.getEndTime(), data.getTimestep(), dataZoneId, events.size());
 			for (EventWrapper event : events)
 			{
 				HecTime hecTime = fromZonedDateTime(event.getDate(), dataZoneId);
@@ -115,14 +128,64 @@ final class MerlinDataConverter
 			output.endHecTime = endTime;
 			try
 			{
+				if(needsInterpolation)
+				{
+					output = interpolateTimeSeries(output, interval);
+				}
 				convertUnits(output, unitSystemToConvertTo, data);
 			}
 			catch (UnitsConversionException e)
 			{
 				logUnitConversionError(e, progressListener);
 			}
+
 		}
 		return output;
+	}
+
+	private static boolean calculateInterpolationNeeded(boolean isProcessed, ZonedDateTime startTime, ZonedDateTime endTime, String timeStep, ZoneId dataZoneId, int numberOfEvents)
+			throws DataSetIllegalArgumentException
+	{
+		boolean retVal = !isProcessed;
+		if(!isProcessed)
+		{
+			int parsedInterval = Integer.parseInt(timeStep);
+			String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
+			int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(interval), TimeZone.getTimeZone(dataZoneId));
+			int numIntervals = calculateNumberOfIntervals(startTime, endTime, offsetMinutes, parsedInterval, interval, dataZoneId);
+			retVal = numIntervals + 1 != numberOfEvents;
+		}
+		return retVal;
+	}
+
+	private static int calculateNumberOfIntervals(ZonedDateTime startTime, ZonedDateTime endTime, int offsetMinutes, int parsedInterval, String interval, ZoneId dataZoneId)
+			throws DataSetIllegalArgumentException
+	{
+		IntervalOffset offset = new IntervalOffset(offsetMinutes/60, parsedInterval/60);
+		return (int) Interval.calcNumberOfIntervals(Date.from(startTime.toInstant()),
+				Date.from(endTime.toInstant()), new Interval(interval), offset, TimeZone.getTimeZone(dataZoneId));
+	}
+
+	private static TimeSeriesContainer interpolateTimeSeries(TimeSeriesContainer output, String interval) throws HecMathException
+	{
+		TimeSeriesMath timeSeriesMath = new TimeSeriesMath(output);
+		HecMath hecMath = timeSeriesMath.interpolateDataAtRegularInterval(interval, null);
+		if (hecMath instanceof TimeSeriesMath)
+		{
+			DataContainer dataContainer = hecMath.getData();
+			if (dataContainer instanceof TimeSeriesContainer)
+			{
+				output = (TimeSeriesContainer) dataContainer;
+			}
+		}
+		return output;
+	}
+
+	private static int calculateOffsetInMinutes(ZonedDateTime start, Interval interval, TimeZone timeZone) throws DataSetIllegalArgumentException
+	{
+		Instant prevInterval = Instant.ofEpochMilli(Interval.getPreviousIntervalTime(start.toInstant().toEpochMilli(), interval, timeZone));
+		Instant interValToCheck = Instant.ofEpochMilli(Interval.getNextIntervalTime(prevInterval.toEpochMilli(), interval, timeZone));
+		return (int) Duration.between(interValToCheck, start.toInstant()).toMinutes();
 	}
 
 	private static void logUnitConversionError(Exception e, ProgressListener progressListener)
