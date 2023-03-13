@@ -90,7 +90,7 @@ final class MerlinDataConverter
 			output.units = data.getUnits();
 			output.interval = parsedInterval;
 			output.type = data.getDataType();
-			output.parameter = data.getParameter();
+			output.parameter = "IR-MONTH";
 			output.location = pathname.bPart();
 			output.version = pathname.fPart();
 			output.setStoreAsDoubles(true);
@@ -129,7 +129,7 @@ final class MerlinDataConverter
 			{
 				if(needsInterpolation)
 				{
-					output = interpolateTimeSeries(output, interval);
+					output = interpolateTimeSeries(output, parsedInterval + "M");
 				}
 				convertUnits(output, unitSystemToConvertTo, data);
 			}
@@ -149,20 +149,19 @@ final class MerlinDataConverter
 		if(!isProcessed)
 		{
 			int parsedInterval = Integer.parseInt(timeStep);
-			String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
-			int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(interval), TimeZone.getTimeZone(dataZoneId));
-			int numIntervals = calculateNumberOfIntervals(startTime, endTime, offsetMinutes, parsedInterval, interval, dataZoneId);
+			int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(parsedInterval), TimeZone.getTimeZone(dataZoneId));
+			int numIntervals = calculateNumberOfIntervals(startTime, endTime, offsetMinutes, parsedInterval, dataZoneId);
 			retVal = numIntervals + 1 != numberOfEvents;
 		}
 		return retVal;
 	}
 
-	private static int calculateNumberOfIntervals(ZonedDateTime startTime, ZonedDateTime endTime, int offsetMinutes, int parsedInterval, String interval, ZoneId dataZoneId)
+	private static int calculateNumberOfIntervals(ZonedDateTime startTime, ZonedDateTime endTime, int offsetMinutes, int parsedInterval, ZoneId dataZoneId)
 			throws DataSetIllegalArgumentException
 	{
 		IntervalOffset offset = new IntervalOffset(offsetMinutes*60, parsedInterval*60);
 		return (int) Interval.calcNumberOfIntervals(Date.from(startTime.toInstant()),
-				Date.from(endTime.toInstant()), new Interval(interval), offset, TimeZone.getTimeZone(dataZoneId));
+				Date.from(endTime.toInstant()), new Interval(parsedInterval), offset, TimeZone.getTimeZone(dataZoneId));
 	}
 
 	private static TimeSeriesContainer interpolateTimeSeries(TimeSeriesContainer output, String interval) throws HecMathException
