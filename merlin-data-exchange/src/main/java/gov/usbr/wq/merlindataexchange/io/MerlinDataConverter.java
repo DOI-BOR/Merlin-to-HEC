@@ -90,7 +90,7 @@ final class MerlinDataConverter
 			output.units = data.getUnits();
 			output.interval = parsedInterval;
 			output.type = data.getDataType();
-			output.parameter = "IR-MONTH";
+			output.parameter = data.getParameter();
 			output.location = pathname.bPart();
 			output.version = pathname.fPart();
 			output.setStoreAsDoubles(true);
@@ -129,6 +129,7 @@ final class MerlinDataConverter
 			{
 				if(needsInterpolation)
 				{
+					output.interval = HecTimeSeriesBase.getIntervalFromEPart("IR-MONTH");
 					output = interpolateTimeSeries(output, parsedInterval + "M");
 				}
 				convertUnits(output, unitSystemToConvertTo, data);
