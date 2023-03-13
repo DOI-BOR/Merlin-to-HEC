@@ -130,7 +130,8 @@ final class MerlinDataConverter
 				if(needsInterpolation)
 				{
 					output.interval = HecTimeSeriesBase.getIntervalFromEPart("IR-MONTH");
-					output = interpolateTimeSeries(output, parsedInterval + "M");
+					int offsetInMinutes = calculateOffsetInMinutes(data.getStartTime(), new Interval(parsedInterval), TimeZone.getTimeZone(dataZoneId));
+					output = interpolateTimeSeries(output, parsedInterval, offsetInMinutes);
 				}
 				convertUnits(output, unitSystemToConvertTo, data);
 			}
@@ -165,10 +166,10 @@ final class MerlinDataConverter
 				Date.from(endTime.toInstant()), new Interval(parsedInterval), offset, TimeZone.getTimeZone(dataZoneId));
 	}
 
-	private static TimeSeriesContainer interpolateTimeSeries(TimeSeriesContainer output, String interval) throws HecMathException
+	private static TimeSeriesContainer interpolateTimeSeries(TimeSeriesContainer output, int interval, int offsetInMinutes) throws HecMathException
 	{
 		TimeSeriesMath timeSeriesMath = new TimeSeriesMath(output);
-		HecMath hecMath = timeSeriesMath.interpolateDataAtRegularInterval(interval, null);
+		HecMath hecMath = timeSeriesMath.interpolateDataAtRegularInterval(interval + "M", offsetInMinutes + "M");
 		if (hecMath instanceof TimeSeriesMath)
 		{
 			DataContainer dataContainer = hecMath.getData();
