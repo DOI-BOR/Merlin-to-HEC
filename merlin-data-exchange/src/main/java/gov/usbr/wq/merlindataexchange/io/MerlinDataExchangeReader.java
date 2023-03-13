@@ -17,8 +17,10 @@ import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordHolder;
 import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordNotFoundException;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
+import hec.data.DataSetIllegalArgumentException;
 import hec.heclib.dss.HecTimeSeriesBase;
 import hec.heclib.util.HecTime;
+import hec.hecmath.HecMathException;
 import hec.io.TimeSeriesContainer;
 import hec.ui.ProgressListener;
 import hec.ui.ProgressListener.MessageType;
@@ -116,7 +118,7 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
         TimeSeriesContainer retVal = null;
         try
         {
-            retVal =  MerlinDataConverter.dataToTimeSeries(data, unitSystemToConvertTo, fPartOverride, progressListener);
+            retVal =  MerlinDataConverter.dataToTimeSeries(data, unitSystemToConvertTo, fPartOverride, isProcessed, progressListener);
         }
         catch (MerlinInvalidTimestepException e)
         {
@@ -150,6 +152,10 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
             logFileLogger.log(e.getMessage());
             logProgressMessage(progressListener, e.getMessage(), nothingToWritePercentIncrement);
             LOGGER.log(Level.CONFIG, e, () -> "No events for " + data.getSeriesId() + " in time window " + startDetermined + " | " + endDetermined);
+        }
+        catch (DataSetIllegalArgumentException | HecMathException e)
+        {
+            logError(progressListener, logFileLogger, "Failed to convert data to timeseries: " + e.getMessage(), e);
         }
         return retVal;
     }

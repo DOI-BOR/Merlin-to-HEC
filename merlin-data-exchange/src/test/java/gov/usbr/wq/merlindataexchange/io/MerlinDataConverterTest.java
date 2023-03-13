@@ -4,9 +4,11 @@ import gov.usbr.wq.dataaccess.json.Data;
 import gov.usbr.wq.dataaccess.json.Event;
 import gov.usbr.wq.dataaccess.model.DataWrapper;
 import gov.usbr.wq.merlindataexchange.NoEventsException;
+import hec.data.DataSetIllegalArgumentException;
 import hec.data.Units;
 import hec.data.UnitsConversionException;
 import hec.heclib.util.HecTime;
+import hec.hecmath.HecMathException;
 import hec.io.TimeSeriesContainer;
 import hec.lang.Const;
 import org.junit.jupiter.api.Test;
@@ -25,7 +27,7 @@ class MerlinDataConverterTest
 	private static final String TEST_TIMESERIES_ID = "Shasta Lake-Shasta Dam-Outflow/Flow/INST-VAL/60/0/35-230.11.125.1.1";
 
 	@Test
-	void dataWrapperToTimeSeries() throws NoEventsException
+	void dataWrapperToTimeSeries() throws NoEventsException, DataSetIllegalArgumentException, HecMathException
 	{
 		ZonedDateTime startTime = ZonedDateTime.now()
 											   .withYear(2019)
@@ -90,7 +92,7 @@ class MerlinDataConverterTest
 		DataWrapper wrapper = new DataWrapper(data);
 		try
 		{
-			TimeSeriesContainer tsc = MerlinDataConverter.dataToTimeSeries(wrapper, "SI", null, null);
+			TimeSeriesContainer tsc = MerlinDataConverter.dataToTimeSeries(wrapper, "SI", null, false, null);
 			int[] receivedTimes = tsc.times;
 			double[] receivedValues = tsc.values;
 			assertArrayEquals(expectedTimes, receivedTimes);

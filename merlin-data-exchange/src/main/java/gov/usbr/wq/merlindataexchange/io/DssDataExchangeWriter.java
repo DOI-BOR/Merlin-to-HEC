@@ -8,8 +8,6 @@ import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import hec.data.DataSetIllegalArgumentException;
 import hec.heclib.dss.DSSPathname;
-import hec.heclib.dss.HecTimeSeriesBase;
-import hec.heclib.util.HecTime;
 import hec.io.StoreOption;
 import hec.io.TimeSeriesContainer;
 import hec.lang.Const;
@@ -19,8 +17,6 @@ import rma.services.annotations.ServiceProvider;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -52,7 +48,17 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
             int percentComplete = completionTracker.readTaskCompleted();
             logProgress(progressListener, progressMsg, percentComplete);
             timeSeriesContainer.fileName = _dssWritePath.toString();
-            int success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
+            int success;
+            //write(timeseriesContainer) uses store option zero, so this ensures correct functionality for regular store flag 0
+            //writeTS has a bug in its current state that can cause dss to write to wrong file. Once fixed, this conditional check won't be needed
+            if(runtimeParameters.getStoreOption().getRegular() == 0)
+            {
+                 success = DssFileManagerImpl.getDssFileManager().write(timeSeriesContainer);
+            }
+            else
+            {
+                success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
+            }
             if(success == 0)
             {
                 String successMsg = "Write to " + timeSeriesContainer.fullName + " from " + seriesString;

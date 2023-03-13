@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data-exchange-configuration xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance">
+    <datastore id="www.grabdata2.com">
+        <datastore-type>merlin</datastore-type>
+        <path>https://www.grabdata2.com</path>
+    </datastore>
+    <datastore id="wat">
+        <datastore-type>dss</datastore-type>
+        <path>$WATERSHED/merlin_mock_config_needs_interpolation.dss</path>
+    </datastore>
+    <data-exchange-set id="Lower American R - MR Flow" source-id="www.grabdata2.com" template-id="86" template-name = "Lower American R - MR Flow" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="English">
+        <data-type>time-series</data-type>
+        <datastore-ref-a id="www.grabdata2.com"/>
+        <datastore-ref-b id="wat"/>
+    </data-exchange-set>
+</data-exchange-configuration>
