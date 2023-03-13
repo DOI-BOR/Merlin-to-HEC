@@ -12,7 +12,6 @@ import gov.usbr.wq.dataaccess.model.DataWrapper;
 import gov.usbr.wq.dataaccess.model.EventWrapper;
 import gov.usbr.wq.merlindataexchange.NoEventsException;
 import hec.data.DataSetIllegalArgumentException;
-import hec.data.IllegalIntervalOffsetException;
 import hec.data.Interval;
 import hec.data.IntervalOffset;
 import hec.data.Units;
@@ -100,7 +99,7 @@ final class MerlinDataConverter
 			int[] times = new int[events.size()];
 			double[] values = new double[events.size()];
 			int i = 0;
-			boolean needsInterpolation = calculateInterpolationNeeded(isProcessed, data.getStartTime(), data.getEndTime(), data.getTimestep(), dataZoneId, events.size());
+			boolean needsInterpolation = isInterpolationNeeded(isProcessed, data.getStartTime(), data.getEndTime(), data.getTimestep(), dataZoneId, events.size());
 			for (EventWrapper event : events)
 			{
 				HecTime hecTime = fromZonedDateTime(event.getDate(), dataZoneId);
@@ -143,7 +142,7 @@ final class MerlinDataConverter
 		return output;
 	}
 
-	private static boolean calculateInterpolationNeeded(boolean isProcessed, ZonedDateTime startTime, ZonedDateTime endTime, String timeStep, ZoneId dataZoneId, int numberOfEvents)
+	private static boolean isInterpolationNeeded(boolean isProcessed, ZonedDateTime startTime, ZonedDateTime endTime, String timeStep, ZoneId dataZoneId, int numberOfEvents)
 			throws DataSetIllegalArgumentException
 	{
 		boolean retVal = !isProcessed;
@@ -161,7 +160,7 @@ final class MerlinDataConverter
 	private static int calculateNumberOfIntervals(ZonedDateTime startTime, ZonedDateTime endTime, int offsetMinutes, int parsedInterval, String interval, ZoneId dataZoneId)
 			throws DataSetIllegalArgumentException
 	{
-		IntervalOffset offset = new IntervalOffset(offsetMinutes/60, parsedInterval/60);
+		IntervalOffset offset = new IntervalOffset(offsetMinutes*60, parsedInterval*60);
 		return (int) Interval.calcNumberOfIntervals(Date.from(startTime.toInstant()),
 				Date.from(endTime.toInstant()), new Interval(interval), offset, TimeZone.getTimeZone(dataZoneId));
 	}
