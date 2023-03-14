@@ -132,6 +132,11 @@ final class MerlinDataConverter
 					output.interval = HecTimeSeriesBase.getIntervalFromEPart("IR-MONTH");
 					int offsetInMinutes = calculateOffsetInMinutes(data.getStartTime(), new Interval(parsedInterval), TimeZone.getTimeZone(dataZoneId));
 					output = interpolateTimeSeries(output, parsedInterval, offsetInMinutes);
+					output.startTime = output.times[0];
+					output.startHecTime = startTime;
+					output.endTime = output.times[output.times.length - 1];
+					output.endHecTime = endTime;
+					output.locationTimezone = dataZoneId.getId();
 				}
 				convertUnits(output, unitSystemToConvertTo, data);
 			}
@@ -178,6 +183,7 @@ final class MerlinDataConverter
 				output = (TimeSeriesContainer) dataContainer;
 			}
 		}
+		output.setStoreAsDoubles(true);
 		return output;
 	}
 
