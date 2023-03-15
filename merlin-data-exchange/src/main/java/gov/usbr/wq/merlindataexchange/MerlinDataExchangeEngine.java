@@ -483,14 +483,12 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             TemplateWrapper template = getTemplateFromDataExchangeSet(dataExchangeSet, dataStoreSource);
             DataExchangeReader reader = DataExchangeReaderFactory.lookupReader(dataStoreSource);
             DataExchangeWriter writer = DataExchangeWriterFactory.lookupWriter(dataStoreDestination);
-            reader.initialize(dataStoreSource, _runtimeParameters);
-            writer.initialize(dataStoreDestination, _runtimeParameters);
             String sourcePath = dataStoreSource.getPath(); //for merlin this is a URL
             DataExchangeCache cache = _dataExchangeCache.get(new ApiConnectionInfo(sourcePath));
             if(cache != null)
             {
-                String fromMsg = "Reading from: " + reader.getSourcePath();
-                String toMsg = "Writing to: " + writer.getDestinationPath();
+                String fromMsg = "Reading from: " + reader.getSourcePath(dataStoreSource, _runtimeParameters);
+                String toMsg = "Writing to: " + writer.getDestinationPath(dataStoreDestination, _runtimeParameters);
                 String templateMsg = dataExchangeSet.getTemplateName();
                 if(templateMsg == null)
                 {
@@ -524,18 +522,10 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 }
                 List<MeasureWrapper> measures = cache.getCachedTemplateToMeasures().get(template);
                 List<CompletableFuture<Void>> measurementFutures = new ArrayList<>();
-                try
-                {
-                    measures.forEach(measure ->
-                            measurementFutures.add(DataExchangeIO.exchangeData(reader, writer, dataExchangeSet, _runtimeParameters, cache,
-                                    measure, _completionTracker, _progressListener, _isCancelled, logBody, _executorService)));
-                    CompletableFuture.allOf(measurementFutures.toArray(new CompletableFuture[0])).join();
-                }
-                finally
-                {
-                    reader.close();
-                    writer.close();
-                }
+                measures.forEach(measure ->
+                        measurementFutures.add(DataExchangeIO.exchangeData(reader, writer, dataExchangeSet, _runtimeParameters, dataStoreSource, dataStoreDestination,
+                                cache, measure, _completionTracker, _progressListener, _isCancelled, logBody, _executorService)));
+                CompletableFuture.allOf(measurementFutures.toArray(new CompletableFuture[0])).join();
             }
         }
         catch (DataExchangeLookupException | UnsupportedTemplateException | UnsupportedQualityVersionException e)
