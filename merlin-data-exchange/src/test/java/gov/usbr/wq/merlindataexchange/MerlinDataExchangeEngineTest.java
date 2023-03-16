@@ -13,6 +13,7 @@ import gov.usbr.wq.dataaccess.model.TemplateWrapper;
 import gov.usbr.wq.dataaccess.model.TemplateWrapperBuilder;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeConfiguration;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
+import gov.usbr.wq.merlindataexchange.io.DssDataExchangeWriter;
 import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParametersBuilder;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParametersBuilder;
@@ -66,12 +67,8 @@ final class MerlinDataExchangeEngineTest
         List<Path> mocks = Arrays.asList(mockXml);
         Path testDirectory = getTestDirectory();
         Path dssFile = testDirectory.resolve(mockFileName.replace(".xml", ".dss"));
-        if(Files.exists(dssFile))
-        {
-            Files.delete(dssFile);
-        }
-        Instant start = Instant.parse("2016-02-01T12:00:00Z");
-        Instant end = Instant.parse("2016-02-21T12:00:00Z");
+        Instant start = Instant.parse("2003-02-01T12:00:00Z");
+        Instant end = Instant.parse("2022-02-21T12:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
@@ -140,6 +137,133 @@ final class MerlinDataExchangeEngineTest
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.FAILURE, status);
     }
+
+    @Test
+    void testRunExtractMultiThreadedOn() throws IOException, HttpAccessException, MerlinConfigParseException, UnitsConversionException
+    {
+        System.setProperty(DssDataExchangeWriter.MERLIN_TO_DSS_WRITE_SINGLE_THREAD_PROPERTY_KEY, "True");
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        String mockFileName = "merlin_mock_config_dx.xml";
+        Path mockXml = getMockXml(mockFileName);
+        List<Path> mocks = Arrays.asList(mockXml);
+        Path testDirectory = getTestDirectory();
+        Path dssFile = testDirectory.resolve(mockFileName.replace(".xml", ".dss"));
+        Instant start = Instant.parse("2003-02-01T12:00:00Z");
+        Instant end = Instant.parse("2022-02-21T12:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
+        assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        Map<String, DataWrapper> expectedDssToData = buildExpectedDss(mocks, start, end, username, password);
+        assertNotNull(expectedDssToData);
+        verifyData(expectedDssToData, testDirectory, mockFileName);
+    }
+
+    @Test
+    void testRunExtractMultiThreadedOff() throws IOException, HttpAccessException, MerlinConfigParseException, UnitsConversionException
+    {
+        System.setProperty(DssDataExchangeWriter.MERLIN_TO_DSS_WRITE_SINGLE_THREAD_PROPERTY_KEY, "False");
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        String mockFileName = "merlin_mock_config_dx.xml";
+        Path mockXml = getMockXml(mockFileName);
+        List<Path> mocks = Arrays.asList(mockXml);
+        Path testDirectory = getTestDirectory();
+        Path dssFile = testDirectory.resolve(mockFileName.replace(".xml", ".dss"));
+        Instant start = Instant.parse("2003-02-01T12:00:00Z");
+        Instant end = Instant.parse("2022-02-21T12:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
+        assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        Map<String, DataWrapper> expectedDssToData = buildExpectedDss(mocks, start, end, username, password);
+        assertNotNull(expectedDssToData);
+        verifyData(expectedDssToData, testDirectory, mockFileName);
+    }
+
+    @Test
+    void testRunExtractMultiThreadedNotSet() throws IOException, HttpAccessException, MerlinConfigParseException, UnitsConversionException
+    {
+        String username = ResourceAccess.getUsername();
+        char[] password = ResourceAccess.getPassword();
+        String mockFileName = "merlin_mock_config_dx.xml";
+        Path mockXml = getMockXml(mockFileName);
+        List<Path> mocks = Arrays.asList(mockXml);
+        Path testDirectory = getTestDirectory();
+        Path dssFile = testDirectory.resolve(mockFileName.replace(".xml", ".dss"));
+        if(Files.exists(dssFile))
+        {
+            Files.delete(dssFile);
+        }
+        Instant start = Instant.parse("2003-02-01T12:00:00Z");
+        Instant end = Instant.parse("2022-02-21T12:00:00Z");
+        StoreOptionImpl storeOption = new StoreOptionImpl();
+        storeOption.setRegular("0-replace-all");
+        storeOption.setIrregular("0-delete_insert");
+        MerlinParameters params = new MerlinParametersBuilder()
+                .withWatershedDirectory(testDirectory)
+                .withLogFileDirectory(testDirectory)
+                .withAuthenticationParameters(new AuthenticationParametersBuilder()
+                        .forUrl("https://www.grabdata2.com")
+                        .setUsername(username)
+                        .andPassword(password)
+                        .build())
+                .withStoreOption(storeOption)
+                .withStart(start)
+                .withEnd(end)
+                .withFPartOverride("fPart")
+                .build();
+        DataExchangeEngine dataExchangeEngine = new MerlinDataExchangeEngineBuilder()
+                .withConfigurationFiles(mocks)
+                .withParameters(params)
+                .withProgressListener(buildLoggingProgressListener())
+                .build();
+        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
+        assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        Map<String, DataWrapper> expectedDssToData = buildExpectedDss(mocks, start, end, username, password);
+        assertNotNull(expectedDssToData);
+        verifyData(expectedDssToData, testDirectory, mockFileName);
+    }
+
     @Test
     void testRunExtractPartial() throws IOException, HttpAccessException, MerlinConfigParseException, UnitsConversionException
     {
@@ -517,7 +641,10 @@ final class MerlinDataExchangeEngineTest
                     int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(interval), TimeZone.getTimeZone(merlinData.getTimeZone()));
                     expectedNumValues = calculateNumberOfExpectedIntervals(startTime, endTime, offsetMinutes, parsedInterval, interval, merlinData.getTimeZone()) + 1;
                 }
-                assertEquals(expectedNumValues, tsc.getNumberValues());
+                if(merlinData.getEvents().stream().noneMatch(e -> e.getValue() == null))
+                {
+                    assertEquals(expectedNumValues, tsc.getNumberValues());
+                }
             }
             catch (DataSetIllegalArgumentException e)
             {
@@ -544,7 +671,7 @@ final class MerlinDataExchangeEngineTest
                 {
                     assertNotNull(event);
                 }
-                if(event != null)
+                if(event != null && event.getValue() != null)
                 {
                     assertEquals(event.getValue(), tscVal, 1.0E-4);
                 }

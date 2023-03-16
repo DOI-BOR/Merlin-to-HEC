@@ -6,7 +6,6 @@ import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogBody;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
-import hec.data.DataSetIllegalArgumentException;
 import hec.heclib.dss.DSSPathname;
 import hec.io.StoreOption;
 import hec.io.TimeSeriesContainer;
@@ -28,41 +27,35 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
 {
     public static final String DSS = "dss";
     private static final Logger LOGGER = Logger.getLogger(DssDataExchangeWriter.class.getName());
-    private Path _dssWritePath;
-
+    public static final String MERLIN_TO_DSS_WRITE_SINGLE_THREAD_PROPERTY_KEY = "merlin.dataexchange.writer.dss.singlethread";
+    private final AtomicBoolean _loggedThreadProperty = new AtomicBoolean(false);
     @Override
-    public synchronized void writeData(TimeSeriesContainer timeSeriesContainer, MeasureWrapper measure, MerlinParameters runtimeParameters,
+    public void writeData(TimeSeriesContainer timeSeriesContainer, MeasureWrapper measure, MerlinParameters runtimeParameters, DataStore destinationDataStore,
                                        MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled)
     {
-        StoreOption storeOption = runtimeParameters.getStoreOption();
+        Path dssWritePath = Paths.get(getDestinationPath(destinationDataStore, runtimeParameters));
         String seriesString = measure.getSeriesString();
         if(timeSeriesContainer != null && !isCancelled.get())
         {
-            DSSPathname pathname = new DSSPathname(timeSeriesContainer.fullName);
-            int numTrimmedValues = getNumTrimmedValues(timeSeriesContainer);
-            int numExpected = ExpectedNumberValuesCalculator.getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(),
-                    ZoneId.of(timeSeriesContainer.getTimeZoneID()), timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
-            String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Values read: " + timeSeriesContainer.getNumberValues()
-                    + ", " + numTrimmedValues + " missing, " +  numExpected + " expected" ;
-            logFileLogger.log(progressMsg);
-            int percentComplete = completionTracker.readTaskCompleted();
-            logProgress(progressListener, progressMsg, percentComplete);
-            timeSeriesContainer.fileName = _dssWritePath.toString();
+            timeSeriesContainer.fileName = dssWritePath.toString();
+            boolean useSingleThreading = isSingleThreaded();
             int success;
-            //write(timeseriesContainer) uses store option zero, so this ensures correct functionality for regular store flag 0
-            //writeTS has a bug in its current state that can cause dss to write to wrong file. Once fixed, this conditional check won't be needed
-            if(runtimeParameters.getStoreOption().getRegular() == 0)
+            if(useSingleThreading)
             {
-                 success = DssFileManagerImpl.getDssFileManager().write(timeSeriesContainer);
+                try(CloseableReentrantLock lock = ReadWriteLockManager.getInstance().getCloseableLock().lockIt())
+                {
+                    success = writeDss(timeSeriesContainer, runtimeParameters, measure, completionTracker, logFileLogger, progressListener);
+                }
             }
             else
             {
-                success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
+                success = writeDss(timeSeriesContainer, runtimeParameters, measure, completionTracker, logFileLogger, progressListener);
             }
             if(success == 0)
             {
                 String successMsg = "Write to " + timeSeriesContainer.fullName + " from " + seriesString;
-                int percentCompleteAfterWrite = completionTracker.writeTaskCompleted();
+                int percentCompleteAfterWrite = completionTracker.readWriteTaskCompleted();
+                completionTracker.writeTaskCompleted();
                 if(progressListener != null)
                 {
                     progressListener.progress(successMsg, MessageType.GENERAL, percentCompleteAfterWrite);
@@ -80,7 +73,65 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
                 logFileLogger.log(failMsg);
                 LOGGER.config(() -> failMsg);
             }
+            DssFileManagerImpl.getDssFileManager().close(dssWritePath.toString());
         }
+    }
+
+    private boolean isSingleThreaded()
+    {
+        String useSingleThreadString = System.getProperty(MERLIN_TO_DSS_WRITE_SINGLE_THREAD_PROPERTY_KEY);
+
+        boolean useSingleThreading = false;
+        if(useSingleThreadString != null)
+        {
+            useSingleThreading = Boolean.parseBoolean(useSingleThreadString);
+            if(!_loggedThreadProperty.getAndSet(true))
+            {
+                boolean actualValue = useSingleThreading;
+                LOGGER.log(Level.CONFIG, () -> "Merlin to dss write with single thread using System Property " + MERLIN_TO_DSS_WRITE_SINGLE_THREAD_PROPERTY_KEY + " set to: " + useSingleThreadString
+                    + ". Parsed value: " + actualValue);
+            }
+        }
+        else if(!_loggedThreadProperty.getAndSet(true))
+        {
+            LOGGER.log(Level.INFO, () -> "Merlin to dss write with single thread using System Property " + MERLIN_TO_DSS_WRITE_SINGLE_THREAD_PROPERTY_KEY
+                    + " is not set. Defaulting to : False");
+        }
+        return useSingleThreading;
+    }
+
+    private int writeDss(TimeSeriesContainer timeSeriesContainer, MerlinParameters runtimeParameters, MeasureWrapper measure,
+                         MerlinExchangeCompletionTracker completionTracker, MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener)
+    {
+        int success;
+        StoreOption storeOption = runtimeParameters.getStoreOption();
+        DSSPathname pathname = new DSSPathname(timeSeriesContainer.fullName);
+        int numTrimmedValues = getNumTrimmedValues(timeSeriesContainer);
+        int numExpected = ExpectedNumberValuesCalculator.getExpectedNumValues(runtimeParameters.getStart(), runtimeParameters.getEnd(), pathname.ePart(),
+                ZoneId.of(timeSeriesContainer.getTimeZoneID()), timeSeriesContainer.getStartTime(), timeSeriesContainer.getEndTime());
+        String progressMsg = "Read " + measure.getSeriesString() + " | Is processed: " + measure.isProcessed() + " | Values read: " + timeSeriesContainer.getNumberValues()
+                + ", " + numTrimmedValues + " missing, " +  numExpected + " expected" ;
+        logFileLogger.log(progressMsg);
+        int percentComplete = completionTracker.readWriteTaskCompleted();
+        logProgress(progressListener, progressMsg, percentComplete);
+
+        //write(timeseriesContainer) uses store option zero, so this ensures correct functionality for regular store flag 0
+        //writeTS has a bug in its current state that can cause dss to write to wrong file. Once fixed, this conditional check won't be needed
+        if(runtimeParameters.getStoreOption().getRegular() == 0)
+        {
+            success = DssFileManagerImpl.getDssFileManager().write(timeSeriesContainer);
+        }
+        else
+        {
+            success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
+        }
+        return success;
+    }
+
+    @Override
+    public String getDestinationPath(DataStore destinationDataStore, MerlinParameters parameters)
+    {
+        return buildAbsoluteDssWritePath(destinationDataStore.getPath(), parameters.getWatershedDirectory()).toString();
     }
 
     private int getNumTrimmedValues(TimeSeriesContainer timeSeriesContainer)
@@ -96,25 +147,6 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         return missingCount;
     }
 
-
-    @Override
-    public void initialize(DataStore dataStore, MerlinParameters parameters)
-    {
-        _dssWritePath = buildAbsoluteDssWritePath(dataStore.getPath(), parameters.getWatershedDirectory());
-    }
-
-    @Override
-    public void close()
-    {
-        DssFileManagerImpl.getDssFileManager().close(_dssWritePath.toString());
-    }
-
-    @Override
-    public String getDestinationPath()
-    {
-        return _dssWritePath.toString();
-    }
-
     private static Path buildAbsoluteDssWritePath(String filepath, Path watershedDir)
     {
         Path xmlFilePath = Paths.get(filepath);
@@ -126,23 +158,12 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         return xmlFilePath;
     }
 
-    private synchronized void logProgress(ProgressListener progressListener, String message, int percentComplete)
+    private void logProgress(ProgressListener progressListener, String message, int percentComplete)
     {
         if(progressListener != null)
         {
             progressListener.progress(message, MessageType.GENERAL, percentComplete);
         }
     }
-
-    private synchronized void logError(ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger, String errorMsg, DataSetIllegalArgumentException e)
-    {
-        if(progressListener != null)
-        {
-            progressListener.progress(errorMsg, MessageType.ERROR);
-        }
-        logFileLogger.log(errorMsg);
-        LOGGER.log(Level.CONFIG, e, () -> errorMsg);
-    }
-
 
 }

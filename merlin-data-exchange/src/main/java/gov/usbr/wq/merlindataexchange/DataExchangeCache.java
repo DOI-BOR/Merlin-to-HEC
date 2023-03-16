@@ -41,7 +41,7 @@ public final class DataExchangeCache
     {
         _cachedQualityVersions.addAll(qualityVersions);
     }
-    public void cacheSeriesIds(TemplateWrapper template, List<MeasureWrapper> measures)
+    public void cacheMeasures(TemplateWrapper template, List<MeasureWrapper> measures)
     {
         _cachedTemplateToMeasures.put(template, measures);
     }

@@ -212,7 +212,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }, _executorService);
     }
 
-    private synchronized void logCompletion(MerlinDataExchangeStatus retVal)
+    private void logCompletion(MerlinDataExchangeStatus retVal)
     {
         Instant endTime = Instant.now();
         String finishedTimeMsg = "Ended at: " + MerlinLogDateFormatter.formatInstant(endTime);
@@ -240,7 +240,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
     }
 
-    private synchronized void logCompletionProgress(String completionMessage)
+    private void logCompletionProgress(String completionMessage)
     {
         if (_progressListener != null)
         {
@@ -483,14 +483,12 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             TemplateWrapper template = getTemplateFromDataExchangeSet(dataExchangeSet, dataStoreSource);
             DataExchangeReader reader = DataExchangeReaderFactory.lookupReader(dataStoreSource);
             DataExchangeWriter writer = DataExchangeWriterFactory.lookupWriter(dataStoreDestination);
-            reader.initialize(dataStoreSource, _runtimeParameters);
-            writer.initialize(dataStoreDestination, _runtimeParameters);
             String sourcePath = dataStoreSource.getPath(); //for merlin this is a URL
             DataExchangeCache cache = _dataExchangeCache.get(new ApiConnectionInfo(sourcePath));
             if(cache != null)
             {
-                String fromMsg = "Reading from: " + reader.getSourcePath();
-                String toMsg = "Writing to: " + writer.getDestinationPath();
+                String fromMsg = "Reading from: " + reader.getSourcePath(dataStoreSource, _runtimeParameters);
+                String toMsg = "Writing to: " + writer.getDestinationPath(dataStoreDestination, _runtimeParameters);
                 String templateMsg = dataExchangeSet.getTemplateName();
                 if(templateMsg == null)
                 {
@@ -524,18 +522,10 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 }
                 List<MeasureWrapper> measures = cache.getCachedTemplateToMeasures().get(template);
                 List<CompletableFuture<Void>> measurementFutures = new ArrayList<>();
-                try
-                {
-                    measures.forEach(measure ->
-                            measurementFutures.add(DataExchangeIO.exchangeData(reader, writer, dataExchangeSet, _runtimeParameters, cache,
-                                    measure, _completionTracker, _progressListener, _isCancelled, logBody, _executorService)));
-                    CompletableFuture.allOf(measurementFutures.toArray(new CompletableFuture[0])).join();
-                }
-                finally
-                {
-                    reader.close();
-                    writer.close();
-                }
+                measures.forEach(measure ->
+                        measurementFutures.add(DataExchangeIO.exchangeData(reader, writer, dataExchangeSet, _runtimeParameters, dataStoreSource, dataStoreDestination,
+                                cache, measure, _completionTracker, _progressListener, _isCancelled, logBody, _executorService)));
+                CompletableFuture.allOf(measurementFutures.toArray(new CompletableFuture[0])).join();
             }
         }
         catch (DataExchangeLookupException | UnsupportedTemplateException | UnsupportedQualityVersionException e)
@@ -546,7 +536,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
     }
 
-    private synchronized void logImportantProgress(String message)
+    private void logImportantProgress(String message)
     {
         if(!_isCancelled.get())
         {
@@ -559,7 +549,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
 
     }
 
-    private synchronized void logGeneralProgress(String message)
+    private void logGeneralProgress(String message)
     {
         if(!_isCancelled.get())
         {
@@ -572,7 +562,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
 
     }
 
-    private synchronized void logGeneralProgress(String message, int progressPercentage)
+    private void logGeneralProgress(String message, int progressPercentage)
     {
         if(!_isCancelled.get())
         {
@@ -584,7 +574,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         }
     }
 
-    private synchronized void logError(String message, Throwable error)
+    private void logError(String message, Throwable error)
     {
         if(!_isCancelled.get())
         {
@@ -681,7 +671,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                     if(!alreadyCached)
                     {
                         measures = _merlinDataAccess.getMeasurementsByTemplate(connectionInfo, token, template);
-                        cache.cacheSeriesIds(template, measures);
+                        cache.cacheMeasures(template, measures);
                     }
                     else
                     {

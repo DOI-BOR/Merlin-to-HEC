@@ -1,6 +1,7 @@
 package gov.usbr.wq.merlindataexchange;
 
 
+import gov.usbr.wq.merlindataexchange.io.CloseableReentrantLock;
 import hec.ui.ProgressListener;
 
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
 
 public final class TestLogProgressListener implements ProgressListener
 {
-
+    private final CloseableReentrantLock _lock = new CloseableReentrantLock();
     private static final Logger LOGGER = Logger.getLogger(TestLogProgressListener.class.getName());
     private int _progress = 0;
 
@@ -89,35 +90,44 @@ public final class TestLogProgressListener implements ProgressListener
     @Override
     public void progress(int i)
     {
-        _progress = i;
-        LOGGER.info("Progress: " + i + "%");
+        try(CloseableReentrantLock lock = _lock.lockIt())
+        {
+            _progress = i;
+            LOGGER.info("Progress: " + i + "%");
+        }
     }
 
     @Override
     public void progress(String s)
     {
-        LOGGER.info(s);
+        try(CloseableReentrantLock lock = _lock.lockIt())
+        {
+            LOGGER.info(s);
+        }
     }
 
     @Override
     public void progress(String s, MessageType messageType)
     {
-        String msgType = "(" + messageType + "): ";
-        if(messageType == MessageType.ERROR)
+        try(CloseableReentrantLock lock = _lock.lockIt())
         {
-            LOGGER.info("ERROR: " + s);
-        }
-        else if(messageType == MessageType.WARNING)
-        {
-            LOGGER.info("WARNING: " + s);
-        }
-        else if(messageType == MessageType.GENERAL)
-        {
-            LOGGER.info(msgType + "  " + s);
-        }
-        else if(messageType == MessageType.IMPORTANT)
-        {
-            LOGGER.info(msgType + s);
+            String msgType = "(" + messageType + "): ";
+            if(messageType == MessageType.ERROR)
+            {
+                LOGGER.info("ERROR: " + s);
+            }
+            else if(messageType == MessageType.WARNING)
+            {
+                LOGGER.info("WARNING: " + s);
+            }
+            else if(messageType == MessageType.GENERAL)
+            {
+                LOGGER.info(msgType + "  " + s);
+            }
+            else if(messageType == MessageType.IMPORTANT)
+            {
+                LOGGER.info(msgType + s);
+            }
         }
     }
 
