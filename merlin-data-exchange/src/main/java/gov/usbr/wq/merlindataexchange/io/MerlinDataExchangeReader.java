@@ -42,8 +42,6 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
 
     public static final String MERLIN = "merlin";
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeReader.class.getName());
-    private final CloseableReentrantLock _noDataLock = new CloseableReentrantLock();
-
     @Override
     public CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet dataExchangeSet, MerlinParameters runtimeParameters, DataStore sourceDataStore, DataExchangeCache cache,
                                                            MeasureWrapper measure, MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener, AtomicBoolean isCancelled,
@@ -148,17 +146,15 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
                     HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(start, zoneId)), HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(end, zoneId)));
             String progressMsg = "Read " + data.getSeriesId() + " | Is processed: " + isProcessed + " | Values read: 0"
                     + ", 0 missing, " + expectedNumValues + " expected";
+            String noDataMsg = e.getMessage();
             //when no data is found we count it as a read + no data written completed and move on, but want to ensure these get written together.
-            try(CloseableReentrantLock lock = _noDataLock.lockIt())
-            {
-                int readPercentIncrement = completionTracker.readWriteTaskCompleted();
-                int nothingToWritePercentIncrement = completionTracker.readWriteTaskCompleted();
-                logFileLogger.log(progressMsg);
-                logProgressMessage(progressListener, progressMsg, readPercentIncrement);
-                logFileLogger.log(e.getMessage());
-                logProgressMessage(progressListener, e.getMessage(), nothingToWritePercentIncrement);
-                LOGGER.log(Level.CONFIG, e, () -> "No events for " + data.getSeriesId() + " in time window " + startDetermined + " | " + endDetermined);
-            }
+            int readPercentIncrement = completionTracker.readWriteTaskCompleted();
+            int nothingToWritePercentIncrement = completionTracker.readWriteTaskCompleted();
+            logProgressMessage(progressListener, progressMsg, readPercentIncrement);
+            logProgressMessage(progressListener, noDataMsg, nothingToWritePercentIncrement);
+            logFileLogger.log(progressMsg);
+            logFileLogger.log(noDataMsg);
+            LOGGER.log(Level.CONFIG, e, () -> "No events for " + data.getSeriesId() + " in time window " + startDetermined + " | " + endDetermined);
         }
         catch (DataSetIllegalArgumentException | HecMathException e)
         {
