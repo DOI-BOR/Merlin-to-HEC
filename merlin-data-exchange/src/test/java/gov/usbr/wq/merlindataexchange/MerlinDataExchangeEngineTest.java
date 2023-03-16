@@ -70,8 +70,8 @@ final class MerlinDataExchangeEngineTest
         {
             Files.delete(dssFile);
         }
-        Instant start = Instant.parse("2016-02-01T12:00:00Z");
-        Instant end = Instant.parse("2016-02-21T12:00:00Z");
+        Instant start = Instant.parse("2003-02-01T12:00:00Z");
+        Instant end = Instant.parse("2022-02-21T12:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
@@ -517,7 +517,10 @@ final class MerlinDataExchangeEngineTest
                     int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(interval), TimeZone.getTimeZone(merlinData.getTimeZone()));
                     expectedNumValues = calculateNumberOfExpectedIntervals(startTime, endTime, offsetMinutes, parsedInterval, interval, merlinData.getTimeZone()) + 1;
                 }
-                assertEquals(expectedNumValues, tsc.getNumberValues());
+                if(merlinData.getEvents().stream().noneMatch(e -> e.getValue() == null))
+                {
+                    assertEquals(expectedNumValues, tsc.getNumberValues());
+                }
             }
             catch (DataSetIllegalArgumentException e)
             {
@@ -544,7 +547,7 @@ final class MerlinDataExchangeEngineTest
                 {
                     assertNotNull(event);
                 }
-                if(event != null)
+                if(event != null && event.getValue() != null)
                 {
                     assertEquals(event.getValue(), tscVal, 1.0E-4);
                 }

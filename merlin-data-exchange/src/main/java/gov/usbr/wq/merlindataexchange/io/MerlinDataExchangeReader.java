@@ -42,8 +42,7 @@ public final class MerlinDataExchangeReader implements DataExchangeReader
 
     public static final String MERLIN = "merlin";
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeReader.class.getName());
-
-    CloseableReentrantLock _noDataLock = new CloseableReentrantLock();
+    private final CloseableReentrantLock _noDataLock = new CloseableReentrantLock();
 
     @Override
     public CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet dataExchangeSet, MerlinParameters runtimeParameters, DataStore sourceDataStore, DataExchangeCache cache,
