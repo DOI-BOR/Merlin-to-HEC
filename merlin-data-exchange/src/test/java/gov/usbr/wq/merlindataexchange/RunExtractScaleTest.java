@@ -29,7 +29,7 @@ final class RunExtractScaleTest {
             field.setAccessible(true);
             field.set(null, null);
             System.out.println(System.getProperty("java.library.path"));
-            MerlinDataExchangeStatus status = runExtract(args[0], args[1]);
+            MerlinDataExchangeStatus status = runExtract(args[0], Integer.parseInt(args[1]));
             if(status == MerlinDataExchangeStatus.FAILURE || status == MerlinDataExchangeStatus.AUTHENTICATION_FAILURE)
             {
                 System.exit(1);
@@ -50,8 +50,9 @@ final class RunExtractScaleTest {
         }
     }
 
-    private static MerlinDataExchangeStatus runExtract(String configFileName, String progressLogFileName) throws IOException
+    private static MerlinDataExchangeStatus runExtract(String configFileName, int process) throws IOException
     {
+        String progressLogFileName = "progressLog" + process + ".log";
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
         String mockFileName = configFileName;
@@ -65,8 +66,8 @@ final class RunExtractScaleTest {
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
         MerlinParameters params = new MerlinParametersBuilder()
-                .withWatershedDirectory(testDirectory)
-                .withLogFileDirectory(testDirectory)
+                .withWatershedDirectory(testDirectory.resolve("" + process))
+                .withLogFileDirectory(testDirectory.resolve("" + process))
                 .withAuthenticationParameters(new AuthenticationParametersBuilder()
                         .forUrl("https://www.grabdata2.com")
                         .setUsername(username)
