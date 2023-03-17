@@ -21,6 +21,7 @@ final class ScaleTest
         for(int i=0 ; i < NUMBER_OF_SIMULTANEOUS_RUNS; i++)
         {
             ProcessBuilder pb = new ProcessBuilder("java", "-cp", classpath, className, configFile, "progressLog" + (i+1) +".log");
+            pb.redirectError(ProcessBuilder.Redirect.INHERIT);
             pb.inheritIO();
             pb.directory(new File("."));
             processBuilderList.add(pb);
