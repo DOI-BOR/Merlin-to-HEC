@@ -23,7 +23,7 @@ final class RunExtractScaleTest {
         try
         {
             String workingDir = System.getProperty("user.dir");
-            String libsDir = workingDir + "/merlin-data-exchange/build/libs";
+            String libsDir = workingDir + "/build/libs";
             System.setProperty("java.library.path", libsDir);
             Field field = ClassLoader.class.getDeclaredField("sys_paths");
             field.setAccessible(true);

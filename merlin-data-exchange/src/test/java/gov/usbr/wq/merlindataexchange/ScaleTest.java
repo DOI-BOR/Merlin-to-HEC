@@ -3,10 +3,10 @@ package gov.usbr.wq.merlindataexchange;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-final class ScaleTest {
+final class ScaleTest
+{
 
     private static final Logger LOGGER = Logger.getLogger(ScaleTest.class.getName());
     private static final int NUMBER_OF_SIMULTANEOUS_RUNS = 10;
@@ -14,15 +14,13 @@ final class ScaleTest {
     public static void main(String[] args) throws Exception {
         String configFile = "sacramento_config_dx_Tom.xml";
         ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
-        String javaHome = System.getProperty("java.home");
-        String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
         String classpath = System.getProperty("java.class.path");
         String className = RunExtractScaleTest.class.getName();
 
         List<ProcessBuilder> processBuilderList = new ArrayList<>(NUMBER_OF_SIMULTANEOUS_RUNS);
         for(int i=0 ; i < NUMBER_OF_SIMULTANEOUS_RUNS; i++)
         {
-            ProcessBuilder pb = new ProcessBuilder(javaBin, "-cp", classpath, className, configFile, "progressLog" + (i+1) +".log");
+            ProcessBuilder pb = new ProcessBuilder("java", "-cp", classpath, className, configFile, "progressLog" + (i+1) +".log");
             pb.inheritIO();
             pb.directory(new File("."));
             processBuilderList.add(pb);

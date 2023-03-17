@@ -1,5 +1,6 @@
 plugins {
     id "com.palantir.git-version" version "0.13.0"
+    id 'idea'
 }
 
 def versionLabel(gitInfo) {
@@ -96,6 +97,12 @@ subprojects {
     configure(showGit) {
         group = 'help'
         description = 'Shows Git Tag Versioning information'
+    }
+
+    task scaleTest(type: JavaExec) {
+        main = "gov.usbr.wq.merlindataexchange.ScaleTest"
+        systemProperty "java.library.path", "$buildDir/libs"
+        classpath = sourceSets.test.runtimeClasspath
     }
 
 }
