@@ -18,30 +18,39 @@ import java.util.List;
 
 final class RunExtractScaleTest {
 
-    public static void main(String[] args) throws IOException
+    public static void main(String[] args)
     {
         try
         {
             String workingDir = System.getProperty("user.dir");
             String libsDir = workingDir + "/merlin-data-exchange/build/libs";
             System.setProperty("java.library.path", libsDir);
-            try {
-                Field field = ClassLoader.class.getDeclaredField("sys_paths");
-                field.setAccessible(true);
-                field.set(null, null);
-            } catch (Exception ex) {
-                // Handle the exception
-            }
+            Field field = ClassLoader.class.getDeclaredField("sys_paths");
+            field.setAccessible(true);
+            field.set(null, null);
             System.out.println(System.getProperty("java.library.path"));
-            runExtract(args[0], args[1]);
+            MerlinDataExchangeStatus status = runExtract(args[0], args[1]);
+            if(status == MerlinDataExchangeStatus.FAILURE || status == MerlinDataExchangeStatus.AUTHENTICATION_FAILURE)
+            {
+                System.exit(1);
+            }
+            else
+            {
+                System.exit(0);
+            }
         }
-        finally
+        catch(Exception e)
         {
             System.exit(-1);
         }
+        finally
+        {
+            //safety exit to ensure this jvm eventually exits if it didn't already.
+            System.exit(1);
+        }
     }
 
-    private static void runExtract(String configFileName, String progressLogFileName) throws IOException
+    private static MerlinDataExchangeStatus runExtract(String configFileName, String progressLogFileName) throws IOException
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
@@ -73,8 +82,7 @@ final class RunExtractScaleTest {
                 .withParameters(params)
                 .withProgressListener(new TestLogProgressListener(progressLogFileName))
                 .build();
-        MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
-        System.exit(status == MerlinDataExchangeStatus.COMPLETE_SUCCESS ? 0 : -1);
+        return dataExchangeEngine.runExtract().join();
     }
 
     private static Path getMockXml(String fileName) throws IOException

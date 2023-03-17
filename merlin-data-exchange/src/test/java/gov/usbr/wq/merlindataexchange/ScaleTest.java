@@ -3,12 +3,16 @@ package gov.usbr.wq.merlindataexchange;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 final class ScaleTest {
 
+    private static final Logger LOGGER = Logger.getLogger(ScaleTest.class.getName());
     private static final int NUMBER_OF_SIMULTANEOUS_RUNS = 10;
 
     public static void main(String[] args) throws Exception {
+        ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
         String classpath = System.getProperty("java.class.path");
@@ -28,17 +32,24 @@ final class ScaleTest {
             Process process = pb.start();
             processes.add(process);
         }
+        boolean errorOccurred = false;
         for(Process process : processes)
         {
             int exitCode = process.waitFor();
-            if(exitCode == 0)
-            {
-                System.out.println("Process completed successfully");
-            }
-            else {
-                System.out.println("Process Failed. Exit Code: " + exitCode);
-            }
 
+            if(exitCode != 0)
+            {
+                LOGGER.severe("Process did not complete as expected");
+                errorOccurred = true;
+            }
+            else
+            {
+                LOGGER.info("Process completed successfully");
+            }
+        }
+        if(errorOccurred)
+        {
+            throw new AssertionError("Error Occurred. Test Failed");
         }
     }
 }
