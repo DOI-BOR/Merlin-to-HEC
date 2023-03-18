@@ -47,9 +47,9 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
             Instant writeEnd;
             if(useSingleThreading)
             {
+                writeStart = Instant.now();
                 try(CloseableReentrantLock lock = ReadWriteLockManager.getInstance().getCloseableLock().lockIt())
                 {
-                    writeStart = Instant.now();
                     success = writeDss(timeSeriesContainer, runtimeParameters, measure, completionTracker, logFileLogger, progressListener, readDurationString);
                     writeEnd = Instant.now();
                 }
