@@ -29,7 +29,6 @@ import hec.ui.ProgressListener.MessageType;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,7 +41,6 @@ import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +54,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     private static final int PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP = 5;
     private static final int THREAD_COUNT = 5;
     private static final String THREAD_PROPERTY_KEY = "merlin.dataexchange.threadpool.size";
+    public static final String READ_WRITE_TIMESTAMP_PROPERTY = "merlin.dataexchange.readwrite.log.timestamptoggle";
     private final ExecutorService _executorService = Executors.newFixedThreadPool(getThreadPoolSize(), new MerlinThreadFactory());
     private final Map<ApiConnectionInfo, DataExchangeCache> _dataExchangeCache = new HashMap<>();
     private final MerlinTimeSeriesDataAccess _merlinDataAccess = new MerlinTimeSeriesDataAccess();
@@ -216,7 +215,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
     {
         Instant endTime = Instant.now();
         String finishedTimeMsg = "Ended at: " + MerlinLogDateFormatter.formatInstant(endTime);
-        String formattedDurationMsg = "Total Duration: " + getFormattedDuration(endTime);
+        String formattedDurationMsg = "Total Duration: " + MerlinDurationFormatter.getFormattedDuration(_extractStart, endTime);
         Collection<MerlinDataExchangeLogger> fileLoggers = _fileLoggers.values();
         if(_isCancelled.get())
         {
@@ -246,57 +245,6 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         {
             _progressListener.progress(completionMessage, MessageType.IMPORTANT);
         }
-    }
-
-    private String getFormattedDuration(Instant endTime)
-    {
-        long millis = Duration.between(_extractStart, endTime).toMillis();
-        long days = TimeUnit.MILLISECONDS.toDays(millis);
-        millis -= TimeUnit.DAYS.toMillis(days);
-        long hours = TimeUnit.MILLISECONDS.toHours(millis);
-        millis -= TimeUnit.HOURS.toMillis(hours);
-        long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
-        millis -= TimeUnit.MINUTES.toMillis(minutes);
-        double seconds = millis/1000.0;
-
-        StringBuilder sb = new StringBuilder(64);
-        if(days == 1)
-        {
-            sb.append(1 + " Day");
-        }
-        else if(days > 1)
-        {
-            sb.append(days);
-            sb.append(" Days ");
-        }
-        if(hours == 1)
-        {
-            sb.append(1 + " Hour");
-        }
-        else if (hours > 1)
-        {
-            sb.append(hours);
-            sb.append(" Hours ");
-        }
-        if(minutes == 1)
-        {
-            sb.append(1 + " Minute");
-        }
-        else if (minutes > 1)
-        {
-            sb.append(minutes);
-            sb.append(" Minutes ");
-        }
-        if(seconds == 1)
-        {
-            sb.append(1 + " Second");
-        }
-        else if (seconds >= 0)
-        {
-            sb.append(String.format("%.2f", seconds));
-            sb.append(" Seconds");
-        }
-        return(sb.toString());
     }
 
     private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions)

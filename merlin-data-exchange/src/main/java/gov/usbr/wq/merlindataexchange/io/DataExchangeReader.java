@@ -13,12 +13,13 @@ import hec.ui.ProgressListener;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public interface DataExchangeReader extends DataExchanger
 {
     String LOOKUP_PATH = "dataexchange/reader";
     CompletableFuture<TimeSeriesContainer> readData(DataExchangeSet configuration, MerlinParameters runtimeParameters, DataStore sourceDataStore, DataExchangeCache cache, MeasureWrapper seriesPath,
                                                     MerlinExchangeCompletionTracker completionTracker,
-                                                    ProgressListener progressListener, AtomicBoolean isCancelled, MerlinDataExchangeLogBody logger, ExecutorService executorService);
+                                                    ProgressListener progressListener, AtomicBoolean isCancelled, MerlinDataExchangeLogBody logger, ExecutorService executorService, AtomicReference<String> readStart);
     String getSourcePath(DataStore sourceDataStore, MerlinParameters parameters);
 }

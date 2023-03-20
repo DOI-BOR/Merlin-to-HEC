@@ -22,7 +22,13 @@ final class RunExtractScaleTest {
     {
         try
         {
+            System.setProperty(MerlinDataExchangeEngine.READ_WRITE_TIMESTAMP_PROPERTY, "True");
             String workingDir = System.getProperty("user.dir");
+            if(!workingDir.contains("merlin-data-exchange"))
+            {
+                workingDir += "/" + "merlin-data-exchange";
+            }
+            System.out.println("wd: " + workingDir);
             String libsDir = workingDir + "/build/libs";
             System.setProperty("java.library.path", libsDir);
             Field field = ClassLoader.class.getDeclaredField("sys_paths");
