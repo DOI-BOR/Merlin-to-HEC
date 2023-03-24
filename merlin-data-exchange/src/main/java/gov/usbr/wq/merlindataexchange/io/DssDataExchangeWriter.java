@@ -38,57 +38,50 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
     {
         Path dssWritePath = Paths.get(getDestinationPath(destinationDataStore, runtimeParameters));
         String seriesString = measure.getSeriesString();
-        try
+        if(timeSeriesContainer != null && !isCancelled.get())
         {
-            if(timeSeriesContainer != null && !isCancelled.get())
+            timeSeriesContainer.fileName = dssWritePath.toString();
+            boolean useSingleThreading = isSingleThreaded();
+            int success;
+            Instant writeStart;
+            Instant writeEnd;
+            if(useSingleThreading)
             {
-                timeSeriesContainer.fileName = dssWritePath.toString();
-                boolean useSingleThreading = isSingleThreaded();
-                int success;
-                Instant writeStart;
-                Instant writeEnd;
-                if(useSingleThreading)
+                writeStart = Instant.now();
+                try(CloseableReentrantLock lock = ReadWriteLockManager.getInstance().getCloseableLock().lockIt())
                 {
-                    writeStart = Instant.now();
-                    try(CloseableReentrantLock lock = ReadWriteLockManager.getInstance().getCloseableLock().lockIt())
-                    {
-                        success = writeDss(timeSeriesContainer, runtimeParameters, measure, completionTracker, logFileLogger, progressListener, readDurationString);
-                        writeEnd = Instant.now();
-                    }
-                }
-                else
-                {
-                    writeStart = Instant.now();
-                    success = writeDss(timeSeriesContainer, runtimeParameters, measure, completionTracker, logFileLogger, progressListener, readDurationString);
+                    success = writeDss(timeSeriesContainer, dssWritePath, runtimeParameters, measure, completionTracker, logFileLogger, progressListener, readDurationString);
                     writeEnd = Instant.now();
                 }
-                if(success == 0)
-                {
-                    String successMsg = "Write to " + timeSeriesContainer.fullName + " from " + seriesString + ReadWriteTimestampUtil.getDuration(writeStart, writeEnd);
-                    int percentCompleteAfterWrite = completionTracker.readWriteTaskCompleted();
-                    completionTracker.writeTaskCompleted();
-                    if(progressListener != null)
-                    {
-                        progressListener.progress(successMsg, MessageType.GENERAL, percentCompleteAfterWrite);
-                    }
-                    logFileLogger.log(successMsg);
-                    LOGGER.config(() -> successMsg);
-                }
-                else
-                {
-                    String failMsg = "Failed to write " +  seriesString + " to DSS! Error status code: " + success;
-                    if(progressListener != null)
-                    {
-                        progressListener.progress(failMsg, MessageType.ERROR);
-                    }
-                    logFileLogger.log(failMsg);
-                    LOGGER.config(() -> failMsg);
-                }
             }
-        }
-        finally
-        {
-            DssFileManagerImpl.getDssFileManager().close(dssWritePath.toString());
+            else
+            {
+                writeStart = Instant.now();
+                success = writeDss(timeSeriesContainer, dssWritePath, runtimeParameters, measure, completionTracker, logFileLogger, progressListener, readDurationString);
+                writeEnd = Instant.now();
+            }
+            if(success == 0)
+            {
+                String successMsg = "Write to " + timeSeriesContainer.fullName + " from " + seriesString + ReadWriteTimestampUtil.getDuration(writeStart, writeEnd);
+                int percentCompleteAfterWrite = completionTracker.readWriteTaskCompleted();
+                completionTracker.writeTaskCompleted();
+                if(progressListener != null)
+                {
+                    progressListener.progress(successMsg, MessageType.GENERAL, percentCompleteAfterWrite);
+                }
+                logFileLogger.log(successMsg);
+                LOGGER.config(() -> successMsg);
+            }
+            else
+            {
+                String failMsg = "Failed to write " +  seriesString + " to DSS! Error status code: " + success;
+                if(progressListener != null)
+                {
+                    progressListener.progress(failMsg, MessageType.ERROR);
+                }
+                logFileLogger.log(failMsg);
+                LOGGER.config(() -> failMsg);
+            }
         }
     }
 
@@ -115,7 +108,7 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         return useSingleThreading;
     }
 
-    private int writeDss(TimeSeriesContainer timeSeriesContainer, MerlinParameters runtimeParameters, MeasureWrapper measure,
+    private int writeDss(TimeSeriesContainer timeSeriesContainer, Path dssWritePath, MerlinParameters runtimeParameters, MeasureWrapper measure,
                          MerlinExchangeCompletionTracker completionTracker, MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener, AtomicReference<String> readDurationString)
     {
         int success;
@@ -131,13 +124,20 @@ public final class DssDataExchangeWriter implements DataExchangeWriter
         logProgress(progressListener, progressMsg, percentComplete);
         //write(timeseriesContainer) uses store option zero, so this ensures correct functionality for regular store flag 0
         //writeTS has a bug in its current state that can cause dss to write to wrong file. Once fixed, this conditional check won't be needed
-        if(runtimeParameters.getStoreOption().getRegular() == 0)
+        try
         {
-            success = DssFileManagerImpl.getDssFileManager().write(timeSeriesContainer);
+            if(runtimeParameters.getStoreOption().getRegular() == 0)
+            {
+                success = DssFileManagerImpl.getDssFileManager().write(timeSeriesContainer);
+            }
+            else
+            {
+                success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
+            }
         }
-        else
+        finally
         {
-            success = DssFileManagerImpl.getDssFileManager().writeTS(timeSeriesContainer, storeOption);
+            DssFileManagerImpl.getDssFileManager().close(dssWritePath.toString());
         }
         return success;
     }
