@@ -19,7 +19,10 @@ publishing {
 
 dependencies {
     implementation 'mil.army.usace.hec:service-annotations:1.2.1'
+
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3"
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.12.5'
+
     implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
     implementation 'mil.army.usace.hec:hec-rma:6.0-20220607.200819-127'
     implementation 'mil.army.usace.hec:lookup:1.1'

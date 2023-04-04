@@ -22,7 +22,7 @@ public final class AuthenticationParameters
         return _usernamePassword.getUsername();
     }
 
-    UsernamePasswordHolder getUsernamePassword()
+    public UsernamePasswordHolder getUsernamePassword()
     {
         return _usernamePassword;
     }
