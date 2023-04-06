@@ -22,7 +22,7 @@ final class MerlinDataExportIntegrationTest {
     void testExportCsv() throws IOException {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
-        String csvFileName = "merlin_template_measure.csv";
+        String csvFileName = "merlin_template_measure.xlsx";
         String csvPath = getTestDirectory().resolve(csvFileName).toString();
 
         FluentAuthenticationBuilder authenticationBuilder = new AuthenticationParametersBuilder()

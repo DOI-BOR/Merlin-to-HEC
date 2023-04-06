@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.sett4.dataformat.xlsx.XlsxMapper;
 import gov.usbr.wq.dataaccess.mapper.MerlinObjectMapper;
 import gov.usbr.wq.dataaccess.model.MeasureWrapper;
 import gov.usbr.wq.dataaccess.model.TemplateWrapper;
@@ -24,7 +25,8 @@ import java.util.Map;
 public class TemplateMeasureCsvWriter {
     public void writeToCsv(Map<TemplateWrapper, List<MeasureWrapper>> templateMeasureMap, String exportFilePath) throws IOException {
         List<FlattenedTemplateMeasure> flattenedTemplateMeasures = flattenTemplateMeasureMap(templateMeasureMap);
-        CsvMapper mapper = new CsvMapper();
+//        CsvMapper mapper = new CsvMapper();
+        XlsxMapper mapper = new XlsxMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.findAndRegisterModules();
         SimpleModule simpleModule = new SimpleModule();
