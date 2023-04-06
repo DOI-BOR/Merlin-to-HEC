@@ -39,8 +39,6 @@ import java.util.Optional;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,14 +46,11 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
-public final class MerlinDataExchangeEngine implements DataExchangeEngine
+public final class MerlinDataExchangeEngine extends MerlinEngine implements DataExchangeEngine
 {
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeEngine.class.getName());
     private static final int PERCENT_COMPLETE_ALLOCATED_FOR_INITIAL_SETUP = 5;
-    private static final int THREAD_COUNT = 5;
-    private static final String THREAD_PROPERTY_KEY = "merlin.dataexchange.threadpool.size";
     public static final String READ_WRITE_TIMESTAMP_PROPERTY = "merlin.dataexchange.readwrite.log.timestamptoggle";
-    private final ExecutorService _executorService = Executors.newFixedThreadPool(getThreadPoolSize(), new MerlinThreadFactory());
     private final Map<ApiConnectionInfo, DataExchangeCache> _dataExchangeCache = new HashMap<>();
     private final MerlinTimeSeriesDataAccess _merlinDataAccess = new MerlinTimeSeriesDataAccess();
     private final AtomicBoolean _isCancelled = new AtomicBoolean(false);
@@ -72,31 +67,6 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
         _configurationFiles = configurationFiles;
         _runtimeParameters = runtimeParameters;
         _progressListener = progressListener;
-    }
-
-    private static int getThreadPoolSize()
-    {
-        int retVal;
-        //availableProcessors gives us logical cores, which includes hyperthreading stuff.  We can't determine if hyperthreading is on, so let's always halve the available processors.
-        //Let's make sure we don't go lower than 1 by using Math.max.  1 / 2 = 0 in integer values, so this could be bad...
-        String threadPoolSize = System.getProperty(THREAD_PROPERTY_KEY);
-        if (threadPoolSize != null)
-        {
-            retVal = Math.max(Integer.parseInt(threadPoolSize), 1);
-            LOGGER.log(Level.FINE, () -> "Merlin executor service created using System Property " + THREAD_PROPERTY_KEY + " with thread pool size of: " + retVal);
-        }
-        else
-        {
-            int coreCount = Math.max(getCoreCount(), 1);
-            retVal = THREAD_COUNT * coreCount; //5 should cover bases for concurrent merlin web data retrieval?
-            LOGGER.log(Level.FINE, () -> "System Property " + THREAD_PROPERTY_KEY + " not set. Merlin executor service created using default thread pool size of: " + retVal);
-        }
-        return retVal;
-    }
-
-    private static int getCoreCount()
-    {
-        return Runtime.getRuntime().availableProcessors() / 2;
     }
 
     @Override
@@ -208,7 +178,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
             _fileLoggers.values().forEach(MerlinDataExchangeLogger::writeLog);
             finish();
             return retVal;
-        }, _executorService);
+        }, getExecutorService());
     }
 
     private void logCompletion(MerlinDataExchangeStatus retVal)
@@ -472,7 +442,7 @@ public final class MerlinDataExchangeEngine implements DataExchangeEngine
                 List<CompletableFuture<Void>> measurementFutures = new ArrayList<>();
                 measures.forEach(measure ->
                         measurementFutures.add(DataExchangeIO.exchangeData(reader, writer, dataExchangeSet, _runtimeParameters, dataStoreSource, dataStoreDestination,
-                                cache, measure, _completionTracker, _progressListener, _isCancelled, logBody, _executorService)));
+                                cache, measure, _completionTracker, _progressListener, _isCancelled, logBody, getExecutorService())));
                 CompletableFuture.allOf(measurementFutures.toArray(new CompletableFuture[0])).join();
             }
         }

@@ -6,9 +6,9 @@ import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordHolder;
 
 import java.net.UnknownHostException;
 
-final class MerlinAuthorizationException extends Exception
+public final class MerlinAuthorizationException extends Exception
 {
-    MerlinAuthorizationException(HttpAccessException ex, UsernamePasswordHolder usernamePassword, ApiConnectionInfo connectionInfo)
+    public MerlinAuthorizationException(HttpAccessException ex, UsernamePasswordHolder usernamePassword, ApiConnectionInfo connectionInfo)
     {
         super(getMessageFromHttpAccessException("Failed to authenticate user: " + usernamePassword.getUsername(), ex, connectionInfo), ex);
     }

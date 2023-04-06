@@ -19,14 +19,19 @@ publishing {
 
 dependencies {
     implementation 'mil.army.usace.hec:service-annotations:1.2.1'
+
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3"
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.14.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1'
+    implementation 'com.github.sett4:jackson-dataformat-xlsx-lite:2.13.0-1'
+
     implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
     implementation 'mil.army.usace.hec:hec-rma:6.0-20220607.200819-127'
     implementation 'mil.army.usace.hec:lookup:1.1'
     implementation 'mil.army.usace.hec:hec-core:6.0-20220607.200756-129!!'
     implementation 'mil.army.usace.hec:hec-data:6.0-20220607.200804-129!!'
     implementation 'mil.army.usace.hec:hec-lib:6.0-20220607.200812-129!!'
-    implementation 'gov.usbr.wq:merlin-web-client:4.2.0'
+    implementation 'gov.usbr.wq:merlin-web-client:4.3.1'
 
     runtimeOnly "com.google.flogger:flogger-system-backend:0.5.1"
 

@@ -1,0 +1,34 @@
+package gov.usbr.wq.merlindataexchange.io;
+
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.usbr.wq.dataaccess.model.MeasureWrapper;
+import gov.usbr.wq.dataaccess.model.TemplateWrapper;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+
+public final class TemplateMeasureCsvWriter extends TemplateMeasureWriter
+{
+    @Override
+    public void write(Map<TemplateWrapper, List<MeasureWrapper>> templateMeasureMap, String exportFilePath) throws IOException
+    {
+        CsvMapper mapper = new CsvMapper();
+        CsvSchema schema = mapper.schemaFor(FlattenedTemplateMeasure.class)
+                .withHeader()
+                .withColumnSeparator('|');
+        super.writeInternal(templateMeasureMap, exportFilePath,mapper,schema);
+    }
+
+}
