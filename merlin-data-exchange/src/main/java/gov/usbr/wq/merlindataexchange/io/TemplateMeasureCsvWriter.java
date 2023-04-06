@@ -19,12 +19,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
+
 public final class TemplateMeasureCsvWriter extends TemplateMeasureWriter
 {
     @Override
     public void write(Map<TemplateWrapper, List<MeasureWrapper>> templateMeasureMap, String exportFilePath) throws IOException
     {
-        CsvMapper mapper = new CsvMapper();
+        CsvMapper mapper = (CsvMapper) new CsvMapper().configure(SORT_PROPERTIES_ALPHABETICALLY,false);
         CsvSchema schema = mapper.schemaFor(FlattenedTemplateMeasure.class)
                 .withHeader()
                 .withColumnSeparator('|');
