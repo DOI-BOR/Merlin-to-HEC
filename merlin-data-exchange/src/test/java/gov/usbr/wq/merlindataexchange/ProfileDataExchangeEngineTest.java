@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -29,6 +30,7 @@ final class ProfileDataExchangeEngineTest
         List<Path> mocks = Arrays.asList(mockXml);
         Path testDirectory = getTestDirectory();
         Path csvFile = testDirectory.resolve(mockFileName.replace(".xml", ".csv"));
+        Files.deleteIfExists(csvFile);
         Instant start = Instant.parse("2017-02-01T12:00:00Z");
         Instant end = Instant.parse("2018-02-21T12:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();

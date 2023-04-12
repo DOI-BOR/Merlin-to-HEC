@@ -17,7 +17,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -40,35 +39,9 @@ final class TestMerlinProfileSampleMeasurement
         profileConstituentData.add(new ProfileConstituentData("Depth", depths, depthUnits));
         profileConstituentData.add(new ProfileConstituentData("Temp-Water", temps, tempUnits));
         ProfileSample sample = new ProfileSample(dateTime, profileConstituentData);
-        csvWriter.serializeDataToCsvFile(fileToWriteTo, sample);
-        Map<String, String> headerMapper = csvWriter.buildHeaderMapping(sample);
-        List<CsvDepthTempProfileSampleMeasurement> deserializedDataList = deserializeCsv(csvWriter, fileToWriteTo, headerMapper);
-        assertEquals(deserializedDataList.size(), sample.getConstituentDataList().get(0).getDataValues().size());
-        List<Double> expectedDepthData = sample.getConstituentDataList().get(0).getDataValues();
-        List<Double> expectedTempData = sample.getConstituentDataList().get(1).getDataValues();
-        for(int i=0; i < deserializedDataList.size(); i++)
-        {
-            CsvDepthTempProfileSampleMeasurement deserializedData = deserializedDataList.get(i);
-            Double expectedDepth = expectedDepthData.get(i);
-            assertEquals(deserializedData.getDepth(), expectedDepth);
-            Double expectedTemp = expectedTempData.get(i);
-            assertEquals(deserializedData.getTemperature(), expectedTemp);
-            ZonedDateTime expectedDateTime = sample.getDateTime();
-            assertEquals(deserializedData.getDateTime(), expectedDateTime);
-
-        }
-    }
-
-    private List<CsvDepthTempProfileSampleMeasurement> deserializeCsv(CsvDepthTempProfileWriter writer, Path csvFile, Map<String, String> headerMapper) throws IOException
-    {
-        CsvMapper csvMapper = writer.buildCsvMapper();
-        CsvSchema csvSchema = writer.buildContentSchema(headerMapper).withSkipFirstDataRow(true);
-        try(MappingIterator<CsvDepthTempProfileSampleMeasurement> mappingIterator = csvMapper.readerFor(CsvDepthTempProfileSampleMeasurement.class)
-                .with(csvSchema)
-                .readValues(csvFile.toFile()))
-        {
-            return mappingIterator.readAll();
-        }
+        CsvProfileObjectMapper.serializeDataToCsvFile(fileToWriteTo, sample);
+        ProfileSample returnedSample = CsvProfileObjectMapper.deserializeDataFromCsv(fileToWriteTo);
+        assertEquals(sample, returnedSample);
     }
 
     private Path getTestDirectory()

@@ -1,6 +1,7 @@
 package gov.usbr.wq.merlindataexchange.io.wq;
 
 import java.util.List;
+import java.util.Objects;
 
 final class ProfileConstituentData
 {
@@ -28,5 +29,26 @@ final class ProfileConstituentData
     String getUnit()
     {
         return _unit;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+        ProfileConstituentData that = (ProfileConstituentData) o;
+        return Objects.equals(_dataValues, that._dataValues) && Objects.equals(_parameter, that._parameter) && Objects.equals(_unit, that._unit);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(_dataValues, _parameter, _unit);
     }
 }
