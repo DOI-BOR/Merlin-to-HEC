@@ -76,10 +76,6 @@ public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSa
     private void writeCsv(List<ProfileSample> profileSamples, Path csvWritePath, MeasureWrapper measure, MerlinExchangeCompletionTracker completionTracker,
                           MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener, AtomicReference<String> readDurationString, AtomicReference<List<String>> seriesIds)
     {
-        if(profileSamples == null)
-        {
-            return;
-        }
         List<String> seriesIdList = seriesIds.get();
         String seriesIdsString = String.join(",\n", seriesIdList);
         try

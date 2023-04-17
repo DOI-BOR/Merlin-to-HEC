@@ -308,7 +308,7 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
                     EventWrapper afterOriginalLast = newEndEvents.get(1);
                     if(!ProfileDataConverter.isDifferenceSignificantChange(oldLast.getDate(), afterOriginalLast.getDate(), maxTimeStep, oldLast.getValue(), afterOriginalLast.getValue()))
                     {
-                        retVal.setRemoveFirstProfile();
+                        retVal.setRemoveLastProfile();
                     }
                 }
             }

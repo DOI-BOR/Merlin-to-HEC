@@ -131,7 +131,7 @@ final class CsvProfileObjectMapper extends CsvMapper
                     for(CsvProfileRow row : rows)
                     {
                         CsvDataMapping mapping = row.getMapping();
-                        Double value = mapping.getParameterValues().get(header);
+                        Double value = mapping.getHeaderToValuesMap().get(header);
                         valuesForColumn.add(value);
                     }
                     ProfileConstituent constituentData = new ProfileConstituent(param, valuesForColumn, unit);
@@ -252,9 +252,9 @@ final class CsvProfileObjectMapper extends CsvMapper
             Map<String, Double> sortedMap = new LinkedHashMap<>();
             for (String key : _headers)
             {
-                if (mapping.getParameterValues().containsKey(key))
+                if (mapping.getHeaderToValuesMap().containsKey(key))
                 {
-                    sortedMap.put(key, mapping.getParameterValues().get(key));
+                    sortedMap.put(key, mapping.getHeaderToValuesMap().get(key));
                 }
             }
             gen.writeStartArray();

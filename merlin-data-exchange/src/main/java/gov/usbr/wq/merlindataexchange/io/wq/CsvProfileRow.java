@@ -2,6 +2,9 @@ package gov.usbr.wq.merlindataexchange.io.wq;
 
 import java.time.ZonedDateTime;
 
+/**
+ * Represents a single csv row, which contains a date-time, along with n number of constituent data values.
+ */
 final class CsvProfileRow
 {
     private ZonedDateTime _date;
@@ -24,6 +27,6 @@ final class CsvProfileRow
 
     public void setParameterValue(String parameterHeader, Double value)
     {
-        _mapping.setParameterValue(parameterHeader, value);
+        _mapping.setHeaderValue(parameterHeader, value);
     }
 }
