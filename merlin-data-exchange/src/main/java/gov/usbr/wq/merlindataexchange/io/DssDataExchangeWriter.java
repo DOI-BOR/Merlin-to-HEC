@@ -2,7 +2,9 @@ package gov.usbr.wq.merlindataexchange.io;
 
 import com.rma.io.DssFileManagerImpl;
 import gov.usbr.wq.dataaccess.model.MeasureWrapper;
+import gov.usbr.wq.merlindataexchange.DataExchangeCache;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogBody;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
@@ -18,7 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -33,9 +34,9 @@ public final class DssDataExchangeWriter implements DataExchangeWriter<TimeSerie
     public static final String MERLIN_TO_DSS_WRITE_SINGLE_THREAD_PROPERTY_KEY = "merlin.dataexchange.writer.dss.singlethread";
     private final AtomicBoolean _loggedThreadProperty = new AtomicBoolean(false);
     @Override
-    public void writeData(TimeSeriesContainer timeSeriesContainer, MeasureWrapper measure, MerlinParameters runtimeParameters, DataStore destinationDataStore,
-                          MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled,
-                          AtomicReference<String> readDurationString, AtomicReference<List<String>> logHelper)
+    public void writeData(TimeSeriesContainer timeSeriesContainer, MeasureWrapper measure, DataExchangeSet set, MerlinParameters runtimeParameters, DataExchangeCache cache,
+                          DataStore destinationDataStore, MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger,
+                          AtomicBoolean isCancelled, AtomicReference<String> readDurationString)
     {
         Path dssWritePath = Paths.get(getDestinationPath(destinationDataStore, runtimeParameters));
         String seriesString = measure.getSeriesString();

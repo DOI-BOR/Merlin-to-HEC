@@ -21,7 +21,7 @@ public interface DataExchangeReader<T> extends DataExchanger
     CompletableFuture<T> readData(DataExchangeSet configuration, MerlinParameters runtimeParameters, DataStore sourceDataStore, DataStore destDataStore,
                                   DataExchangeCache cache, MeasureWrapper seriesPath, MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener,
                                   AtomicBoolean isCancelled, MerlinDataExchangeLogBody logger, ExecutorService executorService,
-                                  AtomicReference<String> readStart, AtomicReference<List<String>> logHelper);
+                                  AtomicReference<String> readStart);
     String getSourcePath(DataStore sourceDataStore, MerlinParameters parameters);
 
     List<MeasureWrapper> filterMeasuresToRead(DataExchangeSet dataExchangeSet, List<MeasureWrapper> measures);

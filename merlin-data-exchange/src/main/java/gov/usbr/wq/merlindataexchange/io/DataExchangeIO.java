@@ -33,12 +33,11 @@ public final class DataExchangeIO
         if(!isCancelled.get())
         {
             AtomicReference<String> readDurationString = new AtomicReference<>("");
-            AtomicReference<List<String>> logHelper = new AtomicReference<>();
             retVal = reader.readData(dataExchangeSet, runtimeParameters, source, destination, cache, measure,
-                            completionTracker, progressListener, isCancelled, logger, executorService, readDurationString, logHelper)
+                            completionTracker, progressListener, isCancelled, logger, executorService, readDurationString)
                     .thenAcceptAsync(tsc ->
                     {
-                        writer.writeData((T) tsc, measure, runtimeParameters, destination, completionTracker, progressListener, logger, isCancelled, readDurationString, logHelper);
+                        writer.writeData((T) tsc, measure, dataExchangeSet, runtimeParameters, cache, destination, completionTracker, progressListener, logger, isCancelled, readDurationString);
                         Instant writeEnd = Instant.now();
                         String totalDuration = ReadWriteTimestampUtil.getDuration(readStart, writeEnd);
                         if(!totalDuration.isEmpty())

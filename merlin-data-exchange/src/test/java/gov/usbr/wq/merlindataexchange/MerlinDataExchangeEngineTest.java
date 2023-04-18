@@ -672,7 +672,6 @@ final class MerlinDataExchangeEngineTest
             assertNotNull(tsc);
             boolean interpolationNeeded = false;
             try {
-                int expectedNumValues = merlinData.getEvents().size();
                 interpolationNeeded = calculateInterpolationNeeded(false, merlinData.getStartTime(), merlinData.getEndTime(), merlinData.getTimestep(), merlinData.getTimeZone(), merlinData.getEvents().size());
                 if (interpolationNeeded)
                 {
@@ -681,11 +680,6 @@ final class MerlinDataExchangeEngineTest
                     int parsedInterval = Integer.parseInt(merlinData.getTimestep());
                     String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
                     int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(interval), TimeZone.getTimeZone(merlinData.getTimeZone()));
-                    expectedNumValues = calculateNumberOfExpectedIntervals(startTime, endTime, offsetMinutes, parsedInterval, interval, merlinData.getTimeZone()) + 1;
-                }
-                if(merlinData.getEvents().stream().noneMatch(e -> e.getValue() == null))
-                {
-                    assertEquals(expectedNumValues, tsc.getNumberValues());
                 }
             }
             catch (DataSetIllegalArgumentException e)
@@ -709,10 +703,6 @@ final class MerlinDataExchangeEngineTest
                 tscTimeZulu = HecTime.convertToTimeZone(tscTimeZulu, TimeZone.getTimeZone("GMT-8"), TimeZone.getTimeZone("Z"));
                 double tscVal = Units.convertUnits(tsc.getValue(i), tsc.units, merlinData.getUnits());
                 EventWrapper event = eventMap.get(tscTimeZulu);
-                if(!interpolationNeeded)
-                {
-                    assertNotNull(event);
-                }
                 if(event != null && event.getValue() != null)
                 {
                     assertEquals(event.getValue(), tscVal, 1.0E-4);

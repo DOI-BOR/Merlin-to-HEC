@@ -1,7 +1,9 @@
 package gov.usbr.wq.merlindataexchange.io;
 
 import gov.usbr.wq.dataaccess.model.MeasureWrapper;
+import gov.usbr.wq.merlindataexchange.DataExchangeCache;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogBody;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
@@ -9,7 +11,6 @@ import hec.ui.ProgressListener;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -18,9 +19,9 @@ public interface DataExchangeWriter<T> extends DataExchanger
 
     String LOOKUP_PATH = "dataexchange/reader";
 
-    void writeData(T dataObject, MeasureWrapper seriesPath, MerlinParameters runtimeParameters, DataStore destinationDataStore,
+    void writeData(T dataObject, MeasureWrapper seriesPath, DataExchangeSet set, MerlinParameters runtimeParameters, DataExchangeCache cache, DataStore destinationDataStore,
                    MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener, MerlinDataExchangeLogBody logger,
-                   AtomicBoolean isCancelled, AtomicReference<String> readStart, AtomicReference<List<String>> logHelper);
+                   AtomicBoolean isCancelled, AtomicReference<String> readStart);
 
     default String getDestinationPath(DataStore destinationDataStore, MerlinParameters parameters)
     {

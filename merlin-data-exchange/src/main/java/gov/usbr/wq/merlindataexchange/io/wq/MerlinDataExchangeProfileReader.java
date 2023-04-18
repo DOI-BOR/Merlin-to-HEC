@@ -7,7 +7,6 @@ import gov.usbr.wq.dataaccess.http.TokenContainer;
 import gov.usbr.wq.dataaccess.model.DataWrapper;
 import gov.usbr.wq.dataaccess.model.EventWrapper;
 import gov.usbr.wq.dataaccess.model.MeasureWrapper;
-import gov.usbr.wq.dataaccess.model.TemplateWrapper;
 import gov.usbr.wq.merlindataexchange.DataExchangeCache;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogBody;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
@@ -31,14 +30,13 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NavigableSet;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
+import static gov.usbr.wq.merlindataexchange.io.wq.ProfileMeasuresUtil.getMeasuresListForDepthMeasure;
 import static java.util.stream.Collectors.toList;
 
 @ServiceProvider(service = DataExchangeReader.class, position = 200, path = DataExchangeReader.LOOKUP_PATH
@@ -241,7 +239,7 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
     @Override
     protected MerlinProfileDataWrappers retrieveData(Instant start, Instant end, DataExchangeSet dataExchangeSet, DataExchangeCache cache, String merlinApiRoot, TokenContainer token,
                                                       MeasureWrapper depthMeasure, Integer qualityVersionId, DataStore sourceDataStore, ProgressListener progressListener,
-                                                      MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled, AtomicReference<List<String>> logHelper)
+                                                      MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled)
     {
         MerlinTimeSeriesDataAccess access = new MerlinTimeSeriesDataAccess();
         MerlinProfileDataWrappers retVal =  new MerlinProfileDataWrappers();
@@ -249,16 +247,13 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
         {
             try
             {
-                List<MeasureWrapper> measureWrappers = getMeasuresToRead(depthMeasure, dataExchangeSet, cache);
-                List<String> seriesIds = new ArrayList<>();
+                List<MeasureWrapper> measureWrappers = getMeasuresListForDepthMeasure(depthMeasure, dataExchangeSet, cache);
                 for(MeasureWrapper measureWrapper: measureWrappers)
                 {
-                    seriesIds.add(measureWrapper.getSeriesString());
                     DataWrapper data = access.getEventsBySeries(new ApiConnectionInfo(merlinApiRoot), token, measureWrapper, qualityVersionId, start, end);
                     retVal.add(data);
                 }
                 determineRemovalOfFirstAndLastProfiles(access, merlinApiRoot, token, depthMeasure, qualityVersionId, start, end, retVal);
-                logHelper.set(seriesIds);
             }
             catch (IOException | HttpAccessException ex)
             {
@@ -313,25 +308,6 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
                 }
             }
         }
-    }
-
-    private List<MeasureWrapper> getMeasuresToRead(MeasureWrapper depthMeasure, DataExchangeSet dataExchangeSet, DataExchangeCache cache)
-    {
-        List<MeasureWrapper> retVal = new ArrayList<>();
-        String[] split = depthMeasure.getSeriesString().split("/");
-        String regex = "^" + split[0] +"/[^/]+/" + split[2] + "/" + split[3] + "/" + split[4] + "/" + split[5].substring(0, split[5].length()-1) + "\\d+$";
-        Pattern pattern = Pattern.compile(regex);
-        Optional<TemplateWrapper> template = cache.getCachedTemplates().stream()
-                .filter(t -> t.getName().equalsIgnoreCase(dataExchangeSet.getTemplateName())
-                        || Objects.equals(t.getDprId(), dataExchangeSet.getTemplateId()))
-                .findFirst();
-        if(template.isPresent())
-        {
-            List<MeasureWrapper> measures = cache.getCachedTemplateToMeasures().get(template.get());
-            retVal = measures.stream().filter(m -> pattern.matcher(m.getSeriesString()).matches())
-                    .collect(toList());
-        }
-        return retVal;
     }
 
     @Override

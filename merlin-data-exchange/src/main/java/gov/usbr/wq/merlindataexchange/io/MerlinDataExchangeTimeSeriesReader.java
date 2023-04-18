@@ -94,7 +94,7 @@ public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchange
     @Override
     protected DataWrapper retrieveData(Instant start, Instant end, DataExchangeSet dataExchangeSet, DataExchangeCache cache, String merlinApiRoot, TokenContainer token, MeasureWrapper measure,
                                        Integer qualityVersionId, DataStore sourceDataStore, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger,
-                                       AtomicBoolean isCancelled, AtomicReference<List<String>> logHelper)
+                                       AtomicBoolean isCancelled)
     {
             MerlinTimeSeriesDataAccess access = new MerlinTimeSeriesDataAccess();
             DataWrapper retVal = null;

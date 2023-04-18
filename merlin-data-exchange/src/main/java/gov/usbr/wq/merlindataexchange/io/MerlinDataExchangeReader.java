@@ -16,7 +16,6 @@ import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordNotFoundExcepti
 import hec.ui.ProgressListener;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,7 +30,7 @@ public abstract class MerlinDataExchangeReader<S, T> implements DataExchangeRead
     @Override
     public CompletableFuture<T> readData(DataExchangeSet dataExchangeSet, MerlinParameters runtimeParameters, DataStore sourceDataStore, DataStore destDataStore, DataExchangeCache cache,
                                          MeasureWrapper measure, MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener, AtomicBoolean isCancelled,
-                                         MerlinDataExchangeLogBody logFileLogger, ExecutorService executorService, AtomicReference<String> readDurationString, AtomicReference<List<String>> logHelper)
+                                         MerlinDataExchangeLogBody logFileLogger, ExecutorService executorService, AtomicReference<String> readDurationString)
     {
         String merlinApiRoot = getSourcePath(sourceDataStore, runtimeParameters);
         Instant start = runtimeParameters.getStart();
@@ -47,7 +46,7 @@ public abstract class MerlinDataExchangeReader<S, T> implements DataExchangeRead
             {
                 UsernamePasswordHolder usernamePassword = runtimeParameters.getUsernamePasswordForUrl(merlinApiRoot);
                 retVal = retrieveDataAsType(usernamePassword, start, end, destDataStore, dataExchangeSet, cache, merlinApiRoot, measure, qualityVersionId, progressListener, logFileLogger,
-                        isCancelled, fPartOverride, unitSystemToConvertTo, completionTracker, measure.isProcessed(), readDurationString, logHelper);
+                        isCancelled, fPartOverride, unitSystemToConvertTo, completionTracker, measure.isProcessed(), readDurationString);
             }
             catch (UsernamePasswordNotFoundException e)
             {
@@ -62,7 +61,7 @@ public abstract class MerlinDataExchangeReader<S, T> implements DataExchangeRead
     protected T retrieveDataAsType(UsernamePasswordHolder usernamePassword, Instant start, Instant end, DataStore dataStore, DataExchangeSet dataExchangeSet,
                                    DataExchangeCache cache, String merlinApiRoot, MeasureWrapper measure, Integer qualityVersionId, ProgressListener progressListener,
                                    MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled, String fPartOverride, String unitSystemToConvertTo,
-                                   MerlinExchangeCompletionTracker completionTracker, Boolean isProcessed, AtomicReference<String> readDurationString, AtomicReference<List<String>> logHelper)
+                                   MerlinExchangeCompletionTracker completionTracker, Boolean isProcessed, AtomicReference<String> readDurationString)
     {
         T retVal = null;
         try
@@ -70,7 +69,7 @@ public abstract class MerlinDataExchangeReader<S, T> implements DataExchangeRead
             TokenRegistry tokenRegistry = TokenRegistry.getRegistry();
             TokenContainer token = tokenRegistry.getToken(new ApiConnectionInfo(merlinApiRoot), usernamePassword.getUsername(), usernamePassword.getPassword());
             Instant readStart = Instant.now();
-            S data = retrieveData(start, end, dataExchangeSet, cache, merlinApiRoot, token, measure, qualityVersionId, dataStore, progressListener, logFileLogger, isCancelled, logHelper);
+            S data = retrieveData(start, end, dataExchangeSet, cache, merlinApiRoot, token, measure, qualityVersionId, dataStore, progressListener, logFileLogger, isCancelled);
             Instant readEnd = Instant.now();
             readDurationString.set(ReadWriteTimestampUtil.getDuration(readStart, readEnd));
             if(data == null)
@@ -101,7 +100,7 @@ public abstract class MerlinDataExchangeReader<S, T> implements DataExchangeRead
                                        Instant start, Instant end, AtomicReference<String> readDurationString);
 
     protected abstract S retrieveData(Instant start, Instant end, DataExchangeSet dataExchangeSet, DataExchangeCache cache, String merlinApiRoot, TokenContainer token, MeasureWrapper measure, Integer qualityVersionId,
-                                      DataStore sourceDataStore, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled, AtomicReference<List<String>> logHelper);
+                                      DataStore sourceDataStore, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled);
 
     @Override
     public String getSourcePath(DataStore sourceDataStore, MerlinParameters parameters)

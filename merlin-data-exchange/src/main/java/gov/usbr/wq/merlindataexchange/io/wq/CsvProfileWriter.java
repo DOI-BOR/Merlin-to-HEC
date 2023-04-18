@@ -1,8 +1,10 @@
 package gov.usbr.wq.merlindataexchange.io.wq;
 
 import gov.usbr.wq.dataaccess.model.MeasureWrapper;
+import gov.usbr.wq.merlindataexchange.DataExchangeCache;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogBody;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import gov.usbr.wq.merlindataexchange.io.CloseableReentrantLock;
 import gov.usbr.wq.merlindataexchange.io.DataExchangeWriter;
@@ -22,6 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.util.stream.Collectors.toList;
+
 @ServiceProvider(service = DataExchangeWriter.class, position = 200, path = DataExchangeWriter.LOOKUP_PATH
         + "/" + CsvProfileWriter.CSV)
 public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSample>>
@@ -32,9 +36,9 @@ public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSa
     private final AtomicBoolean _loggedThreadProperty = new AtomicBoolean(false);
 
     @Override
-    public void writeData(List<ProfileSample> profileSamples, MeasureWrapper measure, MerlinParameters runtimeParameters,
-                          DataStore destinationDataStore, MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener,
-                          MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled, AtomicReference<String> readDurationString, AtomicReference<List<String>> seriesIds)
+    public void writeData(List<ProfileSample> profileSamples, MeasureWrapper measure, DataExchangeSet set, MerlinParameters runtimeParameters,
+                          DataExchangeCache cache, DataStore destinationDataStore, MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener,
+                          MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled, AtomicReference<String> readDurationString)
     {
         if(profileSamples == null)
         {
@@ -49,14 +53,14 @@ public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSa
             try(CloseableReentrantLock lock = ReadWriteLockManager.getInstance().getCloseableLock().lockIt())
             {
                 writeStart = Instant.now();
-                writeCsv(profileSamples, csvWritePath, measure, completionTracker, logFileLogger, progressListener, readDurationString, seriesIds);
+                writeCsv(profileSamples, csvWritePath, measure, set, cache, completionTracker, logFileLogger, progressListener, readDurationString);
                 writeEnd = Instant.now();
             }
         }
         else
         {
             writeStart = Instant.now();
-            writeCsv(profileSamples, csvWritePath, measure, completionTracker, logFileLogger, progressListener, readDurationString, seriesIds);
+            writeCsv(profileSamples, csvWritePath, measure, set, cache, completionTracker, logFileLogger, progressListener, readDurationString);
             writeEnd = Instant.now();
         }
         String successMsg = "Write to " + csvWritePath + " from " + measure.getSeriesString() + ReadWriteTimestampUtil.getDuration(writeStart, writeEnd);
@@ -73,10 +77,13 @@ public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSa
 
     }
 
-    private void writeCsv(List<ProfileSample> profileSamples, Path csvWritePath, MeasureWrapper measure, MerlinExchangeCompletionTracker completionTracker,
-                          MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener, AtomicReference<String> readDurationString, AtomicReference<List<String>> seriesIds)
+    private void writeCsv(List<ProfileSample> profileSamples, Path csvWritePath, MeasureWrapper measure, DataExchangeSet set, DataExchangeCache cache,
+                          MerlinExchangeCompletionTracker completionTracker, MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener, AtomicReference<String> readDurationString)
     {
-        List<String> seriesIdList = seriesIds.get();
+        List<String> seriesIdList = ProfileMeasuresUtil.getMeasuresListForDepthMeasure(measure, set, cache)
+                .stream()
+                .map(MeasureWrapper::getSeriesString)
+                .collect(toList());
         String seriesIdsString = String.join(",\n", seriesIdList);
         try
         {
