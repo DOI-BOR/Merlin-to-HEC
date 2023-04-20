@@ -10,7 +10,6 @@ import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import hec.ui.ProgressListener;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,9 +34,9 @@ public final class DataExchangeIO
             AtomicReference<String> readDurationString = new AtomicReference<>("");
             retVal = reader.readData(dataExchangeSet, runtimeParameters, source, destination, cache, measure,
                             completionTracker, progressListener, isCancelled, logger, executorService, readDurationString)
-                    .thenAcceptAsync(tsc ->
+                    .thenAcceptAsync(objectRead ->
                     {
-                        writer.writeData((T) tsc, measure, dataExchangeSet, runtimeParameters, cache, destination, completionTracker, progressListener, logger, isCancelled, readDurationString);
+                        writer.writeData((T) objectRead, measure, dataExchangeSet, runtimeParameters, cache, destination, completionTracker, progressListener, logger, isCancelled, readDurationString);
                         Instant writeEnd = Instant.now();
                         String totalDuration = ReadWriteTimestampUtil.getDuration(readStart, writeEnd);
                         if(!totalDuration.isEmpty())

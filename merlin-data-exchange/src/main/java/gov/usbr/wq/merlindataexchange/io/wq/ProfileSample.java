@@ -20,7 +20,7 @@ final class ProfileSample
         return _dateTime;
     }
 
-    List<ProfileConstituent> getConstituentDataList()
+    List<ProfileConstituent> getConstituents()
     {
         return _constituentDataList;
     }

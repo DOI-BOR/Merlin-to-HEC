@@ -2,7 +2,9 @@ package gov.usbr.wq.merlindataexchange.configuration;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import gov.usbr.wq.merlindataexchange.MerlinConfigParseException;
 
+import java.nio.file.Path;
 import java.util.List;
 
 
@@ -26,7 +28,7 @@ public final class DataStoreProfile extends DataStore
     public Constituent getConstituentByParameter(String parameter)
     {
         Constituent retVal = null;
-        for(Constituent constituent : getConstituents())
+        for(Constituent constituent : _constituents.getConstituents())
         {
             if(constituent.getParameter().equalsIgnoreCase(parameter))
             {
@@ -35,5 +37,18 @@ public final class DataStoreProfile extends DataStore
             }
         }
         return retVal;
+    }
+
+    @Override
+    public void validate(Path configFilepath) throws MerlinConfigParseException
+    {
+        super.validate(configFilepath);
+        for(Constituent constituent : _constituents.getConstituents())
+        {
+            if(constituent.getParameter() == null)
+            {
+                throw new MerlinConfigParseException(configFilepath, "Constituent in data-store " + getId() + " missing parameter name");
+            }
+        }
     }
 }

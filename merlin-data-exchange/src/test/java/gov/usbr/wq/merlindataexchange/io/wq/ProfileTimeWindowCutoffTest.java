@@ -1,12 +1,10 @@
 package gov.usbr.wq.merlindataexchange.io.wq;
 
-import gov.usbr.wq.dataaccess.mapper.MerlinObjectMapper;
 import gov.usbr.wq.merlindataexchange.DataExchangeEngine;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeEngineBuilder;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeStatus;
 import gov.usbr.wq.merlindataexchange.ResourceAccess;
 import gov.usbr.wq.merlindataexchange.TestLogProgressListener;
-import gov.usbr.wq.merlindataexchange.io.wq.CsvProfileObjectMapper;
 import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParametersBuilder;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParametersBuilder;
@@ -24,6 +22,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -31,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 final class ProfileTimeWindowCutoffTest
 {
     @Test
-    void testStartCutoff() throws IOException
+    void testStartCutoff() throws IOException, InvalidProfileCsvException
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
@@ -67,12 +66,12 @@ final class ProfileTimeWindowCutoffTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
-        List<ProfileSample> profiles = CsvProfileObjectMapper.deserializeDataFromCsv(csvFile);
-        assertNotEquals(startDateTime, profiles.get(0).getDateTime());
+        SortedSet<ProfileSample> profiles = CsvProfileObjectMapper.deserializeDataFromCsv(csvFile);
+        assertNotEquals(startDateTime, profiles.first().getDateTime());
     }
 
     @Test
-    void testStartNotCutoff() throws IOException
+    void testStartNotCutoff() throws IOException, InvalidProfileCsvException
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
@@ -108,12 +107,12 @@ final class ProfileTimeWindowCutoffTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
-        List<ProfileSample> profiles = CsvProfileObjectMapper.deserializeDataFromCsv(csvFile);
-        assertEquals(startDateTime, profiles.get(0).getDateTime());
+        SortedSet<ProfileSample> profiles = CsvProfileObjectMapper.deserializeDataFromCsv(csvFile);
+        assertEquals(startDateTime, profiles.first().getDateTime());
     }
 
     @Test
-    void testEndCutoff() throws IOException
+    void testEndCutoff() throws IOException, InvalidProfileCsvException
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
@@ -151,12 +150,12 @@ final class ProfileTimeWindowCutoffTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
-        List<ProfileSample> profiles = CsvProfileObjectMapper.deserializeDataFromCsv(csvFile);
-        assertNotEquals(startDateTimeForLastProfile, profiles.get(profiles.size()-1).getDateTime());
+        SortedSet<ProfileSample> profiles = CsvProfileObjectMapper.deserializeDataFromCsv(csvFile);
+        assertNotEquals(startDateTimeForLastProfile, profiles.last().getDateTime());
     }
 
     @Test
-    void testEndNotCutoff() throws IOException
+    void testEndNotCutoff() throws IOException, InvalidProfileCsvException
     {
         String username = ResourceAccess.getUsername();
         char[] password = ResourceAccess.getPassword();
@@ -194,8 +193,8 @@ final class ProfileTimeWindowCutoffTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
-        List<ProfileSample> profiles = CsvProfileObjectMapper.deserializeDataFromCsv(csvFile);
-        assertEquals(startDateTimeForLastProfile, profiles.get(profiles.size()-1).getDateTime());
+        SortedSet<ProfileSample> profiles = CsvProfileObjectMapper.deserializeDataFromCsv(csvFile);
+        assertEquals(startDateTimeForLastProfile, profiles.last().getDateTime());
     }
 
     private Path getMockXml(String fileName) throws IOException

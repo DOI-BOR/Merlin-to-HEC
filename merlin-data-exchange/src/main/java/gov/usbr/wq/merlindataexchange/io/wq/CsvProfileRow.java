@@ -27,6 +27,6 @@ final class CsvProfileRow
 
     public void setParameterValue(String parameterHeader, Double value)
     {
-        _mapping.setHeaderValue(parameterHeader, value);
+        _mapping.getHeaderToValuesMap().put(parameterHeader, value);
     }
 }

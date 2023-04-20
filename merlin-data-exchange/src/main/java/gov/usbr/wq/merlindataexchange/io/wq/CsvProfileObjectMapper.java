@@ -16,6 +16,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.usbr.wq.merlindataexchange.configuration.DataStoreProfile;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,12 +26,17 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 final class CsvProfileObjectMapper extends CsvMapper
 {
+    private static final char DELIMITER = ',';
+    private static final String DATE_COL_HEADER = "Date";
     CsvProfileObjectMapper(List<String> headers)
     {
         configureMapper(headers);
@@ -50,9 +56,9 @@ final class CsvProfileObjectMapper extends CsvMapper
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    static void serializeDataToCsvFile(Path csvWritePath, List<ProfileSample> depthTempProfileSamples) throws IOException
+    static void serializeDataToCsvFile(Path csvWritePath, SortedSet<ProfileSample> profileSamples) throws IOException
     {
-        List<String> headers = buildHeaders(depthTempProfileSamples.get(0));
+        List<String> headers = buildHeaders(profileSamples.first());
         CsvMapper mapper = new CsvProfileObjectMapper(headers);
         CsvSchema.Builder schemaBuilder = CsvSchema.builder();
         headers.forEach(schemaBuilder::addColumn);
@@ -60,14 +66,14 @@ final class CsvProfileObjectMapper extends CsvMapper
         schemaBuilder.clearColumns();
         headers.forEach(c -> schemaBuilder.addColumn(c, CsvSchema.ColumnType.NUMBER_OR_STRING));
         CsvSchema schema = mapper.schemaFor(CsvProfileRow.class)
-                .withColumnSeparator(',')
-                .withArrayElementSeparator(",")
+                .withColumnSeparator(DELIMITER)
+                .withArrayElementSeparator(String.valueOf(DELIMITER))
                 .withoutQuoteChar();
         mapper.writerFor(List.class)
                 .with(headerSchema)
                 .writeValue(csvWritePath.toFile(), Collections.emptyList());
-        mapper.enable(CsvParser.Feature.TRIM_SPACES).enable(CsvParser.Feature.ALLOW_TRAILING_COMMA);
-        List<CsvProfileRow> csvRows = buildCsvRows(depthTempProfileSamples);
+        mapper.enable(CsvParser.Feature.TRIM_SPACES);
+        List<CsvProfileRow> csvRows = buildCsvRows(profileSamples);
         try(Writer fileWriter = new FileWriter(csvWritePath.toFile(), true);
             SequenceWriter sequenceWriter = mapper.writerFor(CsvProfileRow.class)
                     .with(schema)
@@ -78,17 +84,18 @@ final class CsvProfileObjectMapper extends CsvMapper
     }
 
     //deserialization is current used for testing only, but could be tweaked in future if we ever want to POST data.
-    static List<ProfileSample> deserializeDataFromCsv(Path csvFile) throws IOException
+    static SortedSet<ProfileSample> deserializeDataFromCsv(Path csvFile) throws IOException, InvalidProfileCsvException
     {
         CsvMapper mapper = new CsvMapper();
         CsvSchema schema = CsvSchema.emptySchema().withHeader()
-                .withColumnSeparator(',')
+                .withColumnSeparator(DELIMITER)
                 .withoutEscapeChar();
         // Step 4: Create MappingIterator
         try(MappingIterator<JsonNode> nodeIterator = mapper.readerFor(JsonNode.class).with(schema)
                 .readValues(csvFile.toFile()))
         {
             List<String> headers = ((CsvSchema)nodeIterator.getParserSchema()).getColumnNames();
+            validateCsv(csvFile, headers);
             List<CsvProfileRow> rows = new ArrayList<>();
             while (nodeIterator.hasNext())
             {
@@ -98,7 +105,6 @@ final class CsvProfileObjectMapper extends CsvMapper
                 // Read the date column from the first element in the row
                 String dateString = node.get(headers.get(0)).asText();
                 row.setDate(ZonedDateTime.parse(dateString, DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-
                 // Read the rest of the data columns into the CsvDataMapping object
                 for (int i = 1; i < headers.size(); i++)
                 {
@@ -113,9 +119,39 @@ final class CsvProfileObjectMapper extends CsvMapper
         }
     }
 
-    private static List<ProfileSample> buildProfileSamplesFromRows(List<String> headers, List<CsvProfileRow> rows)
+    private static void validateCsv(Path csvFile, List<String> headers) throws InvalidProfileCsvException
     {
-        List<ProfileSample> retVal = new ArrayList<>();
+        if(headers.isEmpty())
+        {
+            throw new InvalidProfileCsvException(csvFile, "Missing headers");
+        }
+        if(!headers.get(0).equalsIgnoreCase(DATE_COL_HEADER))
+        {
+            throw new InvalidProfileCsvException(csvFile, "Expected first column header to be " + DATE_COL_HEADER + ". But was " + headers.get(0));
+        }
+        validateDepthColumnExists(csvFile, headers);
+    }
+
+    private static void validateDepthColumnExists(Path csvFile, List<String> headers) throws InvalidProfileCsvException
+    {
+        boolean depthPresent = false;
+        for(String header : headers)
+        {
+            if(header.toLowerCase().contains(DataStoreProfile.DEPTH.toLowerCase()))
+            {
+                depthPresent = true;
+                break;
+            }
+        }
+        if(!depthPresent)
+        {
+            throw new InvalidProfileCsvException(csvFile, "Missing depth data");
+        }
+    }
+
+    private static SortedSet<ProfileSample> buildProfileSamplesFromRows(List<String> headers, List<CsvProfileRow> rows)
+    {
+        SortedSet<ProfileSample> retVal = new TreeSet<>(Comparator.comparing(ProfileSample::getDateTime));
         if(!rows.isEmpty())
         {
             List<ProfileConstituent> constituentDataList = new ArrayList<>();
@@ -143,8 +179,7 @@ final class CsvProfileObjectMapper extends CsvMapper
             {
                 dates.add(row.getDate());
             }
-            //using 2 as max time step. If we ever want to support deserialization in the future for POSTing, then this should be specified in CSV or someplace
-            retVal = ProfileDataConverter.splitDataIntoProfileSamples(constituentDataList, dates, 2, false, false);
+            retVal = ProfileDataConverter.splitDataIntoProfileSamples(constituentDataList, dates, false, false);
         }
         return retVal;
     }
@@ -152,28 +187,28 @@ final class CsvProfileObjectMapper extends CsvMapper
     static List<String> buildHeaders(ProfileSample sample)
     {
         List<String> retVal = new ArrayList<>();
-        retVal.add("Date");
-        for(ProfileConstituent profileConstituent : sample.getConstituentDataList())
+        retVal.add(DATE_COL_HEADER);
+        for(ProfileConstituent profileConstituent : sample.getConstituents())
         {
             retVal.add(profileConstituent.getParameter() + "(" + profileConstituent.getUnit() + ")");
         }
         return retVal;
     }
 
-    private static List<CsvProfileRow> buildCsvRows(List<ProfileSample> depthTempProfileSamples)
+    private static List<CsvProfileRow> buildCsvRows(SortedSet<ProfileSample> profileSamples)
     {
         List<CsvProfileRow> retVal = new ArrayList<>();
-        for(ProfileSample depthTempProfileSample : depthTempProfileSamples)
+        for(ProfileSample depthTempProfileSample : profileSamples)
         {
             List<CsvProfileRow> rowsForSample = new ArrayList<>();
             ZonedDateTime dateTime = depthTempProfileSample.getDateTime();
-            for(int i=0; i < depthTempProfileSample.getConstituentDataList().get(0).getDataValues().size(); i++)
+            for(int i = 0; i < depthTempProfileSample.getConstituents().get(0).getDataValues().size(); i++)
             {
                 CsvProfileRow row = new CsvProfileRow();
                 row.setDate(dateTime);
                 rowsForSample.add(row);
             }
-            for (ProfileConstituent data : depthTempProfileSample.getConstituentDataList())
+            for (ProfileConstituent data : depthTempProfileSample.getConstituents())
             {
                 for (int i = 0; i < data.getDataValues().size(); i++)
                 {

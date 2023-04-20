@@ -2,12 +2,14 @@ package gov.usbr.wq.merlindataexchange;
 
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import gov.usbr.wq.merlindataexchange.configuration.Constituent;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeConfiguration;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
-import gov.usbr.wq.merlindataexchange.configuration.DataStoreProfile;
 import gov.usbr.wq.merlindataexchange.configuration.DataStoreRef;
+import gov.usbr.wq.merlindataexchange.io.DssDataExchangeWriter;
+import gov.usbr.wq.merlindataexchange.io.MerlinDataExchangeTimeSeriesReader;
+import gov.usbr.wq.merlindataexchange.io.wq.CsvProfileWriter;
+import gov.usbr.wq.merlindataexchange.io.wq.MerlinDataExchangeProfileReader;
 import hec.heclib.util.Unit;
 import org.xml.sax.SAXException;
 
@@ -21,7 +23,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public final class MerlinDataExchangeParser
 {
@@ -46,23 +50,9 @@ public final class MerlinDataExchangeParser
             {
                 throw new MerlinConfigParseException(configFilepath, "Missing data exchange set(s)");
             }
-            if(retVal.getDataStores() == null)
+            if(retVal.getDataStores().isEmpty())
             {
                 throw new MerlinConfigParseException(configFilepath, "Missing data stores");
-            }
-            for(DataStore dataStore : retVal.getDataStores())
-            {
-                if(dataStore instanceof DataStoreProfile)
-                {
-                    DataStoreProfile dataStoreProfile = (DataStoreProfile) dataStore;
-                    for(Constituent constituent : dataStoreProfile.getConstituents())
-                    {
-                        if(constituent.getParameter() == null)
-                        {
-                            throw new MerlinConfigParseException(configFilepath, "Constituent in data-store " + dataStore.getId() + " missing parameter name");
-                        }
-                    }
-                }
             }
             validateParsedConfig(configFilepath, retVal);
             return retVal;
@@ -78,7 +68,7 @@ public final class MerlinDataExchangeParser
         List<DataStore> dataStores = config.getDataStores();
         for(DataStore dataStore : dataStores)
         {
-            validateDataStore(configFilepath, dataStore);
+            dataStore.validate(configFilepath);
         }
         for (DataExchangeSet set : config.getDataExchangeSets())
         {
@@ -128,7 +118,33 @@ public final class MerlinDataExchangeParser
                     + " in data-exchange-set " + set.getId()));
             config.getDataStoreByRef(dataStoreRefA).orElseThrow(() -> new MerlinConfigParseException(configFilepath, "No data-store found for id: " + dataStoreRefB.getId()
                     + " in data-exchange-set " + set.getId()));
+            validateRefTypes(config, set, dataStoreRefA, dataStoreRefB, configFilepath);
 
+        }
+    }
+
+    private static void validateRefTypes(DataExchangeConfiguration config, DataExchangeSet set, DataStoreRef dataStoreRefA, DataStoreRef dataStoreRefB, Path configFilepath)
+            throws MerlinConfigParseException
+    {
+        DataStoreRef destRef = dataStoreRefA;
+        if(set.getSourceId().equalsIgnoreCase(dataStoreRefA.getId()))
+        {
+            destRef = dataStoreRefB;
+        }
+        Optional<DataStore> dataStoreOpt = config.getDataStoreByRef(destRef);
+        if(dataStoreOpt.isPresent())
+        {
+            DataStore dataStore = dataStoreOpt.get();
+            if(set.getDataType().equalsIgnoreCase(MerlinDataExchangeTimeSeriesReader.TIMESERIES)
+                    && !dataStore.getDataStoreType().equalsIgnoreCase(DssDataExchangeWriter.DSS))
+            {
+                throw new MerlinConfigInvalidTypesException(configFilepath, dataStore, MerlinDataExchangeTimeSeriesReader.TIMESERIES, Collections.singletonList(DssDataExchangeWriter.DSS));
+            }
+            if(set.getDataType().equalsIgnoreCase(MerlinDataExchangeProfileReader.PROFILE)
+                    && !dataStore.getDataStoreType().equalsIgnoreCase(CsvProfileWriter.CSV))
+            {
+                throw new MerlinConfigInvalidTypesException(configFilepath, dataStore, MerlinDataExchangeProfileReader.PROFILE, Collections.singletonList(CsvProfileWriter.CSV));
+            }
         }
     }
 
@@ -158,22 +174,6 @@ public final class MerlinDataExchangeParser
             }
         }
         return retVal;
-    }
-
-    private static void validateDataStore(Path configFilepath, DataStore dataStore) throws MerlinConfigParseException
-    {
-        if(dataStore.getId() == null || dataStore.getId().isEmpty())
-        {
-            throw new MerlinConfigParseException(configFilepath, "Missing id for datastore");
-        }
-        if(dataStore.getDataStoreType() == null || dataStore.getDataStoreType().trim().isEmpty())
-        {
-            throw new MerlinConfigParseException(configFilepath, "Missing data-type for datastore " + dataStore.getId());
-        }
-        if(dataStore.getPath() == null || dataStore.getPath().trim().isEmpty())
-        {
-            throw new MerlinConfigParseException(configFilepath, "Missing path for datastore " + dataStore.getId());
-        }
     }
 
     private static void validateConfigIsXml(Path configFilepath) throws IOException, SAXException, ParserConfigurationException

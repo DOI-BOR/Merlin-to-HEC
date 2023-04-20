@@ -36,6 +36,7 @@ import static java.util.stream.Collectors.toList;
         + "/" + MerlinDataExchangeReader.MERLIN + "/" + MerlinDataExchangeTimeSeriesReader.TIMESERIES)
 public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchangeReader<DataWrapper, TimeSeriesContainer>
 {
+    private static final String MERLIN_TIME_SERIES_TYPE = "Auto";
     public static final String TIMESERIES = "time-series"; //this corresponds to data-type in set we are reading for
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeTimeSeriesReader.class.getName());
 
@@ -116,7 +117,7 @@ public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchange
     public List<MeasureWrapper> filterMeasuresToRead(DataExchangeSet dataExchangeSet, List<MeasureWrapper> measures)
     {
         //filter out profile data for time series
-        return measures.stream().filter(m -> !"Profile".equalsIgnoreCase(m.getType()))
+        return measures.stream().filter(m -> MERLIN_TIME_SERIES_TYPE.equalsIgnoreCase(m.getType()))
                 .collect(toList());
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
-public final class MerlinConfigParseException extends Exception
+public class MerlinConfigParseException extends Exception
 {
     public MerlinConfigParseException(Path configFile, Exception e)
     {

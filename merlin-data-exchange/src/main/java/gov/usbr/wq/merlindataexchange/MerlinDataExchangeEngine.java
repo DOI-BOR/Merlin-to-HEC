@@ -157,7 +157,7 @@ public final class MerlinDataExchangeEngine extends MerlinEngine implements Data
                 }
                 retVal = _completionTracker.getCompletionStatus();
             }
-            catch (MerlinConfigParseException | UnsupportedTemplateException | MerlinInitializationException e)
+            catch (MerlinConfigParseException | MerlinInitializationException e)
             {
                 String errorMsg = e.getMessage();
                 logError(errorMsg, e);
@@ -218,7 +218,7 @@ public final class MerlinDataExchangeEngine extends MerlinEngine implements Data
     }
 
     private void initializeCacheForMerlinUrl(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions)
-            throws UnsupportedTemplateException, MerlinAuthorizationException, MerlinInitializationException
+            throws MerlinAuthorizationException, MerlinInitializationException
     {
         try
         {
@@ -232,7 +232,7 @@ public final class MerlinDataExchangeEngine extends MerlinEngine implements Data
     }
 
     private void initializeCacheForMerlinUrlWithAuthentication(ApiConnectionInfo connectionInfo, Map<Path, DataExchangeConfiguration> parsedConfiguartions, UsernamePasswordHolder usernamePassword)
-            throws UnsupportedTemplateException, MerlinAuthorizationException, MerlinInitializationException
+            throws MerlinAuthorizationException, MerlinInitializationException
     {
         TokenContainer token;
         try
@@ -400,7 +400,7 @@ public final class MerlinDataExchangeEngine extends MerlinEngine implements Data
         {
             TemplateWrapper template = getTemplateFromDataExchangeSet(dataExchangeSet, dataStoreSource);
             DataExchangeReader<?> reader = DataExchangeReaderFactory.lookupReader(dataStoreSource, dataExchangeSet);
-            DataExchangeWriter<?> writer = DataExchangeWriterFactory.lookupWriter(dataStoreDestination);
+            DataExchangeWriter<?> writer = DataExchangeWriterFactory.lookupWriter(dataStoreDestination, dataExchangeSet);
             String sourcePath = dataStoreSource.getPath(); //for merlin this is a URL
             DataExchangeCache cache = _dataExchangeCache.get(new ApiConnectionInfo(sourcePath));
             if(cache != null)
@@ -545,7 +545,7 @@ public final class MerlinDataExchangeEngine extends MerlinEngine implements Data
     }
 
     private void initializeCacheForMerlinWithToken(Map<Path, DataExchangeConfiguration> parsedConfigurations, ApiConnectionInfo connectionInfo, TokenContainer token)
-            throws IOException, HttpAccessException, UnsupportedTemplateException
+            throws IOException, HttpAccessException
     {
 
         DataExchangeCache cache = _dataExchangeCache.get(connectionInfo);
@@ -571,7 +571,7 @@ public final class MerlinDataExchangeEngine extends MerlinEngine implements Data
     }
 
     private void initializeCachedMeasurementsForMerlin(DataExchangeCache cache, Map<Path, DataExchangeConfiguration> parsedConfigurations,
-                                                       ApiConnectionInfo connectionInfo, TokenContainer token) throws UnsupportedTemplateException, IOException, HttpAccessException
+                                                       ApiConnectionInfo connectionInfo, TokenContainer token) throws IOException, HttpAccessException
     {
         for(Map.Entry<Path, DataExchangeConfiguration> entry : parsedConfigurations.entrySet())
         {

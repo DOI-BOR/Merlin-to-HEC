@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ServiceProvider(service = DataExchangeWriter.class, position = 100, path = DataExchangeWriter.LOOKUP_PATH
-        + "/" + DssDataExchangeWriter.DSS)
+        + "/" + MerlinDataExchangeTimeSeriesReader.TIMESERIES + "/" + DssDataExchangeWriter.DSS)
 public final class DssDataExchangeWriter implements DataExchangeWriter<TimeSeriesContainer>
 {
     public static final String DSS = "dss";

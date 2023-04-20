@@ -25,12 +25,15 @@ import hec.ui.ProgressListener;
 import rma.services.annotations.ServiceProvider;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -41,18 +44,18 @@ import static java.util.stream.Collectors.toList;
 
 @ServiceProvider(service = DataExchangeReader.class, position = 200, path = DataExchangeReader.LOOKUP_PATH
         + "/" + MerlinDataExchangeReader.MERLIN + "/" + MerlinDataExchangeProfileReader.PROFILE)
-public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeReader<MerlinProfileDataWrappers, List<ProfileSample>>
+public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeReader<MerlinProfileDataWrappers, SortedSet<ProfileSample>>
 {
     public static final String PROFILE = "profile";
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeProfileReader.class.getName());
 
     @Override
-    protected List<ProfileSample> convertToType(MerlinProfileDataWrappers dataWrappers, DataStore dataStore, String unitSystemToConvertTo,
+    protected SortedSet<ProfileSample> convertToType(MerlinProfileDataWrappers dataWrappers, DataStore dataStore, String unitSystemToConvertTo,
                                           String fPartOverride, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger,
                                           MerlinExchangeCompletionTracker completionTracker, Boolean isProcessed,
                                           Instant start, Instant end, AtomicReference<String> readDurationString)
     {
-        List<ProfileSample> retVal = null;
+        SortedSet<ProfileSample> retVal = null;
         if(!dataWrappers.isEmpty())
         {
             try
@@ -74,8 +77,7 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
                         .stream()
                         .map(EventWrapper::getDate)
                         .collect(toList());
-                int maxTimeStep = getMaxTimeStep(dataWrappers.get(0).getTimestep());
-                retVal = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituents, readingDateTimes, maxTimeStep, dataWrappers.removeFirstProfile(), dataWrappers.removeLastProfile());
+                retVal = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituents, readingDateTimes, dataWrappers.removeFirstProfile(), dataWrappers.removeLastProfile());
             }
             catch (NoEventsException e)
             {
@@ -89,79 +91,29 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
         return retVal;
     }
 
-    private int getMaxTimeStep(String timeSteps)
-    {
-        int maxTimeStep;
-        if(timeSteps.contains(","))
-        {
-            String[] split = timeSteps.split(",");
-            maxTimeStep = Integer.parseInt(split[0].trim());
-            for(int i=1; i < split.length; i++)
-            {
-                int step = Integer.parseInt(split[i].trim());
-                if(step > maxTimeStep)
-                {
-                    maxTimeStep = step;
-                }
-            }
-        }
-        else
-        {
-            maxTimeStep = Integer.parseInt(timeSteps.trim());
-        }
-        return maxTimeStep;
-    }
-
-    private int getMinTimeStep(String timeSteps)
-    {
-        int minTimeStep;
-        if(timeSteps.contains(","))
-        {
-            String[] split = timeSteps.split(",");
-            minTimeStep = Integer.parseInt(split[0].trim());
-            for(int i=1; i < split.length; i++)
-            {
-                int step = Integer.parseInt(split[i].trim());
-                if(step < minTimeStep)
-                {
-                    minTimeStep = step;
-                }
-            }
-        }
-        else
-        {
-            minTimeStep = Integer.parseInt(timeSteps.trim());
-        }
-        return minTimeStep;
-    }
-
     private ProfileConstituent buildProfileConstituentData(List<Double> dataValues, String unitSystemToConvertTo, DataWrapper dataWrapper, DataStore dataStore) throws UnitsConversionException
     {
         Constituent constituent = ((DataStoreProfile) dataStore).getConstituentByParameter(dataWrapper.getParameter());
         int convertToUnitSystemId = getUnitSystemIdForUnitSystem(unitSystemToConvertTo);
-        String unit = dataWrapper.getUnits();
+        String unitToConvertTo = dataWrapper.getUnits();
+        String constituentUnit = null;
+        String unitFromTemplateUnitSystem = null;
         if(constituent != null)
         {
-            String constituentUnit = constituent.getUnit();
-            if(unit != null)
-            {
-                unit = constituentUnit;
-                int constituentUnitSystemId = Units.getUnitSystemForUnits(constituentUnit);
-                if(constituentUnitSystemId != Unit.UNDEF_ID)
-                {
-                    convertToUnitSystemId = constituentUnitSystemId;
-                }
-            }
+            constituentUnit = constituent.getUnit();
         }
-        Parameter paramId = Parameter.getParameterForUnitsString(unit); //param Id from constituent if unit defined, else from merlin
-        if(convertToUnitSystemId == Unit.UNDEF_ID) //if no unit system defined in set or datastore
+        Parameter param = Parameter.getParameterForUnitsString(unitToConvertTo);
+        unitFromTemplateUnitSystem = Parameter.getUnitsStringForSystem(param.getParameterId(), convertToUnitSystemId);
+        if(constituentUnit != null)
         {
-            convertToUnitSystemId = Units.getUnitSystemForUnits(dataWrapper.getUnits()); //use one from merlin
+            unitToConvertTo = constituentUnit;
         }
-        //convert the units
-        dataValues = convertUnits(dataValues, paramId.getParameterId(), dataWrapper.getUnits(), convertToUnitSystemId);
-        String convertedUnit = Parameter.getUnitsStringForSystem(paramId.getParameterId(), convertToUnitSystemId);
-        return new ProfileConstituent(dataWrapper.getParameter(), dataValues, convertedUnit);
+        else if(unitFromTemplateUnitSystem != null)
+        {
+            unitToConvertTo = unitFromTemplateUnitSystem;
+        }
+        dataValues = convertUnits(dataValues, dataWrapper.getUnits(), unitToConvertTo);
+        return new ProfileConstituent(dataWrapper.getParameter(), dataValues, unitToConvertTo);
     }
 
     private int getUnitSystemIdForUnitSystem(String unitSystemToConvertTo)
@@ -178,16 +130,15 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
         return convertToUnitSystemId;
     }
 
-    private List<Double> convertUnits(List<Double> dataList, int paramId, String units, int unitSystemToConvertTo) throws UnitsConversionException
+    private List<Double> convertUnits(List<Double> dataList, String unitsFrom, String unitsTo) throws UnitsConversionException
     {
         List<Double> retVal = new ArrayList<>(dataList);
-        int nativeUnitSystem = Units.getUnitSystemForUnits(units);
-        if(nativeUnitSystem != unitSystemToConvertTo)
+        if(!unitsFrom.equalsIgnoreCase(unitsTo))
         {
             retVal.clear();
             for(Double data : dataList)
             {
-                retVal.add(Units.convertUnits(data, paramId, nativeUnitSystem, unitSystemToConvertTo));
+                retVal.add(Units.convertUnits(data, unitsFrom, unitsTo));
             }
         }
         return retVal;
@@ -248,12 +199,16 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
             try
             {
                 List<MeasureWrapper> measureWrappers = getMeasuresListForDepthMeasure(depthMeasure, dataExchangeSet, cache);
+                Duration significantTimeChange = ProfileDataConverter.getSignificantTimeChange();
+                long maxTimeJumpBeforeConsideredSignificantChange = significantTimeChange.toMinutes() - 1;
+                Instant expandedStart = start.minusSeconds(maxTimeJumpBeforeConsideredSignificantChange * 60);
+                Instant expandedEnd = end.plusSeconds(maxTimeJumpBeforeConsideredSignificantChange *60);
                 for(MeasureWrapper measureWrapper: measureWrappers)
                 {
-                    DataWrapper data = access.getEventsBySeries(new ApiConnectionInfo(merlinApiRoot), token, measureWrapper, qualityVersionId, start, end);
+                    DataWrapper data = access.getEventsBySeries(new ApiConnectionInfo(merlinApiRoot), token, measureWrapper, qualityVersionId, expandedStart, expandedEnd);
                     retVal.add(data);
                 }
-                determineRemovalOfFirstAndLastProfiles(access, merlinApiRoot, token, depthMeasure, qualityVersionId, start, end, retVal);
+                determineRemovalOfFirstAndLastProfiles(start, end, retVal);
             }
             catch (IOException | HttpAccessException ex)
             {
@@ -263,9 +218,7 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
         return retVal;
     }
 
-    private void determineRemovalOfFirstAndLastProfiles(MerlinTimeSeriesDataAccess access, String merlinApiRoot, TokenContainer token,
-                                                        MeasureWrapper depthMeasure, Integer qualityVersionId, Instant start, Instant end,
-                                                        MerlinProfileDataWrappers retVal) throws IOException, HttpAccessException
+    private void determineRemovalOfFirstAndLastProfiles(Instant start, Instant end, MerlinProfileDataWrappers retVal)
     {
         if(!retVal.isEmpty())
         {
@@ -274,40 +227,52 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
             if(dataWrapper.isPresent() && !dataWrapper.get().getEvents().isEmpty())
             {
                 DataWrapper depthData = dataWrapper.get();
-                long multiple = ProfileDataConverter.getSignificantChangeTimeStepMultiple();
-                long minTimeStep = getMinTimeStep(depthData.getTimestep());
-                long maxTimeStep = getMaxTimeStep(depthData.getTimestep());
-                long maxTimeJumpBeforeConsideredSignificantChange = maxTimeStep * multiple - minTimeStep;
-                Instant newStart = start.minusSeconds(maxTimeJumpBeforeConsideredSignificantChange * 60);
-                Instant newEnd = end.plusSeconds(maxTimeJumpBeforeConsideredSignificantChange *60);
-                //build two new small data sets from original moving back/forward to just before what we consider to be a significant change
-                DataWrapper newStartData = access.getEventsBySeries(new ApiConnectionInfo(merlinApiRoot), token, depthMeasure, qualityVersionId, newStart, start);
-                DataWrapper newEndData = access.getEventsBySeries(new ApiConnectionInfo(merlinApiRoot), token, depthMeasure, qualityVersionId, end, newEnd);
-                List<EventWrapper> newStartEvents = new ArrayList<>(newStartData.getEvents());
-                List<EventWrapper> newEndEvents =  new ArrayList<>(newEndData.getEvents());
-                EventWrapper oldFirst = depthData.getEvents().first();
-                EventWrapper oldLast = depthData.getEvents().last();
-                //if there is data in our new small data sets, it means that there was NON-significant change data time-wise that got cut off by the time window
-                //so lets check the depths of those data to see if there was a significant change there
-                //if not, we should remove this data set as it doesn't contain complete data for the profile
-                if(newStartEvents.size() > 1)
+                List<EventWrapper> events = new ArrayList<>(depthData.getEvents());
+                Optional<EventWrapper> originalStartEvent = events.stream().filter(e -> e.getDate().toInstant().equals(start) || e.getDate().toInstant().isAfter(start))
+                        .findFirst();
+                Optional<EventWrapper> originalEndEvent = getOriginalEndEvent(events, end);
+                if(events.size() > 2)
                 {
-                    EventWrapper beforeOriginalFirst = newStartEvents.get(newStartEvents.size() - 2);
-                    if(!ProfileDataConverter.isDifferenceSignificantChange(beforeOriginalFirst.getDate(), oldFirst.getDate(), maxTimeStep, beforeOriginalFirst.getValue(), oldFirst.getValue()))
-                    {
-                        retVal.setRemoveFirstProfile();
-                    }
-                }
-                if(newEndEvents.size() > 1)
-                {
-                    EventWrapper afterOriginalLast = newEndEvents.get(1);
-                    if(!ProfileDataConverter.isDifferenceSignificantChange(oldLast.getDate(), afterOriginalLast.getDate(), maxTimeStep, oldLast.getValue(), afterOriginalLast.getValue()))
-                    {
-                        retVal.setRemoveLastProfile();
-                    }
+                    List<Double> depths = depthData.getEvents().stream().map(EventWrapper::getValue).collect(toList());
+                    Double min = ProfileMeasuresUtil.getMinDepth(depths);
+                    Double max = ProfileMeasuresUtil.getMaxDepth(depths);
+                    originalStartEvent.ifPresent(eventWrapper -> determineRemovalOfFirst(eventWrapper, start, events, min, max, retVal));
+                    originalEndEvent.ifPresent(eventWrapper -> determineRemovalOfLast(eventWrapper, end, events, min, max, retVal));
                 }
             }
         }
+    }
+
+    private void determineRemovalOfLast(EventWrapper originalEndEvent, Instant end, List<EventWrapper> events, Double min, Double max, MerlinProfileDataWrappers retVal)
+    {
+        int originalEndIndex = events.indexOf(originalEndEvent);
+        int lastIndex = events.size() - 1;
+        if(originalEndIndex < lastIndex && events.get(originalEndIndex + 1).getDate().toInstant().isAfter(end)
+                && !ProfileDataConverter.isDifferenceSignificantChange(events.get(originalEndIndex).getDate(), events.get(originalEndIndex+1).getDate(),
+                events.get(originalEndIndex).getValue(), events.get(originalEndIndex+1).getValue(), max, min))
+        {
+            retVal.setRemoveLastProfile();
+        }
+    }
+
+    private void determineRemovalOfFirst(EventWrapper originalStartEvent, Instant start, List<EventWrapper> events, Double min, Double max, MerlinProfileDataWrappers retVal)
+    {
+        int originalStartIndex = events.indexOf(originalStartEvent);
+        if(originalStartIndex > 0 && events.get(originalStartIndex-1).getDate().toInstant().isBefore(start)
+                && !ProfileDataConverter.isDifferenceSignificantChange(events.get(originalStartIndex-1).getDate(), events.get(originalStartIndex).getDate(),
+                events.get(originalStartIndex-1).getValue(), events.get(originalStartIndex).getValue(),
+                max, min))
+        {
+            retVal.setRemoveFirstProfile();
+        }
+    }
+
+    private Optional<EventWrapper> getOriginalEndEvent(List<EventWrapper> events, Instant end)
+    {
+        List<EventWrapper> eventsReversed = new ArrayList<>(events);
+        Collections.reverse(eventsReversed);
+        return eventsReversed.stream().filter(e -> e.getDate().toInstant().equals(end) || e.getDate().toInstant().isBefore(end))
+                .findFirst();
     }
 
     @Override

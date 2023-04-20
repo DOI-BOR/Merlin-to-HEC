@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -27,8 +28,8 @@ import java.util.logging.Logger;
 import static java.util.stream.Collectors.toList;
 
 @ServiceProvider(service = DataExchangeWriter.class, position = 200, path = DataExchangeWriter.LOOKUP_PATH
-        + "/" + CsvProfileWriter.CSV)
-public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSample>>
+        + "/" + MerlinDataExchangeProfileReader.PROFILE + "/" + CsvProfileWriter.CSV)
+public final class CsvProfileWriter implements DataExchangeWriter<SortedSet<ProfileSample>>
 {
     private static final Logger LOGGER = Logger.getLogger(CsvProfileWriter.class.getName());
     public static final String CSV = "csv";
@@ -36,7 +37,7 @@ public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSa
     private final AtomicBoolean _loggedThreadProperty = new AtomicBoolean(false);
 
     @Override
-    public void writeData(List<ProfileSample> profileSamples, MeasureWrapper measure, DataExchangeSet set, MerlinParameters runtimeParameters,
+    public void writeData(SortedSet<ProfileSample> profileSamples, MeasureWrapper measure, DataExchangeSet set, MerlinParameters runtimeParameters,
                           DataExchangeCache cache, DataStore destinationDataStore, MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener,
                           MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled, AtomicReference<String> readDurationString)
     {
@@ -77,7 +78,7 @@ public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSa
 
     }
 
-    private void writeCsv(List<ProfileSample> profileSamples, Path csvWritePath, MeasureWrapper measure, DataExchangeSet set, DataExchangeCache cache,
+    private void writeCsv(SortedSet<ProfileSample> profileSamples, Path csvWritePath, MeasureWrapper measure, DataExchangeSet set, DataExchangeCache cache,
                           MerlinExchangeCompletionTracker completionTracker, MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener, AtomicReference<String> readDurationString)
     {
         List<String> seriesIdList = ProfileMeasuresUtil.getMeasuresListForDepthMeasure(measure, set, cache)
@@ -88,14 +89,14 @@ public final class CsvProfileWriter implements DataExchangeWriter<List<ProfileSa
         try
         {
             int totalSize = profileSamples.stream()
-                    .mapToInt(sample -> sample.getConstituentDataList().stream()
+                    .mapToInt(sample -> sample.getConstituents().stream()
                         .mapToInt(cdl -> cdl.getDataValues().size())
                         .sum())
                     .sum();
             String progressMsg = "Read " + seriesIdsString + " | Is processed: "
                     + measure.isProcessed() + " | Values read: " + totalSize + readDurationString;
             logFileLogger.log(progressMsg);
-            for(int i=1; i < profileSamples.get(0).getConstituentDataList().size(); i++)
+            for(int i = 1; i < profileSamples.first().getConstituents().size(); i++)
             {
                 completionTracker.readWriteTaskCompleted(); //1 read for every profile measure
             }

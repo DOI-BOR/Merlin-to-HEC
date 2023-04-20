@@ -8,15 +8,16 @@ import java.util.List;
 public final class Constituents
 {
     @JacksonXmlProperty(localName = "constituent")
-    private List<Constituent> _constituents = new ArrayList<>();
+    private final List<Constituent> _constituents = new ArrayList<>();
 
     public List<Constituent> getConstituents()
     {
-        return _constituents;
+        return new ArrayList<>(_constituents);
     }
 
     public void setConstituents(List<Constituent> constituents)
     {
-        _constituents = constituents;
+        _constituents.clear();
+        _constituents.addAll(constituents);
     }
 }

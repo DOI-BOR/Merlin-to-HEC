@@ -14,9 +14,4 @@ final class CsvDataMapping
     {
         return _headerToValuesMap;
     }
-
-    void setHeaderValue(String parameterHeader, Double value)
-    {
-        _headerToValuesMap.put(parameterHeader, value);
-    }
 }

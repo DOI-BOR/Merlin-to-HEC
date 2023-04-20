@@ -32,9 +32,26 @@ final class ProfileMeasuresUtil
         if(template.isPresent())
         {
             List<MeasureWrapper> measures = cache.getCachedTemplateToMeasures().get(template.get());
-            retVal = measures.stream().filter(m -> pattern.matcher(m.getSeriesString()).matches())
+            retVal = measures.stream().filter(m -> pattern.matcher(m.getSeriesString()).matches()
+                            && m.getType().equalsIgnoreCase(MerlinDataExchangeProfileReader.PROFILE))
                     .collect(toList());
         }
         return retVal;
+    }
+
+    static Double getMinDepth(List<Double> depthValues)
+    {
+        return depthValues.stream()
+                .mapToDouble(Double::doubleValue)
+                .min()
+                .orElse(Double.MIN_VALUE);
+    }
+
+    static Double getMaxDepth(List<Double> depthValues)
+    {
+        return depthValues.stream()
+                .mapToDouble(Double::doubleValue)
+                .max()
+                .orElse(Double.MAX_VALUE);
     }
 }
