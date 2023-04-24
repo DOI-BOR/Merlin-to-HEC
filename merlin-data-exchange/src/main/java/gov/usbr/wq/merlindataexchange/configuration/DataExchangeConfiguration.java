@@ -11,52 +11,46 @@ import java.util.Optional;
 public final class DataExchangeConfiguration
 {
     @JacksonXmlProperty(localName = "datastore")
-    private List<DataStore> _dataStores;
+    private final List<DataStore> _dataStores = new ArrayList<>();
     @JacksonXmlProperty(localName = "datastore-profile")
-    private List<DataStoreProfile> _dataStoreProfiles;
+    private final List<DataStoreProfile> _dataStoreProfiles = new ArrayList<>();
     @JacksonXmlProperty(localName = "data-exchange-set")
-    private List<DataExchangeSet> _dataExchangeSet;
+    private final List<DataExchangeSet> _dataExchangeSet = new ArrayList<>();
 
     public List<DataStore> getDataStores()
     {
         List<DataStore> dataStores = new ArrayList<>();
-        if(_dataStores != null || _dataStoreProfiles != null)
-        {
-            if(_dataStores != null)
-            {
-                dataStores.addAll(_dataStores);
-            }
-            if(_dataStoreProfiles != null)
-            {
-                dataStores.addAll(_dataStoreProfiles);
-            }
-        }
+        dataStores.addAll(_dataStores);
+        dataStores.addAll(_dataStoreProfiles);
         return dataStores;
     }
 
     List<DataStoreProfile> getDataStoreProfiles()
     {
-        return _dataStoreProfiles;
+        return new ArrayList<>(_dataStoreProfiles);
     }
 
     void setDataStoreProfiles(List<DataStoreProfile> dataStoreProfiles)
     {
-        _dataStoreProfiles = dataStoreProfiles;
+        _dataStoreProfiles.clear();
+        _dataStoreProfiles.addAll(dataStoreProfiles);
     }
 
     public void setDataStores(List<DataStore> dataStores)
     {
-        _dataStores = dataStores;
+        _dataStores.clear();
+        _dataStores.addAll(dataStores);
     }
 
     public List<DataExchangeSet> getDataExchangeSets()
     {
-        return _dataExchangeSet;
+        return new ArrayList<>(_dataExchangeSet);
     }
 
     public void setDataExchangeSets(List<DataExchangeSet> dataExchangeSet)
     {
-        _dataExchangeSet = dataExchangeSet;
+        _dataExchangeSet.clear();
+        _dataExchangeSet.addAll(dataExchangeSet);
     }
 
     public Optional<DataStore> getDataStoreByRef(DataStoreRef ref)

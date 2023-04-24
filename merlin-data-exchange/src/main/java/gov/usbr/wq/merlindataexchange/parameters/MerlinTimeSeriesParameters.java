@@ -1,11 +1,14 @@
 package gov.usbr.wq.merlindataexchange.parameters;
 
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogger;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import hec.io.StoreOption;
 
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
+
+import static gov.usbr.wq.merlindataexchange.io.MerlinDataExchangeTimeSeriesReader.TIMESERIES;
 
 public final class MerlinTimeSeriesParameters extends MerlinParameters
 {
@@ -39,5 +42,11 @@ public final class MerlinTimeSeriesParameters extends MerlinParameters
         String fPartOverrideMsg = "DSS f-part override: " + (fPartOverride == null ? "Not Overridden" : fPartOverride);
         merlinDataExchangeLogger.logToHeader(storeRuleMsg);
         merlinDataExchangeLogger.logToHeader(fPartOverrideMsg);
+    }
+
+    @Override
+    public boolean supportsDataExchangeSet(DataExchangeSet dataExchangeSet)
+    {
+        return dataExchangeSet.getDataType().equalsIgnoreCase(TIMESERIES);
     }
 }

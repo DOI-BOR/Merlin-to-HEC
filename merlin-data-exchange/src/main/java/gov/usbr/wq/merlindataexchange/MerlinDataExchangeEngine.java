@@ -339,7 +339,7 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
             List<DataExchangeSet> dataExchangeSets = dataExchangeConfig.getDataExchangeSets();
             dataExchangeSets.forEach(dataExchangeSet ->
             {
-                if(!_isCancelled.get())
+                if(!_isCancelled.get() && _runtimeParameters.supportsDataExchangeSet(dataExchangeSet))
                 {
                     MerlinDataExchangeLogBody logBody = new MerlinDataExchangeLogBody();
                     exchangeDataForSet(dataExchangeSet, dataExchangeConfig, logBody);
@@ -579,7 +579,7 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
                 Optional<TemplateWrapper> templateOpt = cache.getCachedTemplates().stream()
                         .filter(t -> t.getName().equals(set.getTemplateName()) || t.getDprId().equals(set.getTemplateId()))
                         .findFirst();
-                if(templateOpt.isPresent())
+                if(templateOpt.isPresent() && _runtimeParameters.supportsDataExchangeSet(set))
                 {
                     TemplateWrapper template = templateOpt.get();
                     boolean alreadyCached = cache.getCachedTemplateToMeasures().containsKey(template);

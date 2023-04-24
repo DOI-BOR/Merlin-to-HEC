@@ -2,6 +2,7 @@ package gov.usbr.wq.merlindataexchange.parameters;
 
 
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogger;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -60,4 +61,6 @@ public abstract class MerlinParameters
     }
 
     public abstract void logAdditionalParameters(MerlinDataExchangeLogger logBody);
+
+    public abstract boolean supportsDataExchangeSet(DataExchangeSet dataExchangeSet);
 }

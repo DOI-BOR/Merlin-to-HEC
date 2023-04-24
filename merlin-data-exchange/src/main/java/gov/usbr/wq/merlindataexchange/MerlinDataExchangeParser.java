@@ -46,7 +46,7 @@ public final class MerlinDataExchangeParser
             XmlMapper xmlMapper = new XmlMapper(module);
             streamReader.next(); // to point to <root>
             DataExchangeConfiguration retVal = xmlMapper.readValue(streamReader, DataExchangeConfiguration.class);
-            if(retVal.getDataExchangeSets() == null)
+            if(retVal.getDataExchangeSets().isEmpty())
             {
                 throw new MerlinConfigParseException(configFilepath, "Missing data exchange set(s)");
             }
