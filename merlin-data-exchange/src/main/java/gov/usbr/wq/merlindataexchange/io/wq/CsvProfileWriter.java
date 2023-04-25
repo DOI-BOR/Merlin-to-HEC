@@ -10,6 +10,7 @@ import gov.usbr.wq.merlindataexchange.io.CloseableReentrantLock;
 import gov.usbr.wq.merlindataexchange.io.DataExchangeWriter;
 import gov.usbr.wq.merlindataexchange.io.ReadWriteLockManager;
 import gov.usbr.wq.merlindataexchange.io.ReadWriteTimestampUtil;
+import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinProfileParameters;
 import hec.ui.ProgressListener;
 import rma.services.annotations.ServiceProvider;
@@ -18,8 +19,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -34,6 +40,7 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
     private static final Logger LOGGER = Logger.getLogger(CsvProfileWriter.class.getName());
     public static final String CSV = "csv";
     public static final String MERLIN_TO_CSV_PROFILE_WRITE_SINGLE_THREAD_PROPERTY_KEY = "merlin.dataexchange.writer.csv.profile.singlethread";
+    public static final String YEAR_TAG = "<year>";
     private final AtomicBoolean _loggedThreadProperty = new AtomicBoolean(false);
 
     @Override
@@ -45,26 +52,28 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
         {
             return;
         }
-        Path csvWritePath = Paths.get(getDestinationPath(destinationDataStore, runtimeParameters));
+        String csvWritePath = getDestinationPath(destinationDataStore, runtimeParameters);
         boolean useSingleThreading = isSingleThreaded();
         Instant writeStart;
         Instant writeEnd;
+        List<Path> csvWritePaths;
         if(useSingleThreading)
         {
             try(CloseableReentrantLock lock = ReadWriteLockManager.getInstance().getCloseableLock().lockIt())
             {
                 writeStart = Instant.now();
-                writeCsv(profileSamples, csvWritePath, measure, set, cache, completionTracker, logFileLogger, progressListener, readDurationString);
+                csvWritePaths = writeCsv(profileSamples, csvWritePath, measure, set, cache, completionTracker, logFileLogger, progressListener, readDurationString);
                 writeEnd = Instant.now();
             }
         }
         else
         {
             writeStart = Instant.now();
-            writeCsv(profileSamples, csvWritePath, measure, set, cache, completionTracker, logFileLogger, progressListener, readDurationString);
+            csvWritePaths = writeCsv(profileSamples, csvWritePath, measure, set, cache, completionTracker, logFileLogger, progressListener, readDurationString);
             writeEnd = Instant.now();
         }
-        String successMsg = "Write to " + csvWritePath + " from " + measure.getSeriesString() + ReadWriteTimestampUtil.getDuration(writeStart, writeEnd);
+        List<String> pathStrings = csvWritePaths.stream().map(Path::toString).collect(toList());
+        String successMsg = "Write to " + String.join(",\n", pathStrings) + " from " + measure.getSeriesString() + ReadWriteTimestampUtil.getDuration(writeStart, writeEnd);
         //two write tasks
         completionTracker.readWriteTaskCompleted();
         int percentCompleteAfterWrite = completionTracker.readWriteTaskCompleted();
@@ -78,9 +87,11 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
 
     }
 
-    private void writeCsv(SortedSet<ProfileSample> profileSamples, Path csvWritePath, MeasureWrapper measure, DataExchangeSet set, DataExchangeCache cache,
-                          MerlinExchangeCompletionTracker completionTracker, MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener, AtomicReference<String> readDurationString)
+    private List<Path> writeCsv(SortedSet<ProfileSample> profileSamples, String csvWritePath, MeasureWrapper measure, DataExchangeSet set, DataExchangeCache cache,
+                                MerlinExchangeCompletionTracker completionTracker, MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener,
+                                AtomicReference<String> readDurationString)
     {
+        List<Path> writePaths = new ArrayList<>();
         List<String> seriesIdList = ProfileMeasuresUtil.getMeasuresListForDepthMeasure(measure, set, cache)
                 .stream()
                 .map(MeasureWrapper::getSeriesString)
@@ -102,7 +113,15 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
             }
             int percentComplete = completionTracker.readWriteTaskCompleted(); // do the last read outside loop to get back completion percentage
             logProgress(progressListener, progressMsg, percentComplete);
-            CsvProfileObjectMapper.serializeDataToCsvFile(csvWritePath, profileSamples);
+            Map<Integer, SortedSet<ProfileSample>> splitSamplesByYear = splitByYear(profileSamples);
+            for(Map.Entry<Integer, SortedSet<ProfileSample>> entry : splitSamplesByYear.entrySet())
+            {
+                Integer year = entry.getKey();
+                SortedSet<ProfileSample> samples = entry.getValue();
+                Path writePath = Paths.get(csvWritePath.replace(YEAR_TAG, String.valueOf(year)));
+                CsvProfileObjectMapper.serializeDataToCsvFile(writePath, samples);
+                writePaths.add(writePath);
+            }
         }
         catch (IOException e)
         {
@@ -114,6 +133,35 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
             logFileLogger.log(failMsg);
             LOGGER.config(() -> failMsg);
         }
+        return writePaths;
+    }
+
+    private String getFileNameWithoutExtension(Path csvWritePath)
+    {
+        String fileName = csvWritePath.toString();
+        int pos = fileName.lastIndexOf(".");
+        if (pos > 0 && pos < (fileName.length() - 1))
+        {
+            fileName = fileName.substring(0, pos);
+        }
+        return fileName;
+    }
+
+    private Map<Integer, SortedSet<ProfileSample>> splitByYear(SortedSet<ProfileSample> profileSamples)
+    {
+        // Create a new TreeMap to store the split profile samples
+        Map<Integer, SortedSet<ProfileSample>> splitProfileSamples = new TreeMap<>();
+
+        // Iterate over each ProfileSample in the input set
+        for (ProfileSample profileSample : profileSamples)
+        {
+            ZonedDateTime dateTime = profileSample.getDateTime();
+            // Get the year as a string using a DateTimeFormatter
+            Integer yearString = dateTime.getYear();
+            splitProfileSamples.computeIfAbsent(yearString, k -> new TreeSet<>()).add(profileSample);
+        }
+
+        return splitProfileSamples;
     }
 
     private boolean isSingleThreaded()
@@ -147,4 +195,11 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
         }
     }
 
+    @Override
+    public String getDestinationPath(DataStore destinationDataStore, MerlinParameters parameters)
+    {
+        String destPath = DataExchangeWriter.super.getDestinationPath(destinationDataStore, parameters);
+        String fileName = getFileNameWithoutExtension(Paths.get(destPath));
+        return fileName + "-" + YEAR_TAG + ".csv";
+    }
 }

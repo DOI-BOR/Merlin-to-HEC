@@ -13,12 +13,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ProfileDataExchangeEngineTest
 {
@@ -32,9 +34,9 @@ final class ProfileDataExchangeEngineTest
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
         Path csvFile = testDirectory.resolve(mockFileName.replace(".xml", ".csv"));
-        Files.deleteIfExists(csvFile);
         Instant start = ZonedDateTime.parse("2009-09-15T10:06:00-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
         Instant end = Instant.parse("2018-02-21T12:00:00Z");
+        deleteFilesIfExist(start, end, csvFile);
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
@@ -56,6 +58,7 @@ final class ProfileDataExchangeEngineTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        testFilesCreated(start, end, csvFile);
     }
 
     @Test
@@ -68,9 +71,9 @@ final class ProfileDataExchangeEngineTest
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
         Path csvFile = testDirectory.resolve(mockFileName.replace(".xml", ".csv"));
-        Files.deleteIfExists(csvFile);
         Instant start = ZonedDateTime.parse("2009-09-15T10:06:00-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
         Instant end = Instant.parse("2018-02-21T12:00:00Z");
+        deleteFilesIfExist(start, end, csvFile);
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
@@ -92,6 +95,7 @@ final class ProfileDataExchangeEngineTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        testFilesCreated(start, end, csvFile);
     }
 
     @Test
@@ -104,9 +108,9 @@ final class ProfileDataExchangeEngineTest
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
         Path csvFile = testDirectory.resolve(mockFileName.replace(".xml", ".csv"));
-        Files.deleteIfExists(csvFile);
         Instant start = ZonedDateTime.parse("2009-09-15T10:06:00-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
         Instant end = Instant.parse("2018-02-21T12:00:00Z");
+        deleteFilesIfExist(start, end, csvFile);
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
@@ -128,6 +132,7 @@ final class ProfileDataExchangeEngineTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        testFilesCreated(start, end, csvFile);
     }
 
     @Test
@@ -140,9 +145,9 @@ final class ProfileDataExchangeEngineTest
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
         Path csvFile = testDirectory.resolve(mockFileName.replace(".xml", ".csv"));
-        Files.deleteIfExists(csvFile);
         Instant start = ZonedDateTime.parse("2009-09-15T10:06:00-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
         Instant end = Instant.parse("2018-02-21T12:00:00Z");
+        deleteFilesIfExist(start, end, csvFile);
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
@@ -164,6 +169,7 @@ final class ProfileDataExchangeEngineTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        testFilesCreated(start, end, csvFile);
     }
 
     @Test
@@ -176,9 +182,9 @@ final class ProfileDataExchangeEngineTest
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
         Path csvFile = testDirectory.resolve(mockFileName.replace(".xml", ".csv"));
-        Files.deleteIfExists(csvFile);
         Instant start = ZonedDateTime.parse("2009-09-15T10:06:00-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
         Instant end = Instant.parse("2018-02-21T12:00:00Z");
+        deleteFilesIfExist(start, end, csvFile);
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");
@@ -200,6 +206,27 @@ final class ProfileDataExchangeEngineTest
                 .build();
         MerlinDataExchangeStatus status = dataExchangeEngine.runExtract().join();
         assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
+        testFilesCreated(start, end, csvFile);
+    }
+
+    private void testFilesCreated(Instant start, Instant end, Path csvFile)
+    {
+        int startYear = ZonedDateTime.ofInstant(start, ZoneId.of("UTC")).getYear();
+        int endYear = ZonedDateTime.ofInstant(end, ZoneId.of("UTC")).getYear();
+        for(int year = startYear; year <= endYear; year++)
+        {
+            assertTrue(Files.exists(Paths.get(csvFile.toString().replace(".csv", "-" + year + ".csv"))));
+        }
+    }
+
+    private void deleteFilesIfExist(Instant start, Instant end, Path csvFile) throws IOException
+    {
+        int startYear = ZonedDateTime.ofInstant(start, ZoneId.of("UTC")).getYear();
+        int endYear = ZonedDateTime.ofInstant(end, ZoneId.of("UTC")).getYear();
+        for(int year = startYear; year <= endYear; year++)
+        {
+            Files.deleteIfExists(Paths.get(csvFile.toString().replace(".csv", "-" + year + ".csv")));
+        }
     }
 
     private TestLogProgressListener buildLoggingProgressListener() throws IOException

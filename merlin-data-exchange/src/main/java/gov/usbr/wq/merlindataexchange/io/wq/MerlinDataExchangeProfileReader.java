@@ -28,6 +28,9 @@ import rma.services.annotations.ServiceProvider;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -193,12 +196,15 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
                                                       MeasureWrapper depthMeasure, Integer qualityVersionId, DataStore sourceDataStore, ProgressListener progressListener,
                                                       MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled)
     {
+
         MerlinTimeSeriesDataAccess access = new MerlinTimeSeriesDataAccess();
         MerlinProfileDataWrappers retVal =  new MerlinProfileDataWrappers();
         if(!isCancelled.get())
         {
             try
             {
+                start = getStartOfYearInstant(start);
+                end = getEndOfYearInstant(end);
                 List<MeasureWrapper> measureWrappers = getMeasuresListForDepthMeasure(depthMeasure, dataExchangeSet, cache);
                 Duration significantTimeChange = ProfileDataConverter.getSignificantTimeChange();
                 long maxTimeJumpBeforeConsideredSignificantChange = significantTimeChange.toMinutes() - 1;
@@ -242,6 +248,21 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
                 }
             }
         }
+    }
+
+    private Instant getStartOfYearInstant(Instant instant)
+    {
+        LocalDate localDate = LocalDate.from(instant.atZone(ZoneOffset.UTC));
+        LocalDate startOfYear = localDate.withDayOfYear(1);
+        LocalDateTime startOfYearLocalDateTime = startOfYear.atStartOfDay().minus(ProfileDataConverter.getSignificantTimeChange());
+        return startOfYearLocalDateTime.toInstant(ZoneOffset.UTC);
+    }
+    private Instant getEndOfYearInstant(Instant instant)
+    {
+        LocalDate localDate = LocalDate.from(instant.atZone(ZoneOffset.UTC));
+        LocalDate startOfNextYear = localDate.withDayOfYear(1).plusYears(1);
+        LocalDateTime endOfYearLocalDateTime = startOfNextYear.atStartOfDay().plus(ProfileDataConverter.getSignificantTimeChange());
+        return endOfYearLocalDateTime.toInstant(ZoneOffset.UTC);
     }
 
     private void determineRemovalOfLast(EventWrapper originalEndEvent, Instant end, List<EventWrapper> events, Double min, Double max, MerlinProfileDataWrappers retVal)

@@ -32,7 +32,7 @@ final class ProfileDataConverter
                                                                 boolean removeFirstProfile, boolean removeLastProfile)
     {
         List<List<ZonedDateTime>> dateTimeGroups = separateDateTimeGroups(constituents, readingDateTimes);
-        SortedSet<ProfileSample> retVal = new TreeSet<>(Comparator.comparing(ProfileSample::getDateTime));
+        SortedSet<ProfileSample> retVal = new TreeSet<>();
         List<List<ProfileConstituent>> separatedProfileConstituents = new ArrayList<>();
         for(ProfileConstituent constituent : constituents)
         {

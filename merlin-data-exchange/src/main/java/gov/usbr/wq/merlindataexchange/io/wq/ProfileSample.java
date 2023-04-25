@@ -4,7 +4,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 
-final class ProfileSample
+final class ProfileSample implements Comparable<ProfileSample>
 {
     private final ZonedDateTime _dateTime;
     private final List<ProfileConstituent> _constituentDataList;
@@ -44,5 +44,11 @@ final class ProfileSample
     public int hashCode()
     {
         return Objects.hash(_dateTime, _constituentDataList);
+    }
+
+    @Override
+    public int compareTo(ProfileSample o)
+    {
+        return getDateTime().compareTo(o.getDateTime());
     }
 }
