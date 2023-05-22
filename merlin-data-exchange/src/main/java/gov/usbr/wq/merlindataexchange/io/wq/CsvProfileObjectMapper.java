@@ -35,6 +35,7 @@ import java.util.TreeSet;
 
 final class CsvProfileObjectMapper extends CsvMapper
 {
+    private static final String WRITE_REAL_DATE_PROPERTY = "merlin.dataexchange.profile.writeRealDate";
     private static final char DELIMITER = ',';
     private static final String DATE_COL_HEADER = "Date";
     CsvProfileObjectMapper(List<String> headers)
@@ -90,7 +91,6 @@ final class CsvProfileObjectMapper extends CsvMapper
         CsvSchema schema = CsvSchema.emptySchema().withHeader()
                 .withColumnSeparator(DELIMITER)
                 .withoutEscapeChar();
-        // Step 4: Create MappingIterator
         try(MappingIterator<JsonNode> nodeIterator = mapper.readerFor(JsonNode.class).with(schema)
                 .readValues(csvFile.toFile()))
         {
@@ -192,7 +192,11 @@ final class CsvProfileObjectMapper extends CsvMapper
         {
             retVal.add(profileConstituent.getParameter() + "(" + profileConstituent.getUnit() + ")");
         }
-        //retVal.add("Real Date"); -> Can add this in as an optional -D in future
+        boolean writeRealDate = Boolean.getBoolean(WRITE_REAL_DATE_PROPERTY);
+        if(writeRealDate)
+        {
+            retVal.add("Real Date");
+        }
         return retVal;
     }
 
@@ -218,7 +222,10 @@ final class CsvProfileObjectMapper extends CsvMapper
                     String unit = data.getUnit();
                     String parameterName = data.getParameter();
                     csvRow.setParameterValue(parameterName + "(" + unit + ")", value);
-                    //csvRow.setRealDate(data.getDateValues().get(i)); -> Can add this in as an optional -D in future
+                    if(Boolean.getBoolean(WRITE_REAL_DATE_PROPERTY))
+                    {
+                        csvRow.setRealDate(data.getDateValues().get(i));
+                    }
                 }
             }
             retVal.addAll(rowsForSample);

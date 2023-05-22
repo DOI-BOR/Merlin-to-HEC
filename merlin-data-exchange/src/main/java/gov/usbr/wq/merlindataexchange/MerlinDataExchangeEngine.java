@@ -567,6 +567,12 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
         {
             initializeCachedMeasurementsForMerlin(cache, parsedConfigurations, connectionInfo, token);
         }
+        validateDepths(cache, connectionInfo);
+
+    }
+
+    private void validateDepths(DataExchangeCache cache, ApiConnectionInfo connectionInfo) throws MerlinInitializationException
+    {
         for(Map.Entry<TemplateWrapper, List<MeasureWrapper>> entry : cache.getCachedTemplateToMeasures().entrySet())
         {
             List<MeasureWrapper> measures = entry.getValue();
@@ -611,14 +617,6 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
                     else
                     {
                         measures = cache.getCachedTemplateToMeasures().get(template);
-                    }
-                    if(cache.getZoneId() == null && !measures.isEmpty())
-                    {
-                        MeasureWrapper measure = measures.get(0);
-                        QualityVersionWrapper qv = cache.getCachedQualityVersions().get(0);
-                        DataWrapper data = _merlinDataAccess.getEventsBySeries(connectionInfo, token, measure, qv.getQualityVersionID(),
-                                measure.getStart().toInstant(), measure.getStart().toInstant());
-                        cache.setZoneId(data.getTimeZone());
                     }
                     _completionTracker.addNumberOfMeasuresToComplete(measures.size());
                 }

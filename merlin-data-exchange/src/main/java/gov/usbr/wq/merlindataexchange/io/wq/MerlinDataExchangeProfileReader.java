@@ -202,8 +202,8 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
         {
             try
             {
-                start = getStartOfYearInstant(start, cache.getZoneId());
-                end = getEndOfYearInstant(end, cache.getZoneId());
+                start = getStartOfYearInstant(start, depthMeasure.getZoneId());
+                end = getEndOfYearInstant(end, depthMeasure.getZoneId());
                 List<MeasureWrapper> measureWrappers = getMeasuresListForDepthMeasure(depthMeasure, dataExchangeSet, cache);
                 Duration significantTimeChange = ProfileDataConverter.getSignificantTimeChange();
                 long maxTimeJumpBeforeConsideredSignificantChange = significantTimeChange.toMinutes() - 1;
