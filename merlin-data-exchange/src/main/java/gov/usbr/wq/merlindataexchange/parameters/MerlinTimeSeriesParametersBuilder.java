@@ -44,6 +44,11 @@ public final class MerlinTimeSeriesParametersBuilder implements FluentTimeSeries
         _start = existingParameters.getStart();
         _end = existingParameters.getEnd();
         _authenticationParametersList = existingParameters.getAuthenticationParameters();
+        if(existingParameters instanceof MerlinTimeSeriesParameters)
+        {
+            _storeOption = ((MerlinTimeSeriesParameters)existingParameters).getStoreOption();
+            _fPartOverride = ((MerlinTimeSeriesParameters)existingParameters).getFPartOverride();
+        }
         return new MerlinTimeSeriesAlteredParameters();
     }
 

@@ -36,7 +36,12 @@ final class ProfileDataConverter
         for(ProfileConstituent constituent : constituents)
         {
             List<List<Double>> separatedValuesList = separateValues(constituent.getDataValues(), dateTimeGroups);
-            List<List<ZonedDateTime>> separatedZonedDateTimesList = separateDateTimes(constituent.getDateValues(), dateTimeGroups);
+            List<ZonedDateTime> dates = readingDateTimes;
+            if(!constituent.getDateValues().isEmpty())
+            {
+                dates = constituent.getDateValues();
+            }
+            List<List<ZonedDateTime>> separatedZonedDateTimesList = separateDateTimes(dates, dateTimeGroups);
             List<ProfileConstituent> profileConstituentSubGroups = new ArrayList<>();
             int i=0;
             for(List<Double> valuesGroup : separatedValuesList)
