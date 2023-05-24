@@ -20,9 +20,9 @@ publishing {
 dependencies {
     implementation 'mil.army.usace.hec:service-annotations:1.2.1'
 
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.0"
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.14.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0'
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.1"
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.13.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1'
     implementation 'com.github.sett4:jackson-dataformat-xlsx-lite:2.13.0-1'
 
     implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'

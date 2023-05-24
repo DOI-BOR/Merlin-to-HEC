@@ -18,6 +18,8 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.usbr.wq.merlindataexchange.configuration.DataStoreProfile;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -25,6 +27,7 @@ import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -92,9 +95,20 @@ final class CsvProfileObjectMapper extends CsvMapper
                 .withColumnSeparator(DELIMITER)
                 .withoutEscapeChar();
         try(MappingIterator<JsonNode> nodeIterator = mapper.readerFor(JsonNode.class).with(schema)
-                .readValues(csvFile.toFile()))
+                .readValues(csvFile.toFile());
+            BufferedReader reader = new BufferedReader(new FileReader(csvFile.toFile())))
         {
-            List<String> headers = ((CsvSchema)nodeIterator.getParserSchema()).getColumnNames();
+            List<String> headers = new ArrayList<>();
+            String headerLine = reader.readLine();
+            if (headerLine != null)
+            {
+                String[] headersArr = headerLine.split(",");
+                for(int i=0; i < headersArr.length; i++)
+                {
+                    headersArr[i] = headersArr[i].replace("\"", "");
+                }
+                headers = Arrays.asList(headersArr);
+            }
             validateCsv(csvFile, headers);
             List<CsvProfileRow> rows = new ArrayList<>();
             while (nodeIterator.hasNext())
@@ -110,8 +124,11 @@ final class CsvProfileObjectMapper extends CsvMapper
                 {
                     String key = headers.get(i);
                     JsonNode value = node.get(key);
-                    double d = value.asDouble();
-                    row.setParameterValue(key, d);
+                    if(value != null)
+                    {
+                        double d = value.asDouble();
+                        row.setParameterValue(key, d);
+                    }
                 }
                 rows.add(row);
             }
