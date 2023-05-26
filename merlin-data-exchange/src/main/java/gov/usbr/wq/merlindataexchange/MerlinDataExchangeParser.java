@@ -12,6 +12,8 @@ import gov.usbr.wq.merlindataexchange.io.MerlinDataExchangeTimeSeriesReader;
 import gov.usbr.wq.merlindataexchange.io.wq.CsvProfileWriter;
 import gov.usbr.wq.merlindataexchange.io.wq.MerlinDataExchangeProfileReader;
 import hec.heclib.util.Unit;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -20,8 +22,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import java.io.BufferedReader;
-import java.io.FileReader;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,7 +35,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public final class MerlinDataExchangeParser
 {
@@ -90,22 +93,21 @@ public final class MerlinDataExchangeParser
         }
     }
 
-    private static int countNumberOfElements(Path configFilepath, String... elemNames)
+    private static int countNumberOfElements(Path configFilepath, String elemName)
     {
         int count = 0;
-        try (BufferedReader br = new BufferedReader(new FileReader(configFilepath.toString())))
+        try
         {
-            String line;
-            while ((line = br.readLine()) != null)
-            {
-                for(String elemName : elemNames)
-                {
-                    String datastoreElem = "<" + elemName + " ";
-                    count += line.split(datastoreElem, -1).length - 1;
-                }
-            }
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            Document document = factory.newDocumentBuilder().parse(configFilepath.toString());
+
+            // Create an XPath expression
+            XPathFactory xPathFactory = XPathFactory.newInstance();
+            XPath xPath = xPathFactory.newXPath();
+            String expression = "count(//" + elemName + ")";
+            count = (int) (double) xPath.evaluate(expression, document, XPathConstants.NUMBER);
         }
-        catch (IOException e)
+        catch (IOException | SAXException | ParserConfigurationException | XPathExpressionException e)
         {
             LOGGER.log(Level.CONFIG, e, () -> "Failed to read " + configFilepath);
         }

@@ -12,9 +12,15 @@
             <constituent parameter="Depth" unit="ft"/>
         </constituents>
     </datastore-profile>
+    <!----><data-exchange-set id="Sac._BC_Shasta WTemp Profiles" source-id="www.grabdata2.com" template-id="123" template-name = "Sac._BC_Shasta WTemp Profiles" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="SI">
+        <data-type>profile<!-- comment --></data-type>
+        <datastore-ref-a id="www.grabdata2.com"/>
+        <datastore-ref-b id="wat"/>
+    </data-exchange-set><!-- comment -->
+    <!--
     <data-exchange-set id="Sac._BC_Shasta WTemp Profiles" source-id="www.grabdata2.com" template-id="123" template-name = "Sac._BC_Shasta WTemp Profiles" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="SI">
         <data-type>profile</data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>
-    </data-exchange-set>
+    </data-exchange-set>/-->
 </data-exchange-configuration>
