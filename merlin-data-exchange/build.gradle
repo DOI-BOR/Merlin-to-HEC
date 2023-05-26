@@ -23,7 +23,7 @@ dependencies {
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.0"
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.11.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.0'
-    implementation 'gov.usbr.wq:jackson-dataformat-xlsx-lite:2.11.0'
+    implementation 'gov.usbr.wq:jackson-dataformat-xlsx-lite:2.11.0.1'
 
     implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
     implementation 'mil.army.usace.hec:hec-rma:6.0-20220607.200819-127'
