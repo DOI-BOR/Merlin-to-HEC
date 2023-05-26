@@ -1,12 +1,10 @@
 package gov.usbr.wq.merlindataexchange.io;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.usbr.wq.dataaccess.model.MeasureWrapper;
@@ -58,7 +56,7 @@ public abstract class TemplateMeasureWriter
         });
         simpleModule.addDeserializer(OffsetDateTime.class, new JsonDeserializer<OffsetDateTime>()
         {
-            public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
+            public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
             {
                 String dateStr = p.getText().trim();
                 return OffsetDateTime.parse(dateStr, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
