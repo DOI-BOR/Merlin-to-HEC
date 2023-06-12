@@ -65,7 +65,7 @@ final class MerlinDataConverter
 
 			DSSPathname pathname = new DSSPathname(data.getSeriesId());
 			pathname.setAPart(data.getProject());
-			pathname.setBPart(data.getStation() + "-" + data.getSensor());
+			pathname.setBPart(data.getStation() + "-" + data.getMeasurement());
 			pathname.setCPart(data.getParameter());
 			String[] seriesSplit = data.getSeriesId().split("/");
 			String fPart = seriesSplit[seriesSplit.length - 1];

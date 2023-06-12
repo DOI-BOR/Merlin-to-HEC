@@ -471,7 +471,7 @@ final class MerlinDataExchangeEngineTest
                             String range = "";
                             int parsedInterval = Integer.parseInt(data.getTimestep());
                             String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
-                            retVal.put("/" + data.getProject() + "/" + data.getStation() + "-" + data.getSensor() + "/" +
+                            retVal.put("/" + data.getProject() + "/" + data.getStation() + "-" + data.getMeasurement() + "/" +
                                     data.getParameter() + "/" + range + "/" + interval + "/fPart/", data);
                         }
                     }
@@ -689,7 +689,7 @@ final class MerlinDataExchangeEngineTest
             DSSPathname pathname = new DSSPathname(tsc.getFullName());
             assertEquals( HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(merlinData.getTimestep())), pathname.ePart());
             assertEquals(merlinData.getParameter(), pathname.cPart());
-            assertEquals(merlinData.getStation() + "-" + merlinData.getSensor(), pathname.getBPart());
+            assertEquals(merlinData.getStation() + "-" + merlinData.getMeasurement(), pathname.getBPart());
             assertEquals(merlinData.getProject(), pathname.getAPart());
             NavigableMap<HecTime, EventWrapper> eventMap = new TreeMap<>();
             for(EventWrapper event : merlinData.getEvents())
@@ -703,7 +703,7 @@ final class MerlinDataExchangeEngineTest
                 tscTimeZulu = HecTime.convertToTimeZone(tscTimeZulu, TimeZone.getTimeZone("GMT-8"), TimeZone.getTimeZone("Z"));
                 double tscVal = Units.convertUnits(tsc.getValue(i), tsc.units, merlinData.getUnits());
                 EventWrapper event = eventMap.get(tscTimeZulu);
-                if(event != null && event.getValue() != null)
+                if(event != null && (event.getValue() != null))
                 {
                     assertEquals(event.getValue(), tscVal, 1.0E-4);
                 }
