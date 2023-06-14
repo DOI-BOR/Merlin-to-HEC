@@ -19,11 +19,23 @@ final class ProfileMeasuresUtil
     {
         throw new AssertionError("Utility class");
     }
+
+    /**
+     * Gets measures of all constituents matching a given depth measure. IMPORTANT: this only works for matching series strings that
+     * have a single-digit ending to the last part of the typeId of the f-part (0-9).
+     * Example: MR Sac.-Shasta Lake-Lake-Water Depth/Depth/INST-VAL/1, 2/0/123-230.12.310.1.2
+     * would return all measures matching MR Sac.-Shasta Lake-Lake-<anything>/<any-param>/INST-VAL/1, 2/0/123-230.12.310.1.<any-single-digit-number>
+     * @param depthMeasure - depth measure to match against
+     * @param dataExchangeSet - set containing template
+     * @param cache - cache object
+     * @return List of matching MeasureWrapper objects
+     */
     static List<MeasureWrapper> getMeasuresListForDepthMeasure(MeasureWrapper depthMeasure, DataExchangeSet dataExchangeSet, DataExchangeCache cache)
     {
         List<MeasureWrapper> retVal = new ArrayList<>();
         String[] split = depthMeasure.getSeriesString().split("/");
-        String regex = "^" + split[0] +"/[^/]+/" + split[2] + "/" + split[3] + "/" + split[4] + "/" + split[5].substring(0, split[5].length()-1) + "\\d+$";
+        String prefix = split[0].substring(0, split[0].lastIndexOf("-")); // Get the prefix before the last "-"
+        String regex = "^" + prefix + "-[^/]+/[^/]+/" + split[2] + "/" + split[3] + "/" + split[4] + "/" + split[5].substring(0, split[5].length()-1) + "\\d+$";
         Pattern pattern = Pattern.compile(regex);
         Optional<TemplateWrapper> template = cache.getCachedTemplates().stream()
                 .filter(t -> t.getName().equalsIgnoreCase(dataExchangeSet.getTemplateName())
