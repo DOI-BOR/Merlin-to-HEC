@@ -55,7 +55,7 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
     protected SortedSet<ProfileSample> convertToType(MerlinProfileDataWrappers dataWrappers, DataStore dataStore, String unitSystemToConvertTo,
                                                      MerlinProfileParameters parameters, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger,
                                                      MerlinExchangeCompletionTracker completionTracker, Boolean isProcessed,
-                                                     Instant start, Instant end, AtomicReference<String> readDurationString)
+                                                     Instant start, Instant end, AtomicReference<String> readDurationString, MeasureWrapper measure)
     {
         SortedSet<ProfileSample> retVal = null;
         if(!dataWrappers.isEmpty())

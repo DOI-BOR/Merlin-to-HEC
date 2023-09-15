@@ -92,7 +92,7 @@ class MerlinDataConverterTest
 		DataWrapper wrapper = new DataWrapper(data);
 		try
 		{
-			TimeSeriesContainer tsc = MerlinDataConverter.dataToTimeSeries(wrapper, "SI", null, false, null);
+			TimeSeriesContainer tsc = MerlinDataConverter.dataToTimeSeries(wrapper, "SI", null, false, null, "230.6.125.1.1");
 			int[] receivedTimes = tsc.times;
 			double[] receivedValues = tsc.values;
 			assertArrayEquals(expectedTimes, receivedTimes);

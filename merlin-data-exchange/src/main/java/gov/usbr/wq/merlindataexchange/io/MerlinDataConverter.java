@@ -51,7 +51,7 @@ final class MerlinDataConverter
 		throw new AssertionError("This utility class is not intended to be instantiated.");
 	}
 
-	static TimeSeriesContainer dataToTimeSeries(DataWrapper data, String unitSystemToConvertTo, String fPartOverride, boolean isProcessed, ProgressListener progressListener)
+	static TimeSeriesContainer dataToTimeSeries(DataWrapper data, String unitSystemToConvertTo, String fPartOverride, boolean isProcessed, ProgressListener progressListener, String typeId)
 			throws MerlinInvalidTimestepException, NoEventsException, HecMathException, DataSetIllegalArgumentException
 	{
 		TimeSeriesContainer output = new TimeSeriesContainer();
@@ -67,11 +67,9 @@ final class MerlinDataConverter
 			pathname.setAPart(data.getProject());
 			pathname.setBPart(data.getStation() + "-" + data.getMeasurement());
 			pathname.setCPart(data.getParameter());
-			String[] seriesSplit = data.getSeriesId().split("/");
-			String fPart = seriesSplit[seriesSplit.length - 1];
 			int parsedInterval = Integer.parseInt(data.getTimestep());
 			String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
-			pathname.setFPart(fPart);
+			pathname.setFPart(typeId);
 			if (fPartOverride != null)
 			{
 				pathname.setFPart(fPartOverride);

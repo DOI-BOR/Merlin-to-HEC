@@ -83,7 +83,7 @@ public abstract class MerlinDataExchangeReader<P extends MerlinParameters, S, T>
             }
             else if(!isCancelled.get())
             {
-                retVal = convertToType(data, dataStore, unitSystemToConvertTo, runTimeParameters, progressListener, logFileLogger, completionTracker, isProcessed, start, end, readDurationString);
+                retVal = convertToType(data, dataStore, unitSystemToConvertTo, runTimeParameters, progressListener, logFileLogger, completionTracker, isProcessed, start, end, readDurationString, measure);
             }
         }
         catch (HttpAccessException e)
@@ -96,7 +96,7 @@ public abstract class MerlinDataExchangeReader<P extends MerlinParameters, S, T>
 
     protected abstract T convertToType(S data, DataStore sourceDataStore, String unitSystemToConvertTo, P parameters, ProgressListener progressListener,
                                        MerlinDataExchangeLogBody logFileLogger, MerlinExchangeCompletionTracker completionTracker, Boolean isProcessed,
-                                       Instant start, Instant end, AtomicReference<String> readDurationString);
+                                       Instant start, Instant end, AtomicReference<String> readDurationString, MeasureWrapper measure);
 
     protected abstract S retrieveData(Instant start, Instant end, DataExchangeSet dataExchangeSet, DataExchangeCache cache, String merlinApiRoot, TokenContainer token,
                                       MeasureWrapper measure, Integer qualityVersionId, DataStore sourceDataStore, ProgressListener progressListener,

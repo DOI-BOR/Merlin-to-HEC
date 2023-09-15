@@ -44,13 +44,14 @@ public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchange
     @Override
     protected TimeSeriesContainer convertToType(DataWrapper data, DataStore sourceDataStore, String unitSystemToConvertTo, MerlinTimeSeriesParameters parameters,
                                                 ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger,
-                                                MerlinExchangeCompletionTracker completionTracker, Boolean isProcessed, Instant start, Instant end, AtomicReference<String> readDurationString)
+                                                MerlinExchangeCompletionTracker completionTracker, Boolean isProcessed, Instant start, Instant end, AtomicReference<String> readDurationString,
+                                                MeasureWrapper measure)
     {
         TimeSeriesContainer retVal = null;
         String fPartOverride = parameters.getFPartOverride();
         try
         {
-            retVal =  MerlinDataConverter.dataToTimeSeries(data, unitSystemToConvertTo, fPartOverride, isProcessed, progressListener);
+            retVal =  MerlinDataConverter.dataToTimeSeries(data, unitSystemToConvertTo, fPartOverride, isProcessed, progressListener, measure.getTypeId());
         }
         catch (MerlinInvalidTimestepException e)
         {
