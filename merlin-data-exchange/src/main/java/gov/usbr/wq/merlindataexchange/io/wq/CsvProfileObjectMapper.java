@@ -196,7 +196,7 @@ final class CsvProfileObjectMapper extends CsvMapper
             {
                 dates.add(row.getDate());
             }
-            retVal = ProfileDataConverter.splitDataIntoProfileSamples(constituentDataList, dates, false, false);
+            retVal = ProfileDataConverter.splitDataIntoProfileSamples(constituentDataList, dates, null, false, false);
         }
         return retVal;
     }

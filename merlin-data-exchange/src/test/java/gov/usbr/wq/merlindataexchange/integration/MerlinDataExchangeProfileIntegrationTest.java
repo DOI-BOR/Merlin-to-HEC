@@ -34,7 +34,7 @@ final class MerlinDataExchangeProfileIntegrationTest
         List<Path> mocks = Collections.singletonList(mockXml);
         Path testDirectory = getTestDirectory();
         Instant start = Instant.parse("2016-02-01T12:00:00Z");
-        Instant end = Instant.parse("2017-02-21T12:00:00Z");
+        Instant end = Instant.parse("2019-02-21T12:00:00Z");
         StoreOptionImpl storeOption = new StoreOptionImpl();
         storeOption.setRegular("0-replace-all");
         storeOption.setIrregular("0-delete_insert");

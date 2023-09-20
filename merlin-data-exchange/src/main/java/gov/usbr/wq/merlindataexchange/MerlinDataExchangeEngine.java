@@ -567,29 +567,7 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
         {
             initializeCachedMeasurementsForMerlin(cache, parsedConfigurations, connectionInfo, token);
         }
-        validateDepths(cache, connectionInfo);
 
-    }
-
-    private void validateDepths(DataExchangeCache cache, ApiConnectionInfo connectionInfo) throws MerlinInitializationException
-    {
-        for(Map.Entry<TemplateWrapper, List<MeasureWrapper>> entry : cache.getCachedTemplateToMeasures().entrySet())
-        {
-            List<MeasureWrapper> measures = entry.getValue();
-            int depthCount = 0;
-            for(MeasureWrapper measure : measures)
-            {
-                if(DataStoreProfile.DEPTH.equalsIgnoreCase(measure.getParameter()))
-                {
-                    depthCount++;
-                }
-                if(depthCount > 1)
-                {
-                    throw new MerlinInitializationException(connectionInfo,
-                            "Template " + entry.getKey().getName() + " has multiple profiles. Data Exchange does not currently support multiple profiles in a single template");
-                }
-            }
-        }
     }
 
     private void initializeCachedMeasurementsForMerlin(DataExchangeCache cache, Map<Path, DataExchangeConfiguration> parsedConfigurations,

@@ -29,7 +29,7 @@ final class ProfileDataConverterTest
                 ZonedDateTime.parse("2009-09-23T10:06:01-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 ZonedDateTime.parse("2009-09-23T10:06:02-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 ZonedDateTime.parse("2009-09-23T10:06:04-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        SortedSet<ProfileSample> result = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituentList, readDateTimes, false, false);
+        SortedSet<ProfileSample> result = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituentList, readDateTimes, null, false, false);
         assertEquals(2, result.size());
         assertEquals(result.first().getDateTime(), ZonedDateTime.parse("2009-09-15T10:06:00-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         List<ProfileConstituent> firstDataList = result.first().getConstituents();
@@ -69,7 +69,7 @@ final class ProfileDataConverterTest
                 ZonedDateTime.parse("2009-09-23T10:06:01-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 ZonedDateTime.parse("2009-09-23T10:06:02-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 ZonedDateTime.parse("2009-09-23T10:06:04-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        SortedSet<ProfileSample> result = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituentList, readDateTimes, false, false);
+        SortedSet<ProfileSample> result = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituentList, readDateTimes, null, false, false);
         assertEquals(2, result.size());
         assertEquals(result.first().getDateTime(), ZonedDateTime.parse("2009-09-15T10:06:00-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         List<ProfileConstituent> firstDataList = result.first().getConstituents();
@@ -109,7 +109,7 @@ final class ProfileDataConverterTest
                 ZonedDateTime.parse("2009-09-23T10:06:01-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 ZonedDateTime.parse("2009-09-23T10:06:02-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 ZonedDateTime.parse("2009-09-23T10:06:04-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        SortedSet<ProfileSample> result = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituentList, readDateTimes, false, false);
+        SortedSet<ProfileSample> result = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituentList, readDateTimes, null, false, false);
         assertEquals(2, result.size());
         assertEquals(result.first().getDateTime(), ZonedDateTime.parse("2009-09-15T10:06:00-08:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         List<ProfileConstituent> firstDataList = result.first().getConstituents();

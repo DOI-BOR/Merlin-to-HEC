@@ -35,16 +35,17 @@ import static java.util.stream.Collectors.toList;
 
 @ServiceProvider(service = DataExchangeWriter.class, position = 200, path = DataExchangeWriter.LOOKUP_PATH
         + "/" + MerlinDataExchangeProfileReader.PROFILE + "/" + CsvProfileWriter.CSV)
-public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileParameters, SortedSet<ProfileSample>>
+public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileParameters, ProfileSampleSet>
 {
     private static final Logger LOGGER = Logger.getLogger(CsvProfileWriter.class.getName());
     public static final String CSV = "csv";
     public static final String MERLIN_TO_CSV_PROFILE_WRITE_SINGLE_THREAD_PROPERTY_KEY = "merlin.dataexchange.writer.csv.profile.singlethread";
     public static final String YEAR_TAG = "<year>";
+    public static final String STATION_TAG = "<station>";
     private final AtomicBoolean _loggedThreadProperty = new AtomicBoolean(false);
 
     @Override
-    public void writeData(SortedSet<ProfileSample> profileSamples, MeasureWrapper measure, DataExchangeSet set, MerlinProfileParameters runtimeParameters,
+    public void writeData(ProfileSampleSet profileSamples, MeasureWrapper measure, DataExchangeSet set, MerlinProfileParameters runtimeParameters,
                           DataExchangeCache cache, DataStore destinationDataStore, MerlinExchangeCompletionTracker completionTracker, ProgressListener progressListener,
                           MerlinDataExchangeLogBody logFileLogger, AtomicBoolean isCancelled, AtomicReference<String> readDurationString)
     {
@@ -87,7 +88,7 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
 
     }
 
-    private List<Path> writeCsv(SortedSet<ProfileSample> profileSamples, String csvWritePath, MeasureWrapper measure, DataExchangeSet set, DataExchangeCache cache,
+    private List<Path> writeCsv(ProfileSampleSet profileSamples, String csvWritePath, MeasureWrapper measure, DataExchangeSet set, DataExchangeCache cache,
                                 MerlinExchangeCompletionTracker completionTracker, MerlinDataExchangeLogBody logFileLogger, ProgressListener progressListener,
                                 AtomicReference<String> readDurationString)
     {
@@ -118,7 +119,13 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
             {
                 Integer year = entry.getKey();
                 SortedSet<ProfileSample> samples = entry.getValue();
-                Path writePath = Paths.get(csvWritePath.replace(YEAR_TAG, String.valueOf(year)));
+                csvWritePath = csvWritePath.replace(YEAR_TAG, String.valueOf(year));
+                String station = profileSamples.getStation();
+                if(station != null)
+                {
+                    csvWritePath = csvWritePath.replace(STATION_TAG, station.replace(" ", "_"));
+                }
+                Path writePath = Paths.get(csvWritePath);
                 CsvProfileObjectMapper.serializeDataToCsvFile(writePath, samples);
                 writePaths.add(writePath);
             }
@@ -200,6 +207,6 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
     {
         String destPath = DataExchangeWriter.super.getDestinationPath(destinationDataStore, parameters);
         String fileName = getFileNameWithoutExtension(Paths.get(destPath));
-        return fileName + "-" + YEAR_TAG + ".csv";
+        return fileName + "-" + STATION_TAG + "-" + YEAR_TAG + ".csv";
     }
 }

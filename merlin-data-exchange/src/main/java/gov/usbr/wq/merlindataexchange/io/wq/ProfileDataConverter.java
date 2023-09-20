@@ -27,11 +27,11 @@ final class ProfileDataConverter
         return constituentDataList.get(0);
     }
 
-    static SortedSet<ProfileSample> splitDataIntoProfileSamples(List<ProfileConstituent> constituents, List<ZonedDateTime> readingDateTimes,
-                                                                boolean removeFirstProfile, boolean removeLastProfile)
+    static ProfileSampleSet splitDataIntoProfileSamples(List<ProfileConstituent> constituents, List<ZonedDateTime> readingDateTimes,
+                                                                String station, boolean removeFirstProfile, boolean removeLastProfile)
     {
         List<List<ZonedDateTime>> dateTimeGroups = separateDateTimeGroups(constituents, readingDateTimes);
-        SortedSet<ProfileSample> retVal = new TreeSet<>();
+        ProfileSampleSet retVal = new ProfileSampleSet(station);
         List<List<ProfileConstituent>> separatedProfileConstituents = new ArrayList<>();
         for(ProfileConstituent constituent : constituents)
         {

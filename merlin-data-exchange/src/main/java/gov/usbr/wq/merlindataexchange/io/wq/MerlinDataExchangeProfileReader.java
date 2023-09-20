@@ -46,18 +46,18 @@ import static java.util.stream.Collectors.toList;
 
 @ServiceProvider(service = DataExchangeReader.class, position = 200, path = DataExchangeReader.LOOKUP_PATH
         + "/" + MerlinDataExchangeReader.MERLIN + "/" + MerlinDataExchangeProfileReader.PROFILE)
-public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeReader<MerlinProfileParameters, MerlinProfileDataWrappers, SortedSet<ProfileSample>>
+public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeReader<MerlinProfileParameters, MerlinProfileDataWrappers, ProfileSampleSet>
 {
     public static final String PROFILE = "profile";
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeProfileReader.class.getName());
 
     @Override
-    protected SortedSet<ProfileSample> convertToType(MerlinProfileDataWrappers dataWrappers, DataStore dataStore, String unitSystemToConvertTo,
+    protected ProfileSampleSet convertToType(MerlinProfileDataWrappers dataWrappers, DataStore dataStore, String unitSystemToConvertTo,
                                                      MerlinProfileParameters parameters, ProgressListener progressListener, MerlinDataExchangeLogBody logFileLogger,
                                                      MerlinExchangeCompletionTracker completionTracker, Boolean isProcessed,
                                                      Instant start, Instant end, AtomicReference<String> readDurationString, MeasureWrapper measure)
     {
-        SortedSet<ProfileSample> retVal = null;
+        ProfileSampleSet retVal = null;
         if(!dataWrappers.isEmpty())
         {
             try
@@ -81,7 +81,8 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
                         .stream()
                         .map(EventWrapper::getDate)
                         .collect(toList());
-                retVal = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituents, readingDateTimes, dataWrappers.removeFirstProfile(), dataWrappers.removeLastProfile());
+                String station = dataWrappers.get(0).getStation();
+                retVal = ProfileDataConverter.splitDataIntoProfileSamples(profileConstituents, readingDateTimes, station, dataWrappers.removeFirstProfile(), dataWrappers.removeLastProfile());
             }
             catch (NoEventsException e)
             {
