@@ -5,7 +5,6 @@ import gov.usbr.wq.dataaccess.http.ApiConnectionInfo;
 import gov.usbr.wq.dataaccess.http.HttpAccessException;
 import gov.usbr.wq.dataaccess.http.HttpAccessUtils;
 import gov.usbr.wq.dataaccess.http.TokenContainer;
-import gov.usbr.wq.dataaccess.model.DataWrapper;
 import gov.usbr.wq.dataaccess.model.MeasureWrapper;
 import gov.usbr.wq.dataaccess.model.QualityVersionWrapper;
 import gov.usbr.wq.dataaccess.model.TemplateWrapper;
@@ -567,7 +566,47 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
         {
             initializeCachedMeasurementsForMerlin(cache, parsedConfigurations, connectionInfo, token);
         }
+        validateProjects(cache, connectionInfo);
 
+    }
+
+    void validateProjects(DataExchangeCache cache, ApiConnectionInfo connectionInfo) throws MerlinInitializationException
+    {
+        for(Map.Entry<TemplateWrapper, List<MeasureWrapper>> entry : cache.getCachedTemplateToMeasures().entrySet())
+        {
+            List<MeasureWrapper> measures = entry.getValue();
+            if(!measures.isEmpty())
+            {
+                String projSiteSensor = measures.get(0).getProjectAndSiteAndSensor();
+                String proj = findSubstringBeforeSecondToLastDash(projSiteSensor);
+                for(MeasureWrapper measure : measures)
+                {
+                    String projSiteSensorInList = measure.getProjectAndSiteAndSensor();
+                    String projInList = findSubstringBeforeSecondToLastDash(projSiteSensorInList);
+                    if(!projInList.equals(proj))
+                    {
+                        throw new MerlinInitializationException(connectionInfo,
+                                "Template " + entry.getKey().getName() + " has multiple projects. Data Exchange does not currently support multiple projects in a single template");
+                    }
+                }
+            }
+        }
+    }
+
+    private String findSubstringBeforeSecondToLastDash(String input)
+    {
+        int lastIndex = input.lastIndexOf("-");
+        if (lastIndex == -1)
+        {
+            return input; // No "-" found, return input
+        }
+
+        int secondToLastIndex = input.lastIndexOf("-", lastIndex - 1);
+        if (secondToLastIndex == -1)
+        {
+            return input.substring(0, lastIndex); // Only one "-" found, return everything before it
+        }
+        return input.substring(0, secondToLastIndex); // Return everything before the second to last "-" in case project contains a "-"
     }
 
     private void initializeCachedMeasurementsForMerlin(DataExchangeCache cache, Map<Path, DataExchangeConfiguration> parsedConfigurations,
