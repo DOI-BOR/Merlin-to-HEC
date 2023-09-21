@@ -6,13 +6,13 @@
     </datastore>
     <datastore-profile id="wat">
         <datastore-type>csv</datastore-type>
-        <path>$WATERSHED/merlin_mock_config_profile2.csv</path>
+        <path>$WATERSHED/merlin_mock_config_profile.csv</path>
         <constituents>
             <constituent parameter="Temp-Water" unit="C"/>
             <constituent parameter="Depth" unit="ft"/>
         </constituents>
     </datastore-profile>
-    <!----><data-exchange-set id="Folsom Lake - MR WTemp Profiles" source-id="www.grabdata2.com" template-id="93" quality-version-id="0" unit-system="SI">
+    <!----><data-exchange-set id="Folsom Lake - MR WTemp Profiles" source-id="www.grabdata2.com" template-id="54" quality-version-id="0" unit-system="SI">
         <data-type>profile<!-- comment --></data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>

@@ -8,7 +8,7 @@
         <datastore-type>dss</datastore-type>
         <path>$WATERSHED/merlin_mock_config_unsupported_quality_version_dx.dss</path>
     </datastore>
-    <data-exchange-set id="Lower American R - MR Flow" source-id="www.grabdata2.com" template-id="86" template-name = "Lower American R - MR Flow" quality-version-id="101" quality-version-name = "Boundary Condition123" unit-system="SI">
+    <data-exchange-set id="BC_Shasta Lake 1 of 1" source-id="www.grabdata2.com" template-id="228" template-name = "BC_Shasta Lake 1 of 1" quality-version-id="101" quality-version-name = "Boundary Condition123" unit-system="SI">
         <data-type>time-series</data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>

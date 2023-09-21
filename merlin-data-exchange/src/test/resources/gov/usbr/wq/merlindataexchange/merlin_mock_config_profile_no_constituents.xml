@@ -8,8 +8,8 @@
         <datastore-type>csv</datastore-type>
         <path>$WATERSHED/merlin_mock_config_profile_no_constituents.csv</path>
     </datastore-profile>
-    <data-exchange-set id="Sac._BC_Shasta WTemp Profiles" source-id="www.grabdata2.com" template-id="123" template-name = "Sac._BC_Shasta WTemp Profiles" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="SI">
-        <data-type>profile</data-type>
+    <data-exchange-set id="Folsom Lake - MR WTemp Profiles" source-id="www.grabdata2.com" template-id="54" quality-version-id="0" unit-system="SI">
+        <data-type>profile<!-- comment --></data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>
     </data-exchange-set>

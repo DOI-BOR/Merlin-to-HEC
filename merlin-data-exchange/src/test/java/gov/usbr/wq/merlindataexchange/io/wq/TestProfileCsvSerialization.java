@@ -82,6 +82,10 @@ final class TestProfileCsvSerialization
             String line;
             while ((line = br.readLine()) != null)
             {
+                if(line.endsWith(","))
+                {
+                    line = line.substring(0, line.length() - 1);
+                }
                 retVal.add(line);
             }
         }

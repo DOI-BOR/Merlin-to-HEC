@@ -16,12 +16,12 @@
         <datastore-type>dss</datastore-type>
         <path>$WATERSHED/wat2.dss</path>
     </datastore>
-    <data-exchange-set id="Auburn Dam - Daily" source-id="www.grabdata2.com" template-id="80" template-name = "Auburn Dam - Daily" quality-version-id="0" quality-version-name = "All" unit-system="SI">
+    <data-exchange-set id="Auburn Dam - Daily" source-id="www.grabdata2.com" template-id="230" template-name = "Auburn Dam - Daily" quality-version-id="0" quality-version-name = "All" unit-system="SI">
         <data-type>time-series</data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat2"/>
     </data-exchange-set>
-    <data-exchange-set id="Folsom Lake - MR Boundary Flow" source-id="www.grabdata2.com" template-id="83" template-name = "Folsom Lake - MR Boundary Flow" quality-version-id="0" quality-version-name = "All" unit-system="SI">
+    <data-exchange-set id="Folsom Lake - MR Boundary Flow" source-id="www.grabdata2.com" template-id="231" template-name = "Folsom Lake - MR Boundary Flow" quality-version-id="0" quality-version-name = "All" unit-system="SI">
         <data-type>time-series</data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat2"/>

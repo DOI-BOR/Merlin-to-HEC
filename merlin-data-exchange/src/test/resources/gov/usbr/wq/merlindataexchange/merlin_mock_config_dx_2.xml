@@ -4,12 +4,12 @@
         <datastore-type>merlin</datastore-type>
         <path>https://www.grabdata2.com</path>
     </datastore>
-    <datastore-profile id="wat">
-        <datastore-type>csv</datastore-type>
-        <path>$WATERSHED/merlin_mock_config_profile_no_constituents_no_unit_system.csv</path>
-    </datastore-profile>
-    <data-exchange-set id="Folsom Lake - MR WTemp Profiles" source-id="www.grabdata2.com" template-id="54" quality-version-id="0">
-        <data-type>profile<!-- comment --></data-type>
+    <datastore id="wat">
+        <datastore-type>dss</datastore-type>
+        <path>$WATERSHED/merlin_mock_config_dx_2.dss</path>
+    </datastore>
+    <data-exchange-set id="BC_Shasta Lake 1 of 1" source-id="www.grabdata2.com" template-id="228" template-name = "BC_Shasta Lake 1 of 1" quality-version-id="1" quality-version-name = "Boundary Condition" unit-system="SI">
+        <data-type>time-series</data-type>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>
     </data-exchange-set>

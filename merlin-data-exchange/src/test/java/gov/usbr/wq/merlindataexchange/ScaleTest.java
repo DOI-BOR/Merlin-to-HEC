@@ -12,7 +12,7 @@ final class ScaleTest
     private static final int NUMBER_OF_SIMULTANEOUS_RUNS = 10;
 
     public static void main(String[] args) throws Exception {
-        String configFile = "sacramento_config_dx_Tom.xml";
+        String configFile = "merlin_mock_config_dx.xml";
         ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
         String classpath = System.getProperty("java.class.path");
         String className = RunExtractScaleTest.class.getName();

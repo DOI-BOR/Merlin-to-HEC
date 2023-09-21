@@ -21,6 +21,7 @@ import gov.usbr.wq.merlindataexchange.io.DataExchangeWriter;
 import gov.usbr.wq.merlindataexchange.io.DataExchangeWriterFactory;
 import gov.usbr.wq.merlindataexchange.io.MerlinDataExchangeReader;
 import gov.usbr.wq.merlindataexchange.io.QualityVersionFromSetUtil;
+import gov.usbr.wq.merlindataexchange.io.wq.MerlinDataExchangeProfileReader;
 import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParameters;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinParameters;
 import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordHolder;
@@ -581,12 +582,15 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
                 String proj = findSubstringBeforeSecondToLastDash(projSiteSensor);
                 for(MeasureWrapper measure : measures)
                 {
-                    String projSiteSensorInList = measure.getProjectAndSiteAndSensor();
-                    String projInList = findSubstringBeforeSecondToLastDash(projSiteSensorInList);
-                    if(!projInList.equals(proj))
+                    if(MerlinDataExchangeProfileReader.PROFILE.equalsIgnoreCase(measure.getType()))
                     {
-                        throw new MerlinInitializationException(connectionInfo,
-                                "Template " + entry.getKey().getName() + " has multiple projects. Data Exchange does not currently support multiple projects in a single template");
+                        String projSiteSensorInList = measure.getProjectAndSiteAndSensor();
+                        String projInList = findSubstringBeforeSecondToLastDash(projSiteSensorInList);
+                        if(!projInList.equals(proj))
+                        {
+                            throw new MerlinInitializationException(connectionInfo,
+                                    "Template " + entry.getKey().getName() + " has multiple projects. Data Exchange does not currently support multiple projects in a single template for profiles");
+                        }
                     }
                 }
             }

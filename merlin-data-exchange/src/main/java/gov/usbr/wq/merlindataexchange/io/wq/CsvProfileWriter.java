@@ -119,13 +119,13 @@ public final class CsvProfileWriter implements DataExchangeWriter<MerlinProfileP
             {
                 Integer year = entry.getKey();
                 SortedSet<ProfileSample> samples = entry.getValue();
-                csvWritePath = csvWritePath.replace(YEAR_TAG, String.valueOf(year));
+                String csvWritePathWithYear = csvWritePath.replace(YEAR_TAG, String.valueOf(year));
                 String station = profileSamples.getStation();
                 if(station != null)
                 {
-                    csvWritePath = csvWritePath.replace(STATION_TAG, station.replace(" ", "_"));
+                    csvWritePathWithYear = csvWritePathWithYear.replace(STATION_TAG, station.replace(" ", "_"));
                 }
-                Path writePath = Paths.get(csvWritePath);
+                Path writePath = Paths.get(csvWritePathWithYear);
                 CsvProfileObjectMapper.serializeDataToCsvFile(writePath, samples);
                 writePaths.add(writePath);
             }
