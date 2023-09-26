@@ -132,7 +132,7 @@ final class CsvProfileObjectMapper extends CsvMapper
                 }
                 rows.add(row);
             }
-            return buildProfileSamplesFromRows(headers, rows);
+            return buildProfileSamplesFromRows(headers, rows, csvFile);
         }
     }
 
@@ -166,8 +166,9 @@ final class CsvProfileObjectMapper extends CsvMapper
         }
     }
 
-    private static SortedSet<ProfileSample> buildProfileSamplesFromRows(List<String> headers, List<CsvProfileRow> rows)
+    private static SortedSet<ProfileSample> buildProfileSamplesFromRows(List<String> headers, List<CsvProfileRow> rows, Path csvFile)
     {
+        String station = parseStationFromFileName(csvFile);
         SortedSet<ProfileSample> retVal = new TreeSet<>(Comparator.comparing(ProfileSample::getDateTime));
         if(!rows.isEmpty())
         {
@@ -196,7 +197,18 @@ final class CsvProfileObjectMapper extends CsvMapper
             {
                 dates.add(row.getDate());
             }
-            retVal = ProfileDataConverter.splitDataIntoProfileSamples(constituentDataList, dates, null, false, false);
+            retVal = ProfileDataConverter.splitDataIntoProfileSamples(constituentDataList, dates, station, false, false);
+        }
+        return retVal;
+    }
+
+    private static String parseStationFromFileName(Path csvFile)
+    {
+        String retVal = null;
+        String[] dashSplit = csvFile.toString().split("-");
+        if(dashSplit.length > 2)
+        {
+            retVal = dashSplit[dashSplit.length - 2];
         }
         return retVal;
     }
