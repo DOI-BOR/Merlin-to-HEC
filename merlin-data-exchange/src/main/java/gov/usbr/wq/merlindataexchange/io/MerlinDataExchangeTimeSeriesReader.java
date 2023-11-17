@@ -73,20 +73,28 @@ public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchange
             Instant startDetermined = start;
             Instant endDetermined = end;
             ZoneId zoneId = data.getTimeZone();
-            int expectedNumValues = ExpectedNumberValuesCalculator.getExpectedNumValues(start, end,
-                    HecTimeSeriesBase.getEPartFromInterval(Integer.parseInt(data.getTimestep())), zoneId,
-                    HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(start, zoneId)), HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(end, zoneId)));
-            String progressMsg = "Read " + data.getSeriesId() + " | Is processed: " + isProcessed + " | Values read: 0"
-                    + ", 0 missing, " + expectedNumValues + " expected" + readDurationString.get();
-            String noDataMsg = e.getMessage();
-            //when no data is found we count it as a read + no data written completed and move on, but want to ensure these get written together.
-            int readPercentIncrement = completionTracker.readWriteTaskCompleted();
-            int nothingToWritePercentIncrement = completionTracker.readWriteTaskCompleted();
-            logProgressMessage(progressListener, progressMsg, readPercentIncrement);
-            logProgressMessage(progressListener, noDataMsg, nothingToWritePercentIncrement);
-            logFileLogger.log(progressMsg);
-            logFileLogger.log(noDataMsg);
-            LOGGER.log(Level.CONFIG, e, () -> "No events for " + data.getSeriesId() + " in time window " + startDetermined + " | " + endDetermined);
+            try
+            {
+                int timeStep = MerlinDataConverter.getValidTimeStep(data.getTimestep(), data.getSeriesId());
+                int expectedNumValues = ExpectedNumberValuesCalculator.getExpectedNumValues(start, end,
+                        HecTimeSeriesBase.getEPartFromInterval(timeStep), zoneId,
+                        HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(start, zoneId)), HecTime.fromZonedDateTime(ZonedDateTime.ofInstant(end, zoneId)));
+                String progressMsg = "Read " + data.getSeriesId() + " | Is processed: " + isProcessed + " | Values read: 0"
+                        + ", 0 missing, " + expectedNumValues + " expected" + readDurationString.get();
+                String noDataMsg = e.getMessage();
+                //when no data is found we count it as a read + no data written completed and move on, but want to ensure these get written together.
+                int readPercentIncrement = completionTracker.readWriteTaskCompleted();
+                int nothingToWritePercentIncrement = completionTracker.readWriteTaskCompleted();
+                logProgressMessage(progressListener, progressMsg, readPercentIncrement);
+                logProgressMessage(progressListener, noDataMsg, nothingToWritePercentIncrement);
+                logFileLogger.log(progressMsg);
+                logFileLogger.log(noDataMsg);
+                LOGGER.log(Level.CONFIG, e, () -> "No events for " + data.getSeriesId() + " in time window " + startDetermined + " | " + endDetermined);
+            }
+            catch (MerlinInvalidTimestepException ex)
+            {
+                LOGGER.log(Level.FINE, ex.getMessage(), ex);
+            }
         }
         catch (DataSetIllegalArgumentException | HecMathException e)
         {

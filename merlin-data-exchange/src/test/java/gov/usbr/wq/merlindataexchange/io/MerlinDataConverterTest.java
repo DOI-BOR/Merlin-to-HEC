@@ -115,4 +115,26 @@ class MerlinDataConverterTest
 		assertEquals(expected, hecTimePST.getLocalDateTime());
 	}
 
+	@Test
+	void testValidTimeSteps() throws MerlinInvalidTimestepException
+	{
+		String seriesId = "testSeries";
+		int dssTimeStep = MerlinDataConverter.getValidTimeStep("43200, 44640, 40320", seriesId);
+		assertEquals(MerlinDataConverter.DSS_MONTHLY_TIME_STEP, dssTimeStep);
+		dssTimeStep = MerlinDataConverter.getValidTimeStep("43200, 40320", seriesId);
+		assertEquals(MerlinDataConverter.DSS_MONTHLY_TIME_STEP, dssTimeStep);
+		dssTimeStep = MerlinDataConverter.getValidTimeStep("44640, 40320", seriesId);
+		assertEquals(MerlinDataConverter.DSS_MONTHLY_TIME_STEP, dssTimeStep);
+		dssTimeStep = MerlinDataConverter.getValidTimeStep("43200, 44640", seriesId);
+		assertEquals(MerlinDataConverter.DSS_MONTHLY_TIME_STEP, dssTimeStep);
+		dssTimeStep = MerlinDataConverter.getValidTimeStep("43200", seriesId);
+		assertEquals(MerlinDataConverter.DSS_MONTHLY_TIME_STEP, dssTimeStep);
+		dssTimeStep = MerlinDataConverter.getValidTimeStep("44640", seriesId);
+		assertEquals(MerlinDataConverter.DSS_MONTHLY_TIME_STEP, dssTimeStep);
+		dssTimeStep = MerlinDataConverter.getValidTimeStep("40320", seriesId);
+		assertEquals(MerlinDataConverter.DSS_MONTHLY_TIME_STEP, dssTimeStep);
+		assertEquals(15, MerlinDataConverter.getValidTimeStep("15", seriesId));
+		assertThrows(MerlinInvalidTimestepException.class, () -> MerlinDataConverter.getValidTimeStep("43200, 44640, 10000", seriesId));
+	}
+
 }

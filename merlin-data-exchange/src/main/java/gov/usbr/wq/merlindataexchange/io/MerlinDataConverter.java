@@ -32,8 +32,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.NavigableSet;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +47,8 @@ import java.util.logging.Logger;
  */
 final class MerlinDataConverter
 {
-
+	static final int DSS_MONTHLY_TIME_STEP = 43200;
+	private static final Set<Integer> MONTHLY_TIME_STEPS = new HashSet<>(Arrays.asList(DSS_MONTHLY_TIME_STEP, 44640, 40320));
 	private static final Logger LOGGER = Logger.getLogger(MerlinDataConverter.class.getName());
 	private MerlinDataConverter()
 	{
@@ -57,17 +61,11 @@ final class MerlinDataConverter
 		TimeSeriesContainer output = new TimeSeriesContainer();
 		if(data != null && data.getSeriesId() != null && !data.getSeriesId().isEmpty())
 		{
-			String timeStep = data.getTimestep();
-			if (timeStep == null || timeStep.contains(","))
-			{
-				throw new MerlinInvalidTimestepException(timeStep, data.getSeriesId());
-			}
-
+			int parsedInterval = getValidTimeStep(data.getTimestep(), data.getSeriesId());
 			DSSPathname pathname = new DSSPathname(data.getSeriesId());
 			pathname.setAPart(data.getProject());
 			pathname.setBPart(data.getStation() + "-" + data.getMeasurement());
 			pathname.setCPart(data.getParameter());
-			int parsedInterval = Integer.parseInt(data.getTimestep());
 			String interval = HecTimeSeriesBase.getEPartFromInterval(parsedInterval);
 			pathname.setFPart(typeId);
 			if (fPartOverride != null)
@@ -97,7 +95,7 @@ final class MerlinDataConverter
 			int[] times = new int[events.size()];
 			double[] values = new double[events.size()];
 			int i = 0;
-			boolean needsInterpolation = isInterpolationNeeded(isProcessed, data.getStartTime(), data.getEndTime(), data.getTimestep(), dataZoneId, events.size());
+			boolean needsInterpolation = isInterpolationNeeded(isProcessed, data.getStartTime(), data.getEndTime(), parsedInterval, dataZoneId, events.size());
 			for (EventWrapper event : events)
 			{
 				HecTime hecTime = fromZonedDateTime(event.getDate(), dataZoneId);
@@ -147,13 +145,42 @@ final class MerlinDataConverter
 		return output;
 	}
 
-	private static boolean isInterpolationNeeded(boolean isProcessed, ZonedDateTime startTime, ZonedDateTime endTime, String timeStep, ZoneId dataZoneId, int numberOfEvents)
+	static int getValidTimeStep(String timeStep, String seriesId) throws MerlinInvalidTimestepException
+	{
+		int retVal;
+		if (timeStep == null || timeStep.isEmpty())
+		{
+			throw new MerlinInvalidTimestepException(timeStep, seriesId);
+		}
+		if(timeStep.contains(","))
+		{
+			String[] timeSteps = timeStep.split(",");
+			for(String step : timeSteps)
+			{
+				if(!MONTHLY_TIME_STEPS.contains(Integer.parseInt(step.trim())))
+				{
+					throw new MerlinInvalidTimestepException(timeStep, seriesId);
+				}
+			}
+			retVal = DSS_MONTHLY_TIME_STEP;
+		}
+		else if(MONTHLY_TIME_STEPS.contains(Integer.parseInt(timeStep.trim())))
+		{
+			retVal = DSS_MONTHLY_TIME_STEP;
+		}
+		else
+		{
+			retVal = Integer.parseInt(timeStep.trim());
+		}
+		return retVal;
+	}
+
+	private static boolean isInterpolationNeeded(boolean isProcessed, ZonedDateTime startTime, ZonedDateTime endTime, int parsedInterval, ZoneId dataZoneId, int numberOfEvents)
 			throws DataSetIllegalArgumentException
 	{
 		boolean retVal = !isProcessed;
 		if(!isProcessed)
 		{
-			int parsedInterval = Integer.parseInt(timeStep);
 			int offsetMinutes = calculateOffsetInMinutes(startTime, new Interval(parsedInterval), TimeZone.getTimeZone(dataZoneId));
 			int numIntervals = calculateNumberOfIntervals(startTime, endTime, offsetMinutes, parsedInterval, dataZoneId);
 			retVal = numIntervals + 1 != numberOfEvents;
