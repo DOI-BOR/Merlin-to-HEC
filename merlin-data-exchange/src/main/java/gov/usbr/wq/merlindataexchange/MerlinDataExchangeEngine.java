@@ -600,14 +600,14 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
             if(measures != null && !measures.isEmpty())
             {
                 String projSiteSensor = measures.get(0).getProjectAndSiteAndSensor();
-                String proj = findSubstringBeforeSecondToLastDash(projSiteSensor);
+                String proj = parseProject(projSiteSensor);
                 for(int i=1; i < measures.size(); i++)
                 {
                     MeasureWrapper measure = measures.get(i);
                     if(MerlinDataExchangeProfileReader.PROFILE.equalsIgnoreCase(measure.getType()))
                     {
                         String projSiteSensorInList = measure.getProjectAndSiteAndSensor();
-                        String projInList = findSubstringBeforeSecondToLastDash(projSiteSensorInList);
+                        String projInList = parseProject(projSiteSensorInList);
                         if(!projInList.equals(proj))
                         {
                             throw new MerlinInitializationException(connectionInfo,
@@ -619,20 +619,48 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
         }
     }
 
-    private String findSubstringBeforeSecondToLastDash(String input)
+    private String parseProject(String input)
     {
         int lastIndex = input.lastIndexOf("-");
         if (lastIndex == -1)
         {
             return input; // No "-" found, return input
         }
+        if(input.toLowerCase().endsWith("temp-water"))
+        {
+            input = input.substring(0, lastIndex);
+            lastIndex = input.lastIndexOf("-");
+        }
 
         int secondToLastIndex = input.lastIndexOf("-", lastIndex - 1);
+        String retVal;
         if (secondToLastIndex == -1)
         {
-            return input.substring(0, lastIndex); // Only one "-" found, return everything before it
+            retVal = input.substring(0, lastIndex); // Only one "-" found, return everything before it
         }
-        return input.substring(0, secondToLastIndex); // Return everything before the second to last "-" in case project contains a "-"
+        else
+        {
+            retVal = input.substring(0, secondToLastIndex).trim(); // Return everything before the second to last "-" in case site contains a "-"
+        }
+
+        if (countOccurrences(retVal, '-') > 1)
+        {
+            retVal = retVal.substring(0, retVal.lastIndexOf("-"));
+        }
+        return retVal;
+    }
+
+    private int countOccurrences(String input, char target)
+    {
+        int count = 0;
+        for (int i = 0; i < input.length(); i++)
+        {
+            if (input.charAt(i) == target)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void initializeCachedMeasurementsForMerlin(DataExchangeCache cache, Map<Path, DataExchangeConfiguration> parsedConfigurations,
