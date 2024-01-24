@@ -177,11 +177,13 @@ public final class CsvDssProfileWriter implements DataExchangeWriter<MerlinProfi
                     pdc.yunits = nonDepthConstituent.getUnit();
                     double[] depths = toDoubleArray(depthConstituent.getDataValues());
                     List<double[]> yValList = new ArrayList<>();
-                    for (int i = 1; i < sample.getConstituents().size(); i++)
+                    for (ProfileConstituent constituent: sample.getConstituents())
                     {
-                        ProfileConstituent constituent = sample.getConstituents().get(i);
-                        double[] values = toDoubleArray(constituent.getDataValues());
-                        yValList.add(values);
+                        if(!constituent.getParameter().equalsIgnoreCase(DataStoreProfile.DEPTH))
+                        {
+                            double[] values = toDoubleArray(constituent.getDataValues());
+                            yValList.add(values);
+                        }
                     }
                     double[][] yVals = to2DArray(yValList);
                     pdc.setValues(depths, yVals);
