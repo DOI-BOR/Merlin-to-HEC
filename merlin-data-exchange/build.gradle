@@ -28,7 +28,7 @@ dependencies {
     implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
     implementation 'mil.army.usace.hec:hec-rma:6.0-20220607.200819-127'
     implementation 'mil.army.usace.hec:lookup:1.1'
-    implementation 'mil.army.usace.hec:hec-core:6.0-20220607.200756-129'
+    implementation 'mil.army.usace.hec:hec-core:6.0-20240205.220313-163'
     implementation 'mil.army.usace.hec:hec-data:6.0-20220607.200804-129'
     implementation 'mil.army.usace.hec:hec-lib:6.0-20220607.200812-129'
     implementation 'gov.usbr.wq:merlin-web-client:4.5.0'
