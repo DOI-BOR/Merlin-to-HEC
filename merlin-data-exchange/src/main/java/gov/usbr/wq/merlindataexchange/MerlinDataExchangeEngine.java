@@ -701,7 +701,12 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
             }
             for(DataExchangeSet set : unsupportedSets)
             {
-                String msg = "Unsupported template: " + set.getTemplateName() + " | " + set.getTemplateId();
+                String templateDescriptor = set.getTemplateName();
+                if(templateDescriptor == null || templateDescriptor.trim().isEmpty())
+                {
+                    templateDescriptor = "" + set.getTemplateId();
+                }
+                String msg = "Failed to find template " + templateDescriptor + "\nIn config file: " + entry.getKey();
                 logError(msg, null);
                 dataExchangeConfig.removeDataExchangeSet(set);
             }
