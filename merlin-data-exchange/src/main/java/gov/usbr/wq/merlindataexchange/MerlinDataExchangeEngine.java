@@ -34,10 +34,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -668,6 +670,7 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
     {
         for(Map.Entry<Path, DataExchangeConfiguration> entry : parsedConfigurations.entrySet())
         {
+            Set<DataExchangeSet> unsupportedSets = new HashSet<>();
             DataExchangeConfiguration dataExchangeConfig = entry.getValue();
             List<DataExchangeSet> exchangeSets = dataExchangeConfig.getDataExchangeSets();
             for(DataExchangeSet set : exchangeSets)
@@ -691,6 +694,16 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
                     }
                     _completionTracker.addNumberOfMeasuresToComplete(measures.size());
                 }
+                else
+                {
+                    unsupportedSets.add(set);
+                }
+            }
+            for(DataExchangeSet set : unsupportedSets)
+            {
+                String msg = "Unsupported template: " + set.getTemplateName() + " | " + set.getTemplateId();
+                logError(msg, null);
+                dataExchangeConfig.removeDataExchangeSet(set);
             }
         }
 

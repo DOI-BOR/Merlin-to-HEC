@@ -57,4 +57,9 @@ public final class DataExchangeConfiguration
                 .filter(ds -> ds.getId().equalsIgnoreCase(ref.getId()))
                 .findFirst();
     }
+
+    public void removeDataExchangeSet(DataExchangeSet set)
+    {
+        _dataExchangeSet.remove(set);
+    }
 }

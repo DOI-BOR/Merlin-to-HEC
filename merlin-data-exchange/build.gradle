@@ -46,6 +46,10 @@ dependencies {
 
 }
 
+task prepareKotlinBuildScriptModel {
+    //don't remove this. Needed for gradle build to work.
+}
+
 task extractNatives(type: Copy) { copyTask ->
     into "$buildDir/libs"
     from configurations.windows_x64
