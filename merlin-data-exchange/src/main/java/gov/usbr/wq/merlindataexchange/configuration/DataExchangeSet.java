@@ -1,7 +1,10 @@
 package gov.usbr.wq.merlindataexchange.configuration;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import hec.heclib.util.Unit;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class DataExchangeSet
 {
@@ -21,6 +24,9 @@ public final class DataExchangeSet
     private String _unitSystem = Unit.ENGLISH;
     @JacksonXmlProperty(localName = "data-type")
     private String _dataType;
+    @JacksonXmlProperty(localName = "supported-types")
+    @JacksonXmlElementWrapper(useWrapping = true)
+    private List<String> _supportedTypes = new ArrayList<>();
     @JacksonXmlProperty(localName = "datastore-ref-a")
     private DataStoreRef _dataStoreRefA;
     @JacksonXmlProperty(localName = "datastore-ref-b")
@@ -125,5 +131,15 @@ public final class DataExchangeSet
     public void setDataType(String dataType)
     {
         _dataType = dataType;
+    }
+
+    public List<String> getSupportedTypes()
+    {
+        return _supportedTypes;
+    }
+
+    public void setSupportedTypes(List<String> supportedTypes)
+    {
+        _supportedTypes = supportedTypes;
     }
 }

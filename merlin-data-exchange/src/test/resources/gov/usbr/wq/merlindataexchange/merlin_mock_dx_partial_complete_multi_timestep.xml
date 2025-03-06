@@ -23,6 +23,10 @@
     </data-exchange-set>
     <data-exchange-set id="Folsom Lake - MR Boundary Flow" source-id="www.grabdata2.com" template-id="231" template-name = "Folsom Lake - MR Boundary Flow" quality-version-id="0" quality-version-name = "All" unit-system="SI">
         <data-type>time-series</data-type>
+        <supported-types>
+            <supported-type>auto</supported-type>
+            <supported-type>step</supported-type>
+        </supported-types>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat2"/>
     </data-exchange-set>

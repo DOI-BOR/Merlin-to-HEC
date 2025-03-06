@@ -19,6 +19,8 @@ import hec.heclib.util.HecTime;
 import hec.hecmath.HecMathException;
 import hec.io.TimeSeriesContainer;
 import hec.ui.ProgressListener;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import rma.services.annotations.ServiceProvider;
 
 import java.io.IOException;
@@ -37,7 +39,8 @@ import static java.util.stream.Collectors.toList;
         + "/" + MerlinDataExchangeReader.MERLIN + "/" + MerlinDataExchangeTimeSeriesReader.TIMESERIES)
 public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchangeReader<MerlinTimeSeriesParameters, DataWrapper, TimeSeriesContainer>
 {
-    private static final String MERLIN_TIME_SERIES_TYPE = "Auto";
+    private static final String AUTO_TYPE = "auto";
+    private static final String STEP_TYPE = "step";
     public static final String TIMESERIES = "time-series"; //this corresponds to data-type in set we are reading for
     private static final Logger LOGGER = Logger.getLogger(MerlinDataExchangeTimeSeriesReader.class.getName());
 
@@ -128,7 +131,11 @@ public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchange
     public List<MeasureWrapper> filterMeasuresToRead(DataExchangeSet dataExchangeSet, List<MeasureWrapper> measures)
     {
         //filter out profile data for time series
-        return measures.stream().filter(m -> MERLIN_TIME_SERIES_TYPE.equalsIgnoreCase(m.getType()))
+        Set<String> supportedTypes = new LinkedHashSet<>(dataExchangeSet.getSupportedTypes());
+        //support auto and step by default
+        supportedTypes.add(AUTO_TYPE);
+        supportedTypes.add(STEP_TYPE);
+        return measures.stream().filter(m -> supportedTypes.contains(m.getType().toLowerCase()))
                 .collect(toList());
     }
 }

@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -305,8 +304,13 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
         //the reader for depth-temp profiles will handle reading 2 measures at once (one for temp, one for depth)
         //so we want to filter out all but the depth measures from the list that gets handed into the exchange as reading
         //the other constituent measures will happen internally inside the reader
+        List<String> supportedTypes = dataExchangeSet.getSupportedTypes();
+        if(supportedTypes.isEmpty())
+        {
+            supportedTypes.add(dataExchangeSet.getDataType().toLowerCase());
+        }
        return measures.stream().filter(m -> m.getParameter().equalsIgnoreCase(DataStoreProfile.DEPTH)
-                                && m.getType().equalsIgnoreCase(dataExchangeSet.getDataType()))
+                                && supportedTypes.contains(m.getType().toLowerCase()))
                         .collect(toList());
     }
 }

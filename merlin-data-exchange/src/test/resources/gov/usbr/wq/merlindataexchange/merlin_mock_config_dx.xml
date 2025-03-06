@@ -13,4 +13,24 @@
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>
     </data-exchange-set>
+    <data-exchange-set id="MET_Folsom" source-id="www.grabdata2.com"
+                       template-name = "MET_Folsom" quality-version-id="1"
+                       unit-system="SI">
+        <data-type>time-series</data-type>
+        <datastore-ref-a id="www.grabdata2.com"/>
+        <datastore-ref-b id="wat"/>
+    </data-exchange-set>
+    <data-exchange-set id="MET_Lake Natoma - American R" source-id="www.grabdata2.com"
+                       template-name = "MET_Lake Natoma - American R" quality-version-id="1"
+                       unit-system="SI">
+        <data-type>time-series</data-type>
+        <!-- optional supported types to allow for specifying types. If not provided, auto and step are used for timeseries by default -->
+        <supported-types>
+            <supported-type>auto</supported-type>
+            <supported-type>step</supported-type>
+        </supported-types>
+        <datastore-ref-a id="www.grabdata2.com"/>
+        <datastore-ref-b id="wat"/>
+    </data-exchange-set>
+
 </data-exchange-configuration>
