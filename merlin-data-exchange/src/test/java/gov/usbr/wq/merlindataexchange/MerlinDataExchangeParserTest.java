@@ -34,12 +34,12 @@ final class MerlinDataExchangeParserTest
         DataStoreRef merlinRef2 = tsDataExchangeSet2.getDataStoreRefA();
         DataStoreRef localDssRef2 = tsDataExchangeSet2.getDataStoreRefB();
 
-        assertNotNull(tsDataExchangeSet1.getSupportedTypes());
-        assertTrue(tsDataExchangeSet1.getSupportedTypes().isEmpty()); //not specified so empty
+        assertEquals(2, dataExchangeConfig.getSupportedTimeSeriesTypes().size());
+        assertTrue(dataExchangeConfig.getSupportedTimeSeriesTypes().contains("auto"));
+        assertTrue(dataExchangeConfig.getSupportedTimeSeriesTypes().contains("step"));
 
-        assertEquals(2, tsDataExchangeSet2.getSupportedTypes().size());
-        assertTrue(tsDataExchangeSet2.getSupportedTypes().contains("auto"));
-        assertTrue(tsDataExchangeSet2.getSupportedTypes().contains("step"));
+        assertEquals(1, dataExchangeConfig.getSupportedProfileTypes().size());
+        assertTrue(dataExchangeConfig.getSupportedProfileTypes().contains("profile"));
 
         List<DataStore> dataStores = dataExchangeConfig.getDataStores();
         assertNotNull(dataStores);

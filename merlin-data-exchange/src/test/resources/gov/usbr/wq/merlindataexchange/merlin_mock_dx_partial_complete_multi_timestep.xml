@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data-exchange-configuration xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance">
+    <supported-time-series-types>
+        <supported-type>auto</supported-type>
+        <supported-type>step</supported-type>
+    </supported-time-series-types>
+    <supported-profile-types>
+        <supported-type>profile</supported-type>
+    </supported-profile-types>
     <datastore id="www.grabdata.com">
         <datastore-type>merlin</datastore-type>
         <path>https://www.grabdata.com</path>
@@ -23,10 +30,6 @@
     </data-exchange-set>
     <data-exchange-set id="Folsom Lake - MR Boundary Flow" source-id="www.grabdata2.com" template-id="231" template-name = "Folsom Lake - MR Boundary Flow" quality-version-id="0" quality-version-name = "All" unit-system="SI">
         <data-type>time-series</data-type>
-        <supported-types>
-            <supported-type>auto</supported-type>
-            <supported-type>step</supported-type>
-        </supported-types>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat2"/>
     </data-exchange-set>

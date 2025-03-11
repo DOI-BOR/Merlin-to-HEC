@@ -12,6 +12,7 @@ import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogBody;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
 import gov.usbr.wq.merlindataexchange.NoEventsException;
 import gov.usbr.wq.merlindataexchange.configuration.Constituent;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeConfiguration;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import gov.usbr.wq.merlindataexchange.configuration.DataStoreProfile;
@@ -23,6 +24,8 @@ import hec.data.Units;
 import hec.data.UnitsConversionException;
 import hec.heclib.util.Unit;
 import hec.ui.ProgressListener;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import rma.services.annotations.ServiceProvider;
 
 import java.io.IOException;
@@ -299,17 +302,15 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
     }
 
     @Override
-    public List<MeasureWrapper> filterMeasuresToRead(DataExchangeSet dataExchangeSet, List<MeasureWrapper> measures)
+    public List<MeasureWrapper> filterMeasuresToRead(DataExchangeConfiguration dataExchangeConfig, DataExchangeSet dataExchangeSet, List<MeasureWrapper> measures)
     {
         //the reader for depth-temp profiles will handle reading 2 measures at once (one for temp, one for depth)
         //so we want to filter out all but the depth measures from the list that gets handed into the exchange as reading
         //the other constituent measures will happen internally inside the reader
-        List<String> supportedTypes = dataExchangeSet.getSupportedTypes();
-        if(supportedTypes.isEmpty())
-        {
-            supportedTypes.add(dataExchangeSet.getDataType().toLowerCase());
-        }
-       return measures.stream().filter(m -> m.getParameter().equalsIgnoreCase(DataStoreProfile.DEPTH)
+        Set<String> supportedTypes = new LinkedHashSet<>(dataExchangeConfig.getSupportedProfileTypes());
+        //default type of profile
+        supportedTypes.add(PROFILE);
+        return measures.stream().filter(m -> m.getParameter().equalsIgnoreCase(DataStoreProfile.DEPTH)
                                 && supportedTypes.contains(m.getType().toLowerCase()))
                         .collect(toList());
     }

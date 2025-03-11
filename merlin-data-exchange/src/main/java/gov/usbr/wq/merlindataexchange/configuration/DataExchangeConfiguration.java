@@ -1,5 +1,6 @@
 package gov.usbr.wq.merlindataexchange.configuration;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
@@ -13,6 +14,13 @@ public final class DataExchangeConfiguration
     public static final String DATASTORE_ELEM = "datastore";
     public static final String DATASTORE_PROFILE_ELEM = "datastore-profile";
     public static final String DATA_EXCHANGE_SET_ELEM = "data-exchange-set";
+    @JacksonXmlProperty(localName = "supported-time-series-types")
+    @JacksonXmlElementWrapper(useWrapping = true)
+    private final List<String> _supportedTimeSeriesTypes = new ArrayList<>();
+
+    @JacksonXmlProperty(localName = "supported-profile-types")
+    @JacksonXmlElementWrapper(useWrapping = true)
+    private final List<String> _supportedProfileTypes = new ArrayList<>();
     @JacksonXmlProperty(localName = DATASTORE_ELEM)
     private final List<DataStore> _dataStores = new ArrayList<>();
     @JacksonXmlProperty(localName = DATASTORE_PROFILE_ELEM)
@@ -56,6 +64,28 @@ public final class DataExchangeConfiguration
         return getDataStores().stream()
                 .filter(ds -> ds.getId().equalsIgnoreCase(ref.getId()))
                 .findFirst();
+    }
+
+    public List<String> getSupportedTimeSeriesTypes()
+    {
+        return new ArrayList<>(_supportedTimeSeriesTypes);
+    }
+
+    public void setSupportedTimeSeriesTypes(List<String> supportedTimeSeriesTypes)
+    {
+        _supportedTimeSeriesTypes.clear();
+        _supportedTimeSeriesTypes.addAll(supportedTimeSeriesTypes);
+    }
+
+    public List<String> getSupportedProfileTypes()
+    {
+        return new ArrayList<>(_supportedProfileTypes);
+    }
+
+    public void setSupportedProfileTypes(List<String> supportedProfileTypes)
+    {
+        _supportedProfileTypes.clear();
+        _supportedProfileTypes.addAll(supportedProfileTypes);
     }
 
     public void removeDataExchangeSet(DataExchangeSet set)

@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data-exchange-configuration xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance">
+    <supported-time-series-types>
+        <supported-type>auto</supported-type>
+        <supported-type>step</supported-type>
+    </supported-time-series-types>
+    <supported-profile-types>
+        <supported-type>profile</supported-type>
+    </supported-profile-types>
     <datastore id="www.grabdata2.com">
         <datastore-type>merlin</datastore-type>
         <path>https://www.grabdata2.com</path>
@@ -25,10 +32,6 @@
                        unit-system="SI">
         <data-type>time-series</data-type>
         <!-- optional supported types to allow for specifying types. If not provided, auto and step are used for timeseries by default -->
-        <supported-types>
-            <supported-type>auto</supported-type>
-            <supported-type>step</supported-type>
-        </supported-types>
         <datastore-ref-a id="www.grabdata2.com"/>
         <datastore-ref-b id="wat"/>
     </data-exchange-set>

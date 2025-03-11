@@ -10,6 +10,7 @@ import gov.usbr.wq.merlindataexchange.DataExchangeCache;
 import gov.usbr.wq.merlindataexchange.MerlinDataExchangeLogBody;
 import gov.usbr.wq.merlindataexchange.NoEventsException;
 import gov.usbr.wq.merlindataexchange.MerlinExchangeCompletionTracker;
+import gov.usbr.wq.merlindataexchange.configuration.DataExchangeConfiguration;
 import gov.usbr.wq.merlindataexchange.configuration.DataExchangeSet;
 import gov.usbr.wq.merlindataexchange.configuration.DataStore;
 import gov.usbr.wq.merlindataexchange.parameters.MerlinTimeSeriesParameters;
@@ -128,10 +129,10 @@ public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchange
     }
 
     @Override
-    public List<MeasureWrapper> filterMeasuresToRead(DataExchangeSet dataExchangeSet, List<MeasureWrapper> measures)
+    public List<MeasureWrapper> filterMeasuresToRead(DataExchangeConfiguration dataExchangeConfig, DataExchangeSet dataExchangeSet, List<MeasureWrapper> measures)
     {
         //filter out profile data for time series
-        Set<String> supportedTypes = new LinkedHashSet<>(dataExchangeSet.getSupportedTypes());
+        Set<String> supportedTypes = new LinkedHashSet<>(dataExchangeConfig.getSupportedTimeSeriesTypes());
         //support auto and step by default
         supportedTypes.add(AUTO_TYPE);
         supportedTypes.add(STEP_TYPE);

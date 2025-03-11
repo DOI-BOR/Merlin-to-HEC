@@ -389,12 +389,12 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
         }
         if(dataStoreDestinationOpt.isPresent() && dataStoreSourceOpt.isPresent())
         {
-            exchangeData(dataExchangeSet, dataStoreSourceOpt.get(), dataStoreDestinationOpt.get(), logBody);
+            exchangeData(dataExchangeSet, dataStoreSourceOpt.get(), dataStoreDestinationOpt.get(), dataExchangeConfig, logBody);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void exchangeData(DataExchangeSet dataExchangeSet, DataStore dataStoreSource, DataStore dataStoreDestination, MerlinDataExchangeLogBody logBody)
+    private void exchangeData(DataExchangeSet dataExchangeSet, DataStore dataStoreSource, DataStore dataStoreDestination, DataExchangeConfiguration dataExchangeConfig, MerlinDataExchangeLogBody logBody)
     {
         try
         {
@@ -438,8 +438,15 @@ public final class MerlinDataExchangeEngine<P extends MerlinParameters> extends 
                 {
                     throw new UnsupportedQualityVersionException(dataExchangeSet.getQualityVersionName(), dataExchangeSet.getQualityVersionId());
                 }
-                List<MeasureWrapper> measures = cache.getCachedTemplateToMeasures().get(template);
-                measures = reader.filterMeasuresToRead(dataExchangeSet, measures);
+                List<MeasureWrapper> unfilteredMeasures = cache.getCachedTemplateToMeasures().get(template);
+                List<MeasureWrapper> measures = reader.filterMeasuresToRead(dataExchangeConfig, dataExchangeSet, unfilteredMeasures);
+                List<String> filteredOutMeasureSeriesStrings = unfilteredMeasures.stream()
+                        .filter(m -> !measures.contains(m))
+                        .map(meas -> meas.getSeriesString() + " of type: " + meas.getType())
+                        .collect(toList());
+                String filteredMeasuresString = "Filtered out measures: " + String.join(",\n", filteredOutMeasureSeriesStrings);
+                logBody.log(filteredMeasuresString);
+                logGeneralProgress(filteredMeasuresString);
                 List<CompletableFuture<Void>> measurementFutures = new ArrayList<>();
                 measures.forEach(measure ->
                         measurementFutures.add(DataExchangeIO.exchangeData(reader, writer, dataExchangeSet, _runtimeParameters, dataStoreSource, dataStoreDestination,
