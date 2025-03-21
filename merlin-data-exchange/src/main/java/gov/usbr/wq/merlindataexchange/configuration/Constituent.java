@@ -15,19 +15,9 @@ public final class Constituent
         return _parameter;
     }
 
-    public void setParameter(String parameter)
-    {
-        _parameter = parameter;
-    }
-
     public String getUnit()
     {
         return _unit;
-    }
-
-    public void setUnit(String unit)
-    {
-        _unit = unit;
     }
 
 }

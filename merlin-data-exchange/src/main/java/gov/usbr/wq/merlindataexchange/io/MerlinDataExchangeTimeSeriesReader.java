@@ -23,6 +23,7 @@ import hec.ui.ProgressListener;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import rma.services.annotations.ServiceProvider;
 
 import java.io.IOException;
@@ -135,9 +136,12 @@ public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchange
     {
         //filter out profile data for time series
         Set<String> supportedTypes = new LinkedHashSet<>(dataExchangeConfig.getSupportedTimeSeriesTypes());
+        Set<String> supportedTypesLower = supportedTypes.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
         //support auto and step by default
         supportedTypes.addAll(getDefaultSupportedTypes());
-        return measures.stream().filter(m -> supportedTypes.contains(m.getType().toLowerCase()))
+        return measures.stream().filter(m -> supportedTypesLower.contains(m.getType().toLowerCase()))
                 .collect(toList());
     }
 
@@ -150,7 +154,7 @@ public final class MerlinDataExchangeTimeSeriesReader extends MerlinDataExchange
             String[] types = System.getProperty(DEFAULT_SUPPORTED_TYPES_PROPERTY).split(",");
             for(String type : types)
             {
-                retVal.add(type.trim());
+                retVal.add(type.toLowerCase().trim());
             }
         }
         else

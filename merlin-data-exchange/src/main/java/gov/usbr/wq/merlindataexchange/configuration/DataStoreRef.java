@@ -12,8 +12,4 @@ public class DataStoreRef
         return _id;
     }
 
-    public void setId(String id)
-    {
-        this._id = id;
-    }
 }

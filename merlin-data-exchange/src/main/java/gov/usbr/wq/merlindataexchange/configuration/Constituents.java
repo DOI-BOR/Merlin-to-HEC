@@ -14,10 +14,4 @@ public final class Constituents
     {
         return new ArrayList<>(_constituents);
     }
-
-    public void setConstituents(List<Constituent> constituents)
-    {
-        _constituents.clear();
-        _constituents.addAll(constituents);
-    }
 }

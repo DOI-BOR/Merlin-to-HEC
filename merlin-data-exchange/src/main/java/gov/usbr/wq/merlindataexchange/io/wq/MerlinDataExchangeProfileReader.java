@@ -27,6 +27,7 @@ import hec.ui.ProgressListener;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import rma.services.annotations.ServiceProvider;
 
 import java.io.IOException;
@@ -310,10 +311,13 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
         //so we want to filter out all but the depth measures from the list that gets handed into the exchange as reading
         //the other constituent measures will happen internally inside the reader
         Set<String> supportedTypes = new LinkedHashSet<>(dataExchangeConfig.getSupportedProfileTypes());
+        Set<String> supportedTypesLower = supportedTypes.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
         //default type of profile
         supportedTypes.addAll(getDefaultSupportedTypes());
         return measures.stream().filter(m -> m.getParameter().equalsIgnoreCase(DataStoreProfile.DEPTH)
-                                && supportedTypes.contains(m.getType().toLowerCase()))
+                                && supportedTypesLower.contains(m.getType().toLowerCase()))
                         .collect(toList());
     }
 
@@ -326,7 +330,7 @@ public final class MerlinDataExchangeProfileReader extends MerlinDataExchangeRea
             String[] types = System.getProperty(DEFAULT_SUPPORTED_TYPES_PROPERTY).split(",");
             for(String type : types)
             {
-                retVal.add(type.trim());
+                retVal.add(type.toLowerCase().trim());
             }
         }
         else

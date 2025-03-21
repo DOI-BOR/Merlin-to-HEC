@@ -36,27 +36,9 @@ public final class DataExchangeConfiguration
         return dataStores;
     }
 
-    void setDataStoreProfiles(List<DataStoreProfile> dataStoreProfiles)
-    {
-        _dataStoreProfiles.clear();
-        _dataStoreProfiles.addAll(dataStoreProfiles);
-    }
-
-    public void setDataStores(List<DataStore> dataStores)
-    {
-        _dataStores.clear();
-        _dataStores.addAll(dataStores);
-    }
-
     public List<DataExchangeSet> getDataExchangeSets()
     {
         return new ArrayList<>(_dataExchangeSet);
-    }
-
-    public void setDataExchangeSets(List<DataExchangeSet> dataExchangeSet)
-    {
-        _dataExchangeSet.clear();
-        _dataExchangeSet.addAll(dataExchangeSet);
     }
 
     public Optional<DataStore> getDataStoreByRef(DataStoreRef ref)
@@ -71,21 +53,9 @@ public final class DataExchangeConfiguration
         return new ArrayList<>(_supportedTimeSeriesTypes);
     }
 
-    public void setSupportedTimeSeriesTypes(List<String> supportedTimeSeriesTypes)
-    {
-        _supportedTimeSeriesTypes.clear();
-        _supportedTimeSeriesTypes.addAll(supportedTimeSeriesTypes);
-    }
-
     public List<String> getSupportedProfileTypes()
     {
         return new ArrayList<>(_supportedProfileTypes);
-    }
-
-    public void setSupportedProfileTypes(List<String> supportedProfileTypes)
-    {
-        _supportedProfileTypes.clear();
-        _supportedProfileTypes.addAll(supportedProfileTypes);
     }
 
     public void removeDataExchangeSet(DataExchangeSet set)
