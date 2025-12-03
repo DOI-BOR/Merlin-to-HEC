@@ -16,6 +16,7 @@ final class ParametersTest
     @Test
     void testBuildAuthenticationParameters()
     {
+		// This username and password are not valid and will fail unless replaced by the user
         AuthenticationParameters authParams = new AuthenticationParametersBuilder()
                 .forUrl("https://www.grabdata2.com")
                 .setUsername("user")
