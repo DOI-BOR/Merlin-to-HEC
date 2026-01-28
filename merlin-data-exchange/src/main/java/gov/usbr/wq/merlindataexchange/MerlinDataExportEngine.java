@@ -9,7 +9,6 @@ import gov.usbr.wq.dataaccess.model.TemplateWrapper;
 import gov.usbr.wq.merlindataexchange.fluentbuilders.ExportType;
 import gov.usbr.wq.merlindataexchange.io.TemplateMeasureCsvWriter;
 import gov.usbr.wq.merlindataexchange.io.TemplateMeasureReader;
-import gov.usbr.wq.merlindataexchange.io.TemplateMeasureXlsxWriter;
 import gov.usbr.wq.merlindataexchange.parameters.AuthenticationParameters;
 import gov.usbr.wq.merlindataexchange.parameters.UsernamePasswordHolder;
 
@@ -40,7 +39,6 @@ public class MerlinDataExportEngine extends MerlinEngine implements DataExportEn
         {
             case JSON:
                 throw new IllegalArgumentException("Unsupported export type: " + _exportType);
-            case XLSX:
             case CSV:
                 return runExport(_exportType);
             default:
@@ -61,9 +59,6 @@ public class MerlinDataExportEngine extends MerlinEngine implements DataExportEn
                 {
                     case CSV:
                         new TemplateMeasureCsvWriter().write(templateMeasureMap, _exportFilePath);
-                        break;
-                    case XLSX:
-                        new TemplateMeasureXlsxWriter().write(templateMeasureMap, _exportFilePath);
                         break;
                     default:
                         throw new IllegalArgumentException("Unsupported export type: " + exportType);

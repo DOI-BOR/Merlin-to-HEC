@@ -49,30 +49,4 @@ final class MerlinDataExportIntegrationTest
         assertTrue(Files.size(Paths.get(csvPath)) > 0);
     }
 
-    @Test
-    void testExportXlsx() throws IOException
-    {
-        String username = ResourceAccess.getUsername();
-        char[] password = ResourceAccess.getPassword();
-        String xlsxFileName = "merlin_template_measure.xlsx";
-        String xlsxPath = getTestDirectory().resolve(xlsxFileName).toString();
-
-        FluentAuthenticationBuilder authenticationBuilder = new AuthenticationParametersBuilder()
-                .forUrl("https://www.grabdata2.com")
-                .setUsername(username)
-                .andPassword(password);
-
-        DataExportEngine dataExport = new MerlinDataExportEngineFluentBuilder()
-                .withAuthenticationParameters(authenticationBuilder.build())
-                .withExportFilePath(xlsxPath)
-                .withExportType(ExportType.XLSX)
-                .build();
-
-        MerlinDataExchangeStatus status = dataExport.runExport().join();
-        assertEquals(MerlinDataExchangeStatus.COMPLETE_SUCCESS, status);
-        assertTrue(Files.size(Paths.get(xlsxPath)) > 0);
-
-    }
-
-
 }
