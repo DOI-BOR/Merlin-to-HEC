@@ -1,3 +1,42 @@
 rootProject.name = 'merlin-to-hec'
 
 include ":merlin-data-exchange"
+
+dependencyResolutionManagement {
+
+    // set this so the repositories listed here are preferred
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+
+    repositories {
+        mavenCentral()
+
+        // Route only gov.usbr.wq artifacts to GitHub Packages
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = 'GitHubPackages'
+                    url = uri('https://maven.pkg.github.com/doi-bor/Merlin-Web-Client')
+                    credentials {
+                        username = System.getenv("GITHUB_ACTOR")
+                        password = System.getenv("GITHUB_TOKEN")
+                    }
+                }
+            }
+            filter { includeGroup('gov.usbr.wq') }
+        }
+
+        // Route HEC/Nexus artifacts to HEC’s public repository
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = 'HEC_Nexus'
+                    url = uri('https://www.hec.usace.army.mil/nexus/repository/maven-public')
+                }
+            }
+            filter {
+                includeGroup('mil.army.usace.hec')
+                includeGroup('com.rmanet')
+            }
+        }
+    }
+}
