@@ -4,6 +4,7 @@ include ":merlin-data-exchange"
 
 dependencyResolutionManagement {
 
+    // set this so the repositories listed here are preferred
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
 
     repositories {
@@ -14,7 +15,6 @@ dependencyResolutionManagement {
             forRepository {
                 maven {
                     name = 'GitHubPackages'
-                    // owner must be lowercase
                     url = uri('https://maven.pkg.github.com/doi-bor/Merlin-Web-Client')
                     credentials {
                         username = System.getenv("GITHUB_ACTOR")
