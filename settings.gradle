@@ -4,13 +4,13 @@ include ":merlin-data-exchange"
 
 dependencyResolutionManagement {
 
-//     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS
 
     repositories {
         mavenCentral()
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/DOI-BOR/Merlin-Web-Client")
+            url = uri("https://maven.pkg.github.com/doi-bor/Merlin-Web-Client")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
