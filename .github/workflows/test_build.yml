@@ -29,3 +29,7 @@ jobs:
       - name: Build with Gradle wrapper command
         # this run will do the build with the wrapper already provided in the repository
         run: ./gradlew.bat assemble
+        # these are the credentials we will need
+        env:
+          GITHUB_ACTOR: ${{ secrets.PACKAGES_USER }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGES_PAT }}
