@@ -1,0 +1,5 @@
+includeBuild("$gradle.ext.externalLibDir") {
+    dependencySubstitution {
+        substitute(module("gov.usbr.wq:merlin-data-exchange")).using(project(":merlin-data-exchange"))
+    }
+}

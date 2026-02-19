@@ -1,0 +1,14 @@
+plugins {
+    id 'project-report'
+}
+
+repositories {
+    maven {
+        url 'https://www.hec.usace.army.mil/nexus/repository/maven-public'
+    }
+    mavenCentral()
+}
+
+tasks.register("generateDependenciesReport", DependencyReportTask) { depReport ->
+    depReport.setConfiguration("runtimeClasspath")
+}

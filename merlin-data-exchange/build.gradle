@@ -1,11 +1,36 @@
 plugins {
-    id 'java-library'
+    id 'wtmp.deps-conventions'
+    id 'wtmp.java-conventions'
+    id 'wtmp.publishing-conventions'
 }
 
 configurations {
     testRuntimeClasspath.extendsFrom(runtimeClasspath)
     windows_x64
     linux_x64
+}
+
+dependencies {
+    implementation libs.jackson.dataformat.xml
+    implementation libs.jackson.dataformat.csv
+    implementation libs.jackson.datatype.jsr310
+
+    implementation libs.rmadev
+    implementation libs.hec.rma
+    implementation libs.hec.lookup
+    implementation libs.hec.core
+    implementation libs.hec.data
+    implementation libs.hec.lib
+    implementation libs.merlin.web.client
+
+    runtimeOnly libs.flogger.system.backend
+
+    implementation libs.hec.service.annotations
+
+    windows_x64 "mil.army.usace.hec:javaHeclib:${libs.versions.hec.javaHeclib.get()}-win-x86_64@zip"
+    linux_x64 "mil.army.usace.hec:javaHeclib:${libs.versions.hec.javaHeclib.get()}-linux-x86_64@zip"
+
+    annotationProcessor libs.hec.service.annotations
 }
 
 publishing {
@@ -17,46 +42,23 @@ publishing {
     }
 }
 
-dependencies {
-    implementation 'mil.army.usace.hec:service-annotations:1.2.1'
-
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.0"
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.11.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.0'
-    implementation 'gov.usbr.wq:jackson-dataformat-xlsx-lite:2.11.0.1'
-
-    implementation 'com.rmanet:rmadev:v3.1-20221206.175620-16!!'
-    implementation 'mil.army.usace.hec:hec-rma:6.0-20220607.200819-127'
-    implementation 'mil.army.usace.hec:lookup:1.1'
-    implementation 'mil.army.usace.hec:hec-core:6.0-20240205.220313-163'
-    implementation 'mil.army.usace.hec:hec-data:6.0-20220607.200804-129'
-    implementation 'mil.army.usace.hec:hec-lib:6.0-20220607.200812-129'
-    implementation 'gov.usbr.wq:merlin-web-client:4.5.0'
-
-    runtimeOnly "com.google.flogger:flogger-system-backend:0.5.1"
-
-    windows_x64 'mil.army.usace.hec:javaHeclib:7-IQ-0-win-x86_64@zip'
-    linux_x64 'mil.army.usace.hec:javaHeclib:7-IQ-0-linux-x86_64@zip'
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-
-    annotationProcessor("mil.army.usace.hec:service-annotations:1.2.1")
-
-}
-
-task prepareKotlinBuildScriptModel {
-    //don't remove this. Needed for gradle build to work.
-}
-
-task extractNatives(type: Copy) { copyTask ->
+tasks.register("extractNatives", Copy) { copyTask ->
     into "$buildDir/libs"
-    from configurations.windows_x64
+    from({configurations.windows_x64})
     configurations.windows_x64.asFileTree.each {
         copyTask.from(zipTree(it))
-        copyTask.into "$buildDir/libs"
+        copyTask.into("$buildDir/libs")
     }
 }
 
-build.dependsOn(extractNatives)
+test {
+    dependsOn(tasks.named("extractNatives"))
+    systemProperty("java.library.path", "$buildDir/libs")
+    ignoreFailures = true
+}
+
+tasks.register("scaleTest", JavaExec) {
+    mainClass = "gov.usbr.wq.merlindataexchange.ScaleTest"
+    systemProperty("java.library.path", "$buildDir/libs")
+    classpath = sourceSets.test.runtimeClasspath
+}

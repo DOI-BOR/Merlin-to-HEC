@@ -1,0 +1,39 @@
+[versions]
+junit-version = "5.14.2"
+jackson-version = "2.11.0"
+hec-service-annotations = "1.2.1"
+hec-rma = "6.0-20220607.200819-127"
+hec-lookup = "1.1"
+hec-core = "6.0-20240205.220313-163"
+hec-data = "6.0-20220607.200804-129"
+hec-lib = "6.0-20220607.200812-129"
+hec-javaHeclib = "7-IQ-0"
+rmadev = "v3.1-20221206.175620-16"
+merlin-web-client = "4.5.0"
+flogger = "0.5.1"
+
+[libraries]
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-version" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+
+hec-service-annotations = { module = "mil.army.usace.hec:service-annotations", version.ref = "hec-service-annotations" }
+hec-rma = { module = "mil.army.usace.hec:hec-rma", version.ref = "hec-rma" }
+hec-lookup = { module = "mil.army.usace.hec:lookup", version.ref = "hec-lookup" }
+hec-core = { module = "mil.army.usace.hec:hec-core", version.ref = "hec-core" }
+hec-data = { module = "mil.army.usace.hec:hec-data", version.ref = "hec-data" }
+hec-lib = { module = "mil.army.usace.hec:hec-lib", version.ref = "hec-lib" }
+hec-javaHeclib = { module = "mil.army.usace.hec:javaHeclib", version.ref = "hec-javaHeclib" }
+
+jackson-dataformat-xml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version.ref = "jackson-version" }
+jackson-dataformat-csv = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-csv", version.ref = "jackson-version" }
+jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson-version" }
+
+rmadev = { module = "com.rmanet:rmadev", version.ref = "rmadev" }
+merlin-web-client = { module = "gov.usbr.wq:merlin-web-client", version.ref = "merlin-web-client" }
+flogger-system-backend = { module = "com.google.flogger:flogger-system-backend", version.ref = "flogger" }
+
+[bundles]
+junit-api = ["junit-jupiter-api"]
+junit-runtime = ["junit-launcher", "junit-jupiter-engine"]
