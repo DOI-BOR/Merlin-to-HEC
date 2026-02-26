@@ -40,18 +40,6 @@ publishing {
             from components.java
         }
     }
-
-    // publish to github packages
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/DOI-BOR/Merlin-to-HEC")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
-    }
 }
 
 tasks.register("extractNatives", Copy) { copyTask ->
