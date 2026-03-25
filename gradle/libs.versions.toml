@@ -9,7 +9,7 @@ hec-data = "6.0-20220607.200804-129"
 hec-lib = "6.0-20220607.200812-129"
 hec-javaHeclib = "7-IQ-0"
 rmadev = "v3.1-20221206.175620-16"
-merlin-web-client = "main-SNAPSHOT"
+merlin-web-client = "2026.03.25"
 flogger = "0.5.1"
 
 [libraries]
